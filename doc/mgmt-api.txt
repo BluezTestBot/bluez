@@ -3094,6 +3094,62 @@ Set Wideband Speech Command
 				Invalid Index
 
 
+Get Debug Configuration Command
+===============================
+
+	Command Code:		0x0048
+	Controller Index:	<non-controller>
+	Command Parameters:
+	Return Parameters:	Layers (4 Octets)
+				Flags (4 Octets)
+
+	This command is used to read the current global debug setting of
+	the stack.
+
+	The Layers parameter is a bitmask with following defined bits:
+
+		0	Kernel messages
+		1	Daemon messages
+		2	Tools messages
+
+	If the bit is set, then the corresponding debug messages are
+	enabled. The kernel only acts on the Kernel messages bit and
+	all other bits are just passed back to userspace.
+
+	The Flags parameter is a bitmask with following defined bits:
+
+		0	Include function name
+		1	Include line number
+		2	Include module name
+
+	This command generates a Command Complete event on success or
+	a Command Status event on failure.
+
+	Possible errors:	Invalid Parameters
+				Invalid Index
+
+
+Set Debug Configuration Command
+===============================
+
+	Command Code:		0x0049
+	Controller Index:	<non-controller>
+	Command Parameters:	Layers (4 Octets)
+				Flags (4 Octets)
+	Return Parameters:
+
+	This command is used to set the current global debug setting of
+	the stack.
+
+	Refer Get Debug Configuration command for parameter description.
+
+	This command generates a Command Complete event on success or
+	a Command Status event on failure.
+
+	Possible errors:	Invalid Parameters
+				Invalid Index
+
+
 Command Complete Event
 ======================
 
@@ -3976,3 +4032,20 @@ PHY Configuration Changed Event
 	one through which the change was triggered.
 
 	Refer Get PHY Configuration command for PHYs parameter.
+
+
+Debug Configuration Changed Event
+=================================
+
+	Event Code:		0x0027
+	Controller Index:	<non-controller>
+	Event Parameters:	Layers (4 Octets)
+				Flags (4 Octets)
+
+	This event indicates that the current global debug setting of
+	the stack has been changed.
+
+	The event will only be sent to management sockets other than the
+	one through which the change was triggered.
+
+	Refer Get Debug Configuration command for parameter description.
