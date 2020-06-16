@@ -30,7 +30,7 @@ typedef void (*node_ready_func_t) (void *user_data, int status,
 typedef void (*node_join_ready_func_t) (struct mesh_node *node,
 						struct mesh_agent *agent);
 
-void node_remove(struct mesh_node *node);
+bool node_remove(struct mesh_node *node);
 void node_join(const char *app_root, const char *sender, const uint8_t *uuid,
 						node_join_ready_func_t cb);
 uint8_t *node_uuid_get(struct mesh_node *node);
@@ -39,7 +39,6 @@ struct mesh_node *node_find_by_addr(uint16_t addr);
 struct mesh_node *node_find_by_uuid(uint8_t uuid[16]);
 struct mesh_node *node_find_by_token(uint64_t token);
 bool node_is_provisioner(struct mesh_node *node);
-bool node_is_busy(struct mesh_node *node);
 void node_app_key_delete(struct mesh_node *node, uint16_t net_idx,
 							uint16_t app_idx);
 uint16_t node_get_primary(struct mesh_node *node);
@@ -81,8 +80,9 @@ const char *node_get_app_path(struct mesh_node *node);
 bool node_add_pending_local(struct mesh_node *node, void *info);
 void node_attach_io_all(struct mesh_io *io);
 void node_attach_io(struct mesh_node *node, struct mesh_io *io);
-void node_attach(const char *app_root, const char *sender, uint64_t token,
-					node_ready_func_t cb, void *user_data);
+bool node_attach(const char *app_root, const char *sender, uint64_t token,
+					node_ready_func_t cb,
+					struct l_dbus_message *pending_msg);
 void node_build_attach_reply(struct mesh_node *node,
 						struct l_dbus_message *reply);
 void node_create(const char *app_root, const char *sender, const uint8_t *uuid,

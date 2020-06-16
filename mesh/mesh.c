@@ -70,12 +70,19 @@ struct bt_mesh {
 	bool initialized;
 };
 
-struct join_data{
+struct join_data {
 	struct l_dbus_message *msg;
 	char *sender;
 	struct mesh_node *node;
 	uint32_t disc_watch;
 	uint8_t *uuid;
+};
+
+struct call_data {
+	struct mesh_node *node;
+	l_dbus_interface_method_cb_t cb;
+	struct l_dbus_message *msg;
+	void *user_data;
 };
 
 struct mesh_init_request {
@@ -102,11 +109,21 @@ static struct join_data *join_pending;
 /* Pending method requests */
 static struct l_queue *pending_queue;
 
+static struct l_queue *pending_calls;
+
 static const char *storage_dir;
 
 static bool simple_match(const void *a, const void *b)
 {
 	return a == b;
+}
+
+static bool match_call_node(const void *a, const void *b)
+{
+	const struct call_data *call = a;
+	const struct mesh_node *node = b;
+
+	return call->node == node;
 }
 
 /* Used for any outbound traffic that doesn't have Friendship Constraints */
@@ -298,6 +315,7 @@ bool mesh_init(const char *config_dir, const char *mesh_conf_fname,
 	mesh.max_filters = caps.max_num_filters;
 
 	pending_queue = l_queue_new();
+	pending_calls = l_queue_new();
 
 	return true;
 }
@@ -349,6 +367,7 @@ void mesh_cleanup(void)
 	}
 
 	l_queue_destroy(pending_queue, pending_request_exit);
+	l_queue_destroy(pending_calls, pending_request_exit);
 	mesh_agent_cleanup();
 	node_cleanup_all();
 	mesh_model_cleanup();
@@ -439,6 +458,37 @@ static void send_join_failed(const char *owner, const char *path,
 	free_pending_join_call(true);
 }
 
+static void queue_pending_call(struct mesh_node *node,
+				l_dbus_interface_method_cb_t cb,
+				struct l_dbus_message *msg, void *user_data)
+{
+	struct call_data *pending_call = l_new(struct call_data, 1);
+	pending_call->node = node;
+	pending_call->cb = cb;
+	pending_call->msg = l_dbus_message_ref(msg);
+	pending_call->user_data = user_data;
+
+	l_queue_push_tail(pending_calls, pending_call);
+}
+
+static void process_pending_call(struct mesh_node *node)
+{
+	struct l_dbus *dbus = dbus_get_bus();
+	struct call_data *pending_call;
+	struct l_dbus_message *reply;
+
+	pending_call = l_queue_remove_if(pending_calls, match_call_node);
+	if (!pending_call)
+		return;
+
+	reply = pending_call->cb(dbus, pending_call->msg,
+						pending_call->user_data);
+	if (reply)
+		l_dbus_send(dbus, reply);
+
+	l_dbus_message_unref(pending_call->msg);
+}
+
 static void prov_join_complete_reply_cb(struct l_dbus_message *msg,
 								void *user_data)
 {
@@ -447,8 +497,10 @@ static void prov_join_complete_reply_cb(struct l_dbus_message *msg,
 	if (!msg || l_dbus_message_is_error(msg))
 		failed = true;
 
-	if (!failed)
+	if (!failed) {
 		node_finalize_new_node(join_pending->node, mesh.io);
+		process_pending_call(join_pending->node);
+	}
 
 	free_pending_join_call(failed);
 }
@@ -645,7 +697,12 @@ static struct l_dbus_message *attach_call(struct l_dbus *dbus,
 	pending_msg = l_dbus_message_ref(msg);
 	l_queue_push_tail(pending_queue, pending_msg);
 
-	node_attach(app_path, sender, token, attach_ready_cb, pending_msg);
+	if (!node_attach(app_path, sender, token, attach_ready_cb,
+								pending_msg)) {
+
+		struct mesh_node *node = node_find_by_token(token);
+		queue_pending_call(node, attach_call, msg, user_data);
+	}
 
 	return NULL;
 }
@@ -666,10 +723,11 @@ static struct l_dbus_message *leave_call(struct l_dbus *dbus,
 	if (!node)
 		return dbus_error(msg, MESH_ERROR_NOT_FOUND, NULL);
 
-	if (node_is_busy(node))
-		return dbus_error(msg, MESH_ERROR_BUSY, NULL);
-
-	node_remove(node);
+	if (!node_remove(node))
+	{
+		queue_pending_call(node, leave_call, msg, user_data);
+		return NULL;
+	}
 
 	return l_dbus_message_new_method_return(msg);
 }
@@ -685,6 +743,7 @@ static void create_join_complete_reply_cb(struct l_dbus_message *msg,
 	}
 
 	node_finalize_new_node(node, mesh.io);
+	process_pending_call(node);
 }
 
 static void create_node_ready_cb(void *user_data, int status,

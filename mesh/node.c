@@ -345,16 +345,20 @@ static void free_node_resources(void *data)
  * This function is called to free resources and remove the
  * configuration files for the specified node.
  */
-void node_remove(struct mesh_node *node)
+bool node_remove(struct mesh_node *node)
 {
 	if (!node)
-		return;
+		return true;
+
+	if (node->busy)
+		return false;
 
 	l_queue_remove(nodes, node);
 
 	mesh_config_destroy_nvm(node->cfg);
 
 	free_node_resources(node);
+	return true;
 }
 
 static bool add_models_from_storage(struct mesh_node *node,
@@ -597,11 +601,6 @@ void node_cleanup_all(void)
 bool node_is_provisioner(struct mesh_node *node)
 {
 	return node->provisioner;
-}
-
-bool node_is_busy(struct mesh_node *node)
-{
-	return node->busy;
 }
 
 void node_app_key_delete(struct mesh_node *node, uint16_t net_idx,
@@ -1655,30 +1654,28 @@ static void send_managed_objects_request(const char *destination,
 }
 
 /* Establish relationship between application and mesh node */
-void node_attach(const char *app_root, const char *sender, uint64_t token,
-					node_ready_func_t cb, void *user_data)
+bool node_attach(const char *app_root, const char *sender, uint64_t token,
+					node_ready_func_t cb,
+					struct l_dbus_message *pending_msg)
 {
 	struct managed_obj_request *req;
 	struct mesh_node *node;
 
 	node = l_queue_find(nodes, match_token, (void *) &token);
 	if (!node) {
-		cb(user_data, MESH_ERROR_NOT_FOUND, NULL);
-		return;
-	}
-
-	/* Check if there is a pending request associated with this node */
-	if (node->busy) {
-		cb(user_data, MESH_ERROR_BUSY, NULL);
-		return;
+		cb(pending_msg, MESH_ERROR_NOT_FOUND, NULL);
+		return true;
 	}
 
 	/* Check if the node is already in use */
 	if (node->owner) {
 		l_warn("The node is already in use");
-		cb(user_data, MESH_ERROR_ALREADY_EXISTS, NULL);
-		return;
+		cb(pending_msg, MESH_ERROR_ALREADY_EXISTS, NULL);
+		return true;
 	}
+
+	if (node->busy)
+		return false;
 
 	req = l_new(struct managed_obj_request, 1);
 
@@ -1689,13 +1686,14 @@ void node_attach(const char *app_root, const char *sender, uint64_t token,
 	req->node = node_new(node->uuid);
 	req->node->owner = l_strdup(sender);
 	req->ready_cb = cb;
-	req->pending_msg = user_data;
+	req->pending_msg = pending_msg;
 	req->attach = node;
 	req->type = REQUEST_TYPE_ATTACH;
 
 	node->busy = true;
 
 	send_managed_objects_request(sender, app_root, req);
+	return true;
 }
 
 /* Create a temporary pre-provisioned node */
