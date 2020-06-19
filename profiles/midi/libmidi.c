@@ -331,6 +331,24 @@ static size_t handle_end_of_sysex(struct midi_read_parser *parser,
 	return sysex_length + 1; /* +1 because of timestampLow */
 }
 
+/* Searches the end of a SysEx message that contains a timestampLow
+ * before the SysEx end byte. Returns the number of bytes of valid
+ * SysEx payload in the buffer.
+ */
+static size_t sysex_eox_len(const uint8_t *data, size_t size)
+{
+	size_t i = 0;
+
+	MIDI_ASSERT(size > 0);
+
+	if (data[i] == 0xF0)
+		i++;
+
+	/* search for timestamp low */
+	while (i < size && !(data[i++] & 0x80));
+
+	return (i < size && data[i] == 0xF7) ? i : 0;
+}
 
 
 size_t midi_read_raw(struct midi_read_parser *parser, const uint8_t *data,
@@ -368,14 +386,13 @@ size_t midi_read_raw(struct midi_read_parser *parser, const uint8_t *data,
 
 		/* System Common Messages */
 	case 0xF0: /* SysEx Start */ {
-		uint8_t *pos;
+		size_t sysex_length;
 
 		/* cleanup Running Status Message */
 		parser->rstatus = 0;
 
-		/* Avoid parsing if SysEx is contained in one BLE packet */
-		if ((pos = memchr(data + i, 0xF7, size - i))) {
-			const size_t sysex_length = pos - (data + i);
+		/* Search for End of SysEx message in one BLE message */
+		if ((sysex_length = sysex_eox_len(data + i, size - i)) > 0) {
 			midi_size = handle_end_of_sysex(parser, ev, data + i,
 			                                sysex_length);
 		} else {
@@ -424,10 +441,9 @@ size_t midi_read_raw(struct midi_read_parser *parser, const uint8_t *data,
 
 		/* Check for SysEx messages */
 		if (parser->sysex_stream.len > 0) {
-			uint8_t *pos;
+			size_t sysex_length;
 
-			if ((pos = memchr(data + i, 0xF7, size - i))) {
-				const size_t sysex_length = pos - (data + i);
+			if ((sysex_length = sysex_eox_len(data + i, size - i)) > 0) {
 				midi_size = handle_end_of_sysex(parser, ev, data + i,
 				                                sysex_length);
 			} else {
