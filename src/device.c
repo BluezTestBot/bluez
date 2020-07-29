@@ -747,6 +747,12 @@ gboolean device_is_trusted(struct btd_device *device)
 	return device->trusted;
 }
 
+bool device_class_is_audio(struct btd_device *device)
+{
+	/* Look for major service classes Audio (0x20) + Rendering (0x4) */
+	return ((device->class >> 16) & 0x24) == 0x24;
+}
+
 static gboolean dev_property_get_address(const GDBusPropertyTable *property,
 					DBusMessageIter *iter, void *data)
 {
@@ -6851,6 +6857,27 @@ struct btd_service *btd_device_get_service(struct btd_device *dev,
 	}
 
 	return NULL;
+}
+
+/* Internal function to connect to a device. This fakes the dbus message used to
+ * call the "Connect" api on the device so that the same function can be called
+ * by bluez internally.
+ */
+bool device_internal_connect(struct btd_device *dev)
+{
+	DBusMessage *msg;
+
+	if (!device_is_connectable(dev))
+		return false;
+
+	msg = dbus_message_new_method_call("org.bluez",
+						device_get_path(dev),
+						DEVICE_INTERFACE,
+						"Connect");
+	/* Sending the message usually sets serial. Fake it here. */
+	dbus_message_set_serial(msg, 1);
+
+	dev_connect(dbus_conn, msg, dev);
 }
 
 void btd_device_init(void)

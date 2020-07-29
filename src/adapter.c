@@ -90,6 +90,7 @@
 #define IDLE_DISCOV_TIMEOUT (5)
 #define TEMP_DEV_TIMEOUT (3 * 60)
 #define BONDING_TIMEOUT (2 * 60)
+#define RECONNECT_AUDIO_DELAY (5)
 
 #define SCAN_TYPE_BREDR (1 << BDADDR_BREDR)
 #define SCAN_TYPE_LE ((1 << BDADDR_LE_PUBLIC) | (1 << BDADDR_LE_RANDOM))
@@ -268,6 +269,15 @@ struct btd_adapter {
 	GSList *connect_list;		/* Devices to connect when found */
 	struct btd_device *connect_le;	/* LE device waiting to be connected */
 	sdp_list_t *services;		/* Services associated to adapter */
+
+	/* audio device to reconnect after resuming from suspend */
+	struct reconnect_audio_info {
+		bdaddr_t addr;
+		uint8_t addr_type;
+		bool reconnect;
+        } reconnect_audio;
+	guint reconnect_audio_timeout;  /* timeout for reconnect on resume */
+	uint32_t reconnect_audio_delay; /* delay reconnect after resume */
 
 	struct btd_gatt_database *database;
 	struct btd_adv_manager *adv_manager;
@@ -6256,6 +6266,7 @@ static void load_config(struct btd_adapter *adapter)
 	/* Get discoverable mode */
 	adapter->stored_discoverable = g_key_file_get_boolean(key_file,
 					"General", "Discoverable", &gerr);
+
 	if (gerr) {
 		adapter->stored_discoverable = false;
 		g_error_free(gerr);
@@ -6267,6 +6278,16 @@ static void load_config(struct btd_adapter *adapter)
 				"General", "DiscoverableTimeout", &gerr);
 	if (gerr) {
 		adapter->discoverable_timeout = main_opts.discovto;
+		g_error_free(gerr);
+		gerr = NULL;
+	}
+
+	/* Get audio reconnect delay */
+	adapter->reconnect_audio_delay = g_key_file_get_integer(
+		key_file, "General", "ReconnectAudioDelay", &gerr);
+
+	if (gerr) {
+		adapter->reconnect_audio_delay = RECONNECT_AUDIO_DELAY;
 		g_error_free(gerr);
 		gerr = NULL;
 	}
@@ -7820,6 +7841,15 @@ static void dev_disconnected(struct btd_adapter *adapter,
 	if (device) {
 		adapter_remove_connection(adapter, device, addr->type);
 		disconnect_notify(device, reason);
+
+		if (reason == MGMT_DEV_DISCONN_LOCAL_HOST_SUSPEND &&
+		    device_class_is_audio(device)) {
+			adapter->reconnect_audio.reconnect = true;
+			adapter->reconnect_audio.addr_type =
+				btd_device_get_bdaddr_type(device);
+			bacpy(&adapter->reconnect_audio.addr,
+			      device_get_address(device));
+		}
 	}
 
 	bonding_attempt_complete(adapter, &addr->bdaddr, addr->type,
@@ -8766,6 +8796,53 @@ static void connected_callback(uint16_t index, uint16_t length,
 	eir_data_free(&eir_data);
 }
 
+static gboolean reconnect_audio_timeout(gpointer user_data)
+{
+	struct btd_adapter *adapter = user_data;
+
+	adapter->reconnect_audio_timeout = 0;
+
+	if (adapter->reconnect_audio.reconnect) {
+		struct btd_device *dev = btd_adapter_find_device(
+			adapter, &adapter->reconnect_audio.addr,
+			adapter->reconnect_audio.addr_type);
+
+		adapter->reconnect_audio.reconnect = false;
+
+		if (!dev || btd_device_is_connected(dev))
+			return FALSE;
+
+		device_internal_connect(dev);
+	}
+
+	return FALSE;
+}
+
+static void controller_resume_callback(uint16_t index, uint16_t length,
+				       const void *param, void *user_data)
+{
+	const struct mgmt_ev_controller_resume *ev = param;
+	struct btd_adapter *adapter = user_data;
+
+	if (length < sizeof(*ev)) {
+		btd_error(adapter->dev_id, "Too small device resume event");
+		return;
+	}
+
+	DBG("Controller resume with wake event 0x%x", ev->wake_reason);
+
+	if (adapter->reconnect_audio_timeout > 0) {
+		g_source_remove(adapter->reconnect_audio_timeout);
+		adapter->reconnect_audio_timeout = 0;
+	}
+
+	if (adapter->reconnect_audio.reconnect) {
+		adapter->reconnect_audio_timeout =
+			g_timeout_add_seconds(adapter->reconnect_audio_delay,
+					      reconnect_audio_timeout, adapter);
+	}
+}
+
 static void device_blocked_callback(uint16_t index, uint16_t length,
 					const void *param, void *user_data)
 {
@@ -9387,6 +9464,11 @@ static void read_info_complete(uint8_t status, uint16_t length,
 	mgmt_register(adapter->mgmt, MGMT_EV_PASSKEY_NOTIFY,
 						adapter->dev_id,
 						user_passkey_notify_callback,
+						adapter, NULL);
+
+	mgmt_register(adapter->mgmt, MGMT_EV_CONTROLLER_RESUME,
+						adapter->dev_id,
+						controller_resume_callback,
 						adapter, NULL);
 
 	set_dev_class(adapter);
