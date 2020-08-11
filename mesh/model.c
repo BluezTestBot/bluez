@@ -111,7 +111,15 @@ static bool simple_match(const void *a, const void *b)
 
 static bool has_binding(struct l_queue *bindings, uint16_t idx)
 {
-	return l_queue_find(bindings, simple_match, L_UINT_TO_PTR(idx)) != NULL;
+	/* don't use l_queue_find, it can't distinguish between missing entry
+	 * and entry with data equal to NULL */
+	const struct l_queue_entry *entry;
+
+	for (entry = l_queue_get_entries(bindings); entry; entry = entry->next)
+		if (L_PTR_TO_INT(entry->data) == idx)
+			return true;
+
+	return false;
 }
 
 static bool find_virt_by_label(const void *a, const void *b)
