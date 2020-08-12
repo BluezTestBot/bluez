@@ -195,6 +195,7 @@ struct btd_device {
 	bool		le;
 	bool		pending_paired;		/* "Paired" waiting for SDP */
 	bool		svc_refreshed;
+	bool		skip_passive_sdp_discovery;
 
 	/* Manage whether this device can wake the system from suspend.
 	 * - wake_support: Requires a profile that supports wake (i.e. HID)
@@ -1472,6 +1473,10 @@ static gboolean dev_property_wake_allowed_exist(
 	return device_get_wake_support(device);
 }
 
+void device_set_skip_passive_sdp_discovery(struct btd_device *dev, bool skip)
+{
+	dev->skip_passive_sdp_discovery = skip;
+}
 
 static gboolean disconnect_all(gpointer user_data)
 {
@@ -1805,7 +1810,8 @@ done:
 				btd_error_failed(dev->connect, strerror(-err)));
 	} else {
 		/* Start passive SDP discovery to update known services */
-		if (dev->bredr && !dev->svc_refreshed)
+		if (dev->bredr && !dev->svc_refreshed &&
+					!dev->skip_passive_sdp_discovery)
 			device_browse_sdp(dev, NULL);
 		g_dbus_send_reply(dbus_conn, dev->connect, DBUS_TYPE_INVALID);
 	}

@@ -1474,6 +1474,8 @@ static struct input_device *input_device_new(struct btd_service *service)
 	/* Initialize device properties */
 	extract_hid_props(idev, rec);
 
+	device_set_skip_passive_sdp_discovery(device, idev->disable_sdp);
+
 	return idev;
 }
 
