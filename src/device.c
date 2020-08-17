@@ -6008,6 +6008,12 @@ void device_bonding_complete(struct btd_device *device, uint8_t bdaddr_type,
 
 	if (status) {
 		device_cancel_authentication(device, TRUE);
+
+		// Put the device back to the temporary state so that it will be
+		// treated as a newly discovered device.
+		if (!device_is_paired(device, bdaddr_type))
+			btd_device_set_temporary(device, true);
+
 		device_bonding_failed(device, status);
 		return;
 	}
