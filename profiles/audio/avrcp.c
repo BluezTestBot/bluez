@@ -3043,6 +3043,14 @@ static int ct_rewind(struct media_player *mp, void *user_data)
 	return ct_press(player, AVC_REWIND);
 }
 
+static int ct_press_key(struct media_player *mp, uint8_t avc_key,
+								void *user_data)
+{
+	struct avrcp_player *player = user_data;
+
+	return ct_press(player, avc_key);
+}
+
 static int ct_list_items(struct media_player *mp, const char *name,
 				uint32_t start, uint32_t end, void *user_data)
 {
@@ -3388,6 +3396,7 @@ static const struct media_player_callback ct_cbs = {
 	.previous	= ct_previous,
 	.fast_forward	= ct_fast_forward,
 	.rewind		= ct_rewind,
+	.press		= ct_press_key,
 	.list_items	= ct_list_items,
 	.change_folder	= ct_change_folder,
 	.search		= ct_search,
