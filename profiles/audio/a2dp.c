@@ -1568,6 +1568,8 @@ static void channel_free(void *data)
 	}
 
 	avdtp_remove_state_cb(chan->state_id);
+	if (chan->session)
+		avdtp_unref(chan->session);
 
 	queue_destroy(chan->seps, remove_remote_sep);
 	free(chan->last_used);
@@ -2149,7 +2151,7 @@ static void avdtp_state_cb(struct btd_device *dev, struct avdtp *session,
 		break;
 	case AVDTP_SESSION_STATE_CONNECTED:
 		if (!chan->session)
-			chan->session = session;
+			chan->session = avdtp_ref(session);
 		load_remote_seps(chan);
 		break;
 	}
@@ -2229,6 +2231,7 @@ found:
 		channel_remove(chan);
 		return NULL;
 	}
+	avdtp_ref(chan->session);
 
 	return avdtp_ref(chan->session);
 }
@@ -2249,6 +2252,7 @@ static void connect_cb(GIOChannel *io, GError *err, gpointer user_data)
 			error("Unable to create AVDTP session");
 			goto fail;
 		}
+		avdtp_ref(chan->session);
 	}
 
 	g_io_channel_unref(chan->io);
