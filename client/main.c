@@ -934,6 +934,8 @@ static void cmd_show(int argc, char *argv[])
 	print_property(adapter->proxy, "Modalias");
 	print_property(adapter->proxy, "Discovering");
 	print_property(adapter->proxy, "Roles");
+	print_property(adapter->proxy, "SupportedPhyConfiguration");
+	print_property(adapter->proxy, "PhyConfiguration");
 
 	if (adapter->ad_proxy) {
 		bt_shell_printf("Advertising Features:\n");
@@ -2038,6 +2040,37 @@ static void cmd_disconn(int argc, char *argv[])
 						proxy_address(proxy));
 }
 
+static void get_phy_configuration(void)
+{
+	print_property_with_label(default_ctrl->proxy,
+					"SupportedPhyConfiguration", "Supported phys");
+
+	print_property_with_label(default_ctrl->proxy, "PhyConfiguration",
+					"Selected phys");
+}
+
+static void cmd_phy_configuration(int argc, char *argv[])
+{
+	char **phys = NULL;
+	size_t phys_len = 0;
+
+	if (check_default_ctrl() == FALSE)
+		return bt_shell_noninteractive_quit(EXIT_FAILURE);
+
+	if (argc < 2 || !strlen(argv[1]))
+		return get_phy_configuration();
+
+	phys = g_strdupv(&argv[1]);
+	phys_len = g_strv_length(phys);
+
+	g_dbus_proxy_set_property_array(default_ctrl->proxy,
+					"PhyConfiguration", DBUS_TYPE_STRING, phys,
+					phys_len, generic_callback, "PHY Configuration",
+					NULL);
+
+	g_strfreev(phys);
+}
+
 static void cmd_list_attributes(int argc, char *argv[])
 {
 	GDBusProxy *proxy;
@@ -3033,6 +3066,12 @@ static const struct bt_shell_menu main_menu = {
 							dev_generator },
 	{ "disconnect",   "[dev]",    cmd_disconn, "Disconnect device",
 							dev_generator },
+	{ "default-phy",	"[LE1MTX] [LE1MRX] [LE2MTX] [LE2MRX] "
+				"[LECODEDTX] [LECODEDRX] "
+				"[BR1M1SLOT] [BR1M3SLOT] [BR1M5SLOT] "
+				"[EDR2M1SLOT] [EDR2M3SLOT] [EDR2M5SLOT] "
+				"[EDR3M1SLOT] [EDR3M3SLOT] [EDR3M5SLOT]",
+		cmd_phy_configuration,		"Get/Set PHY Configuration" },
 	{ } },
 };
 
