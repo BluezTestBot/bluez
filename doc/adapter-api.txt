@@ -356,3 +356,17 @@ Properties	string Address [readonly]
 				"LE2MRX"
 				"LECODEDTX"
 				"LECODEDRX"
+
+		array{string} PhyConfiguration [readwrite]
+
+			Set/Get the default PHYs to the controller.
+
+			These PHYs will be used for all the
+			subsequent scanning and connection initiation.
+
+			The value of this property is persistent. After
+			restart or unplugging of the adapter it will continue
+			with the last set PHYs.
+
+			Refer SupportedPhyConfiguration property
+			for the possible values.
