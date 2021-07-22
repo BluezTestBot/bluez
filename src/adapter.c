@@ -288,7 +288,8 @@ struct btd_adapter {
 
 	uint32_t supported_phys;
 	uint32_t configurable_phys;
-	uint32_t selected_phys;
+	uint32_t selected_phys;		/* Current selected PHYs */
+	uint32_t stored_phys;		/* Stored last selected PHYs */
 	uint32_t pending_phys;
 };
 
@@ -507,6 +508,10 @@ static void store_adapter_info(struct btd_adapter *adapter)
 	if (adapter->stored_alias)
 		g_key_file_set_string(key_file, "General", "Alias",
 							adapter->stored_alias);
+
+	if (adapter->stored_phys)
+		g_key_file_set_integer(key_file, "General", "PhyConfiguration",
+					adapter->stored_phys);
 
 	snprintf(filename, PATH_MAX, STORAGEDIR "/%s/settings",
 					btd_adapter_get_storage_dir(adapter));
@@ -3329,9 +3334,12 @@ static void set_default_phy_complete(uint8_t status, uint16_t length,
 	btd_info(adapter->dev_id, "PHY configuration successfully set");
 
 	adapter->selected_phys = adapter->pending_phys;
+	adapter->stored_phys = adapter->pending_phys;
 	adapter->pending_phys = 0;
 
 	g_dbus_pending_property_success(data->id);
+
+	store_adapter_info(adapter);
 
 	g_dbus_emit_property_changed(dbus_conn, adapter->path,
 					ADAPTER_INTERFACE, "PhyConfiguration");
@@ -6548,6 +6556,15 @@ static void load_config(struct btd_adapter *adapter)
 		gerr = NULL;
 	}
 
+	/* Get PHY Configuration */
+	adapter->stored_phys = g_key_file_get_integer(key_file,
+				"General", "PhyConfiguration", &gerr);
+	if (gerr) {
+		adapter->stored_phys = 0;
+		g_error_free(gerr);
+		gerr = NULL;
+	}
+
 	g_key_file_free(key_file);
 }
 
@@ -9670,6 +9687,13 @@ static void read_phy_configuration_resp(uint8_t status, uint16_t length,
 	DBG("Supported phys: [0x%x]", adapter->supported_phys);
 	DBG("Configurable phys: [0x%x]", adapter->configurable_phys);
 	DBG("Selected phys: [0x%x]", adapter->selected_phys);
+
+	/*
+	 * Set the default PHYs to the last selected PHYs on which the
+	 * controller was operating before shutting down.
+	 */
+	if (adapter->supported_settings & MGMT_SETTING_PHY_CONFIGURATION)
+		set_default_phy(adapter, adapter->stored_phys, -1);
 }
 
 static void read_phy_configuration(struct btd_adapter *adapter)
@@ -9696,9 +9720,13 @@ static void phy_configuration_changed_callback(uint16_t index,
 	}
 
 	adapter->selected_phys = get_le32(&ev->selected_phys);
+	adapter->stored_phys = adapter->selected_phys;
+
 	info("PHYs changed, New PHYs [0x%x]", adapter->selected_phys);
 
 	adapter->pending_phys = 0;
+
+	store_adapter_info(adapter);
 
 	g_dbus_emit_property_changed(dbus_conn, adapter->path,
 					ADAPTER_INTERFACE, "PhyConfiguration");
