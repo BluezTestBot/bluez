@@ -335,3 +335,24 @@ Properties	string Address [readonly]
 				"peripheral": Supports the peripheral role.
 				"central-peripheral": Supports both roles
 						      concurrently.
+
+		array{string} SupportedPhyConfiguration [readonly]
+
+			List of PHYs supported by the controller.
+
+			Possible values:
+				"BR1M1SLOT"
+				"BR1M3SLOT"
+				"BR1M5SLOT"
+				"EDR2M1SLOT"
+				"EDR2M3SLOT"
+				"EDR2M5SLOT"
+				"EDR3M1SLOT"
+				"EDR3M3SLOT"
+				"EDR3M5SLOT"
+				"LE1MTX"
+				"LE1MRX"
+				"LE2MTX"
+				"LE2MRX"
+				"LECODEDTX"
+				"LECODEDRX"
