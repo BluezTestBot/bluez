@@ -285,6 +285,11 @@ struct btd_adapter {
 
 	bool le_simult_roles_supported;
 	bool quality_report_supported;
+
+	uint32_t supported_phys;
+	uint32_t configurable_phys;
+	uint32_t selected_phys;
+	uint32_t pending_phys;
 };
 
 typedef enum {
@@ -3245,6 +3250,237 @@ static gboolean property_get_roles(const GDBusPropertyTable *property,
 	return TRUE;
 }
 
+static struct phys_config {
+	uint32_t flag;
+	const char *name;
+} phys_str[] = {
+	{ MGMT_PHY_BR_1M_1SLOT, "BR1M1SLOT" },
+	{ MGMT_PHY_BR_1M_3SLOT, "BR1M3SLOT" },
+	{ MGMT_PHY_BR_1M_5SLOT, "BR1M5SLOT" },
+	{ MGMT_PHY_EDR_2M_1SLOT, "EDR2M1SLOT" },
+	{ MGMT_PHY_EDR_2M_3SLOT, "EDR2M3SLOT" },
+	{ MGMT_PHY_EDR_2M_5SLOT, "EDR2M5SLOT" },
+	{ MGMT_PHY_EDR_3M_1SLOT, "EDR3M1SLOT" },
+	{ MGMT_PHY_EDR_3M_3SLOT, "EDR3M3SLOT" },
+	{ MGMT_PHY_EDR_3M_5SLOT, "EDR3M5SLOT" },
+	{ MGMT_PHY_LE_1M_TX, "LE1MTX" },
+	{ MGMT_PHY_LE_1M_RX, "LE1MRX" },
+	{ MGMT_PHY_LE_2M_TX, "LE2MTX" },
+	{ MGMT_PHY_LE_2M_RX, "LE2MRX" },
+	{ MGMT_PHY_LE_CODED_TX, "LECODEDTX" },
+	{ MGMT_PHY_LE_CODED_RX, "LECODEDRX" }
+};
+
+static void append_phys_str(DBusMessageIter *array, uint32_t phys)
+{
+	unsigned int i;
+
+	for (i = 0; i < NELEM(phys_str); i++) {
+		if (phys & phys_str[i].flag)
+			dbus_message_iter_append_basic(array, DBUS_TYPE_STRING,
+						&phys_str[i].name);
+	}
+}
+
+static bool parse_phys_str(DBusMessageIter *array, uint32_t *phys)
+{
+	const char *str;
+	unsigned int i;
+
+	*phys = 0;
+
+	do {
+		if (dbus_message_iter_get_arg_type(array) != DBUS_TYPE_STRING)
+			return false;
+
+		dbus_message_iter_get_basic(array, &str);
+
+		for (i = 0; i < NELEM(phys_str); i++) {
+			if (!strcmp(str, phys_str[i].name)) {
+				*phys |= phys_str[i].flag;
+				break;
+			}
+		}
+
+		if (i == NELEM(phys_str))
+			return false;
+	} while (dbus_message_iter_next(array));
+
+	return true;
+}
+
+static void set_default_phy_complete(uint8_t status, uint16_t length,
+					const void *param, void *user_data)
+{
+	struct property_set_data *data = user_data;
+	struct btd_adapter *adapter = data->adapter;
+
+	if (status != MGMT_STATUS_SUCCESS) {
+		adapter->pending_phys = 0;
+		btd_error(adapter->dev_id,
+				"Failed to set PHY configuration: %s (0x%02x)",
+						mgmt_errstr(status), status);
+		g_dbus_pending_property_error(data->id, ERROR_INTERFACE ".Failed",
+							mgmt_errstr(status));
+		return;
+	}
+
+	/* The default phys are successfully set. */
+	btd_info(adapter->dev_id, "PHY configuration successfully set");
+
+	adapter->selected_phys = adapter->pending_phys;
+	adapter->pending_phys = 0;
+
+	g_dbus_pending_property_success(data->id);
+
+	g_dbus_emit_property_changed(dbus_conn, adapter->path,
+					ADAPTER_INTERFACE, "PhyConfiguration");
+}
+
+static int set_default_phy(struct btd_adapter *adapter, uint32_t phys,
+			GDBusPendingPropertySet id)
+{
+	struct mgmt_cp_set_phy_confguration cp;
+	struct property_set_data *data;
+	uint32_t unconfigure_phys;
+
+	if (!phys) {
+		btd_error(adapter->dev_id,
+			"Set PHY configuration failed: No supplied phy(s)");
+		return -EINVAL;
+	}
+
+	if (phys & ~(adapter->supported_phys)) {
+		btd_error(adapter->dev_id,
+			"Set PHY configuration failed: supplied phy(s) is not supported");
+		return -EINVAL;
+	}
+
+	if (phys == adapter->selected_phys) {
+		DBG("PHYs are already set [0x%x]", phys);
+		g_dbus_pending_property_success(id);
+		return 0;
+	}
+
+	unconfigure_phys = adapter->supported_phys & ~(adapter->configurable_phys);
+
+	if ((phys & unconfigure_phys) != unconfigure_phys) {
+		btd_error(adapter->dev_id,
+			"Set PHY configuration failed: supplied phy(s) must include PHYs %u",
+			unconfigure_phys);
+		return -EINVAL;
+	}
+
+	if (adapter->pending_phys) {
+		btd_error(adapter->dev_id,
+			"Set PHY configuration failed: Operation in progress");
+		return -EINPROGRESS;
+	}
+
+	adapter->pending_phys = phys;
+
+	cp.selected_phys = cpu_to_le32(phys);
+
+	data = g_try_new0(struct property_set_data, 1);
+	if (!data)
+		goto failed;
+
+	data->adapter = adapter;
+	data->id = id;
+
+	DBG("sending set phy configuration command for index %u", adapter->dev_id);
+
+	if (mgmt_send(adapter->mgmt, MGMT_OP_SET_PHY_CONFIGURATION,
+				adapter->dev_id, sizeof(cp), &cp,
+				set_default_phy_complete, data, g_free) > 0)
+		return 0;
+
+	g_free(data);
+
+failed:
+	btd_error(adapter->dev_id, "Failed to set PHY configuration for index %u",
+							adapter->dev_id);
+	adapter->pending_phys = 0;
+
+	return -EIO;
+}
+
+static gboolean property_get_phy_configuration(
+					const GDBusPropertyTable *property,
+					DBusMessageIter *iter, void *user_data)
+{
+	struct btd_adapter *adapter = user_data;
+	DBusMessageIter array;
+
+	dbus_message_iter_open_container(iter, DBUS_TYPE_ARRAY, "s", &array);
+
+	append_phys_str(&array, adapter->selected_phys);
+
+	dbus_message_iter_close_container(iter, &array);
+
+	return TRUE;
+}
+
+static void property_set_phy_configuration(
+				const GDBusPropertyTable *property,
+				DBusMessageIter *iter,
+				GDBusPendingPropertySet id, void *user_data)
+{
+	struct btd_adapter *adapter = user_data;
+	DBusMessageIter array;
+	uint32_t phys;
+	int ret;
+
+	if (dbus_message_iter_get_arg_type(iter) != DBUS_TYPE_ARRAY) {
+		ret = -EINVAL;
+		goto failed;
+	}
+
+	dbus_message_iter_recurse(iter, &array);
+
+	if (!(adapter->supported_settings & MGMT_SETTING_PHY_CONFIGURATION)) {
+		ret = -ENOTSUP;
+		goto failed;
+	}
+
+	if (!parse_phys_str(&array, &phys)) {
+		ret = -EINVAL;
+		goto failed;
+	}
+
+	ret = set_default_phy(adapter, phys, id);
+
+	/*
+	 * gdbus_pending_property_success event will be sent when success status
+	 * will be received from mgmt.
+	 */
+	if (!ret)
+		return;
+
+failed:
+	switch (-ret) {
+	case EINVAL:
+		g_dbus_pending_property_error(id,
+					ERROR_INTERFACE ".InvalidArguments",
+					"Invalid arguments in method call");
+		break;
+	case ENOTSUP:
+		g_dbus_pending_property_error(id,
+					ERROR_INTERFACE ".NotSupported",
+					"Operation is not supported");
+		break;
+	case EINPROGRESS:
+		g_dbus_pending_property_error(id,
+					ERROR_INTERFACE ".InProgress",
+					"Operation is in progress");
+		break;
+	default:
+		g_dbus_pending_property_error(id, ERROR_INTERFACE ".Failed",
+							strerror(-ret));
+		break;
+	}
+}
+
 static DBusMessage *remove_device(DBusConnection *conn,
 					DBusMessage *msg, void *user_data)
 {
@@ -3517,6 +3753,8 @@ static const GDBusPropertyTable adapter_properties[] = {
 	{ "Modalias", "s", property_get_modalias, NULL,
 					property_exists_modalias },
 	{ "Roles", "as", property_get_roles },
+	{ "PhyConfiguration", "as", property_get_phy_configuration,
+					property_set_phy_configuration },
 	{ }
 };
 
@@ -9389,6 +9627,43 @@ static void read_exp_features(struct btd_adapter *adapter)
 	btd_error(adapter->dev_id, "Failed to read exp features info");
 }
 
+static void read_phy_configuration_resp(uint8_t status, uint16_t length,
+					const void *param, void *user_data)
+{
+	const struct mgmt_rp_get_phy_confguration *rp = param;
+	struct btd_adapter *adapter = user_data;
+
+	if (status != MGMT_STATUS_SUCCESS) {
+		btd_error(adapter->dev_id,
+				"Failed to get PHY configuration info: %s (0x%02x)",
+				mgmt_errstr(status), status);
+		return;
+	}
+
+	if (length < sizeof(*rp)) {
+		btd_error(adapter->dev_id, "Response too small");
+		return;
+	}
+
+	adapter->supported_phys = get_le32(&rp->supported_phys);
+	adapter->configurable_phys = get_le32(&rp->configurable_phys);
+	adapter->selected_phys = get_le32(&rp->selected_phys);
+
+	DBG("Supported phys: [0x%x]", adapter->supported_phys);
+	DBG("Configurable phys: [0x%x]", adapter->configurable_phys);
+	DBG("Selected phys: [0x%x]", adapter->selected_phys);
+}
+
+static void read_phy_configuration(struct btd_adapter *adapter)
+{
+	if (mgmt_send(adapter->mgmt, MGMT_OP_GET_PHY_CONFIGURATION,
+			adapter->dev_id, 0, NULL, read_phy_configuration_resp,
+			adapter, NULL) > 0)
+		return;
+
+	btd_error(adapter->dev_id, "Failed to read phy configuration info");
+}
+
 static void read_info_complete(uint8_t status, uint16_t length,
 					const void *param, void *user_data)
 {
@@ -9497,6 +9772,13 @@ static void read_info_complete(uint8_t status, uint16_t length,
 	if (btd_opts.fast_conn &&
 			(missing_settings & MGMT_SETTING_FAST_CONNECTABLE))
 		set_mode(adapter, MGMT_OP_SET_FAST_CONNECTABLE, 0x01);
+
+	if (btd_opts.experimental &&
+			btd_has_kernel_features(KERNEL_EXP_FEATURES))
+		read_exp_features(adapter);
+
+	if (adapter->supported_settings & MGMT_SETTING_PHY_CONFIGURATION)
+		read_phy_configuration(adapter);
 
 	err = adapter_register(adapter);
 	if (err < 0) {
