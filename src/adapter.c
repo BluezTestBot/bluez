@@ -9682,6 +9682,28 @@ static void read_phy_configuration(struct btd_adapter *adapter)
 	btd_error(adapter->dev_id, "Failed to read phy configuration info");
 }
 
+static void phy_configuration_changed_callback(uint16_t index,
+					uint16_t length, const void *param,
+					void *user_data)
+{
+	const struct mgmt_ev_phy_configuration_changed *ev = param;
+	struct btd_adapter *adapter = user_data;
+
+	if (length < sizeof(*ev)) {
+		btd_error(adapter->dev_id,
+				"Too small PHY configuration changed event");
+		return;
+	}
+
+	adapter->selected_phys = get_le32(&ev->selected_phys);
+	info("PHYs changed, New PHYs [0x%x]", adapter->selected_phys);
+
+	adapter->pending_phys = 0;
+
+	g_dbus_emit_property_changed(dbus_conn, adapter->path,
+					ADAPTER_INTERFACE, "PhyConfiguration");
+}
+
 static void read_info_complete(uint8_t status, uint16_t length,
 					const void *param, void *user_data)
 {
@@ -9915,6 +9937,11 @@ static void read_info_complete(uint8_t status, uint16_t length,
 	mgmt_register(adapter->mgmt, MGMT_EV_CONTROLLER_RESUME,
 						adapter->dev_id,
 						controller_resume_callback,
+						adapter, NULL);
+
+	mgmt_register(adapter->mgmt, MGMT_EV_PHY_CONFIGURATION_CHANGED,
+						adapter->dev_id,
+						phy_configuration_changed_callback,
 						adapter, NULL);
 
 	set_dev_class(adapter);
