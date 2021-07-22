@@ -23,8 +23,10 @@
 #include <glib.h>
 
 #include "lib/bluetooth.h"
+#include "lib/uuid.h"
 #include "bluetooth/l2cap.h"
 #include "btio/btio.h"
+#include "src/adapter.h"
 #include "src/log.h"
 #include "src/shared/timeout.h"
 
@@ -2010,7 +2012,7 @@ static void connect_mcl_event_cb(GIOChannel *chan, GError *gerr,
 {
 	struct mcap_instance *mi = user_data;
 	struct mcap_mcl *mcl;
-	bdaddr_t dst;
+	bdaddr_t src, dst;
 	char address[18], srcstr[18];
 	GError *err = NULL;
 
@@ -2018,6 +2020,7 @@ static void connect_mcl_event_cb(GIOChannel *chan, GError *gerr,
 		return;
 
 	bt_io_get(chan, &err,
+			BT_IO_OPT_SOURCE_BDADDR, &src,
 			BT_IO_OPT_DEST_BDADDR, &dst,
 			BT_IO_OPT_DEST, address,
 			BT_IO_OPT_INVALID);
@@ -2025,6 +2028,11 @@ static void connect_mcl_event_cb(GIOChannel *chan, GError *gerr,
 		error("%s", err->message);
 		g_error_free(err);
 		goto drop;
+	}
+
+	if (!btd_adapter_is_uuid_allowed(adapter_find(&src), HDP_UUID)) {
+		info("HID is not allowed. Ignoring the incoming connection");
+		return;
 	}
 
 	ba2str(&mi->src, srcstr);

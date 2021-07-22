@@ -1587,6 +1587,13 @@ static void avctp_confirm_cb(GIOChannel *chan, gpointer data)
 
 	DBG("AVCTP: incoming connect from %s", address);
 
+	if (!btd_adapter_is_uuid_allowed(adapter_find(&src),
+							AVRCP_REMOTE_UUID)) {
+		info("AVRCP REMOTE is not allowed. "
+					"Ignoring the incoming connection");
+		return;
+	}
+
 	device = btd_adapter_find_device(adapter_find(&src), &dst,
 								BDADDR_BREDR);
 	if (!device)

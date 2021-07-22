@@ -2386,6 +2386,12 @@ static void confirm_cb(GIOChannel *io, gpointer data)
 		return;
 	}
 
+	if (!btd_adapter_is_uuid_allowed(adapter_find(&src),
+							ADVANCED_AUDIO_UUID)) {
+		info("A2DP is not allowed. Ignoring the incoming connection");
+		return;
+	}
+
 	chan = channel_new(server, device, io);
 	if (!chan)
 		goto drop;

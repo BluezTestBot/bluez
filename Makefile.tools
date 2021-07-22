@@ -235,6 +235,7 @@ tools_btiotest_LDADD = lib/libbluetooth-internal.la $(GLIB_LIBS)
 tools_mcaptest_SOURCES = tools/mcaptest.c \
 				btio/btio.h btio/btio.c \
 				src/log.c src/log.h \
+				src/adapter.c src/adapter.h \
 				profiles/health/mcap.h profiles/health/mcap.c
 tools_mcaptest_LDADD = lib/libbluetooth-internal.la $(GLIB_LIBS) \
 				src/libshared-mainloop.la -lrt

@@ -156,6 +156,11 @@ static void connect_event_cb(GIOChannel *chan, GError *err, gpointer data)
 	ba2str(&dst, address);
 	DBG("Incoming connection from %s on PSM %d", address, psm);
 
+	if (!btd_adapter_is_uuid_allowed(adapter_find(&src), HID_UUID)) {
+		info("HID is not allowed. Ignoring the incoming connection");
+		return;
+	}
+
 	ret = input_device_set_channel(&src, &dst, psm, chan);
 	if (ret == 0)
 		return;
@@ -231,6 +236,11 @@ static void confirm_event_cb(GIOChannel *chan, gpointer user_data)
 		error("%s", err->message);
 		g_error_free(err);
 		g_io_channel_shutdown(chan, TRUE, NULL);
+		return;
+	}
+
+	if (!btd_adapter_is_uuid_allowed(adapter_find(&src), HID_UUID)) {
+		info("HID is not allowed. Ignoring the incoming connection");
 		return;
 	}
 
