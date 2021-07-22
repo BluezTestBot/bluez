@@ -3405,6 +3405,22 @@ failed:
 	return -EIO;
 }
 
+static gboolean property_get_supported_phy(
+					const GDBusPropertyTable *property,
+					DBusMessageIter *iter, void *user_data)
+{
+	struct btd_adapter *adapter = user_data;
+	DBusMessageIter array;
+
+	dbus_message_iter_open_container(iter, DBUS_TYPE_ARRAY, "s", &array);
+
+	append_phys_str(&array, adapter->supported_phys);
+
+	dbus_message_iter_close_container(iter, &array);
+
+	return TRUE;
+}
+
 static gboolean property_get_phy_configuration(
 					const GDBusPropertyTable *property,
 					DBusMessageIter *iter, void *user_data)
@@ -3753,6 +3769,8 @@ static const GDBusPropertyTable adapter_properties[] = {
 	{ "Modalias", "s", property_get_modalias, NULL,
 					property_exists_modalias },
 	{ "Roles", "as", property_get_roles },
+	{ "SupportedPhyConfiguration", "as", property_get_supported_phy,
+					NULL},
 	{ "PhyConfiguration", "as", property_get_phy_configuration,
 					property_set_phy_configuration },
 	{ }
