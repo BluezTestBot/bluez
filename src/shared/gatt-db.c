@@ -1347,12 +1347,8 @@ static void foreach_in_range(void *data, void *user_data)
 	if (svc_start > foreach_data->end || svc_end < foreach_data->start)
 		return;
 
-	if (!foreach_data->attr) {
-		if (svc_start < foreach_data->start ||
-					svc_start > foreach_data->end)
-			return;
+	if (!foreach_data->attr)
 		return foreach_service_in_range(data, user_data);
-	}
 
 	for (i = 0; i < service->num_handles; i++) {
 		struct gatt_db_attribute *attribute = service->attributes[i];
