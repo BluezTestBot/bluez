@@ -1,0 +1,134 @@
+Intel Hardware Varaints
+
+These are the list of Intel Bluetooth devices and its information.
+
+Some of devices were tested the following test cases:
+	Firmware loading after cold boot
+	Firmware loading after restart
+	Device discovery
+	Connection to LE Mouse
+	A2DP
+	HFP
+	Update to new firmware if available
+
+
+Device List
+-----------
+
+WP2
+- USB(0x8087:0x07dc)
+- Legacy ROM device
+- Driver flag: BTUSB_INTEL_BROKEN_INITIAL_NCMD
+- HW variant: 0x07
+- FW files:
+	intel/ibt-hw-37.7.10-fw-1.80.2.3.d.bseq
+		tested: Patch Version: 87    Release Version: 20.60.0.2
+			70353356f ("linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B3/B4)")
+
+	intel/ibt-hw-37.7.10-fw-1.80.1.2d.d.bseq
+		tested: Patch Version: 42    Release Version: 20.60.0.2
+			629a5e089 ("linux-firmware: Update firmware patch for Intel Bluetooth 7260 (B5/B6)")
+
+
+StP
+- USB(0x8087:0x0a2a)
+- Legacy ROM device
+- HW variant: 0x08
+	intel/ibt-hw-37.8.10-fw-1.10.3.11.e.bseq
+		tested: FW Build: REL_50_0002    Release Version: 20.60.0.2
+			9489f5524 ("linux-firmware: Update firmware patch for Intel Bluetooth 7265 (D0)")
+
+
+SdP
+- USB(0x8087:0x0aa7)
+- Legacy ROM device
+- Driver flag: BTUSB_WIDEBAND_SPEECH
+- HW variant: 0x08
+	intel/ibt-hw-37.8.10-fw-22.50.19.14.f.bseq
+		tested: FW Patch Version: 0x42(66)
+			195ecf149 ("linux-firmware: Intel BT 7265: Fix Security Issues")
+
+
+LnP/SfP/WsP
+- USB(0x8087:0x0a2b)
+- Legacy Bootloader device
+- Driver flag: BTUSB_WIDEBAND_SPEECH
+- HW variant: 0x0b
+	intel/ibt-11-5.sfi
+		tested: FW Build: REL0522    Release Version: 20.100.0.3
+			f0896585b ("linux-firmware: Update firmware patch for Intel Bluetooth 8260")
+- HW variant: 0x0c
+	intel/ibt-12-16.sfi
+		tested: FW Build: REL1221    Release Version: 22.50.0.4
+			4116d72b9 ("linux-firmware: Update firmware file for Intel Bluetooth 8265")
+		tested: FW Build: REL0306    Release Version: 21.10.0.6
+			1f8ebdfc2 ("linux-firmware: Update firmware file for Intel Bluetooth 8265")
+
+
+JfP
+- USB(0x8087:0x0aaa)
+- Legacy Bootloader device
+- Driver flag: BTUSB_WIDEBAND_SPEECH | BTUSB_VALID_LE_STATES
+- HW variant: 0x11
+	intel/ibt-17-0-1.sfi
+	intel/ibt-17-16-1.sfi
+
+
+ThP
+- USB(0x8087:0x0025)
+- Legacy Bootloader device
+- Driver flag: BTUSB_WIDEBAND_SPEECH | BTUSB_VALID_LE_STATES
+- HW variant: 0x12
+	intel/ibt-18-0-1.sfi
+	intel/ibt-18-16-1.sfi
+		tested: FW Build: REL19718    Release Version: 22.50.0.4
+			687d64a4d ("linux-firmware: Update firmware file for Intel Bluetooth 9260")
+		tested: FW Build: REL13313    Release Version: 21.120.0.4
+			db3038082 ("linux-firmware: Update firmware file for Intel Bluetooth 9260")
+
+
+HrP/QnJ/IcP
+- USB(0x8087:0x0026)
+- Legacy Bootloader device
+- Driver flag: BTUSB_WIDEBAND_SPEECH
+- HW variant: 0x13
+	intel/ibt-19-0-0.sfi
+	intel/ibt-19-0-1.sfi
+	intel/ibt-19-0-4.sfi
+	intel/ibt-19-16-4.sfi
+	intel/ibt-19-240-1.sfi
+	intel/ibt-19-240-4.sfi
+	intel/ibt-19-32-0.sfi
+	intel/ibt-19-32-1.sfi
+	intel/ibt-19-32-4.sfi
+
+
+CcP
+- USB(0x8087:0x0029)
+- Legacy Bootloader device
+- Driver flag: BTUSB_WIDEBAND_SPEECH
+- HW variant: 0x14
+	intel/ibt-20-0-3.sfi
+	intel/ibt-20-1-3.sfi
+		tested: FW Build: REL25791    Release Version: 22.60.0.3
+			34803c20f ("linux-firmware: Update firmware file for Intel Bluetooth AX200")
+	intel/ibt-20-1-4.sfi
+
+
+TyP
+- USB(0x8087:0x0032)
+- TLV based Bootloader device
+- Driver flag: BTUSB_WIDEBAND_SPEECH
+- HW variant: 0x17
+	intel/ibt-0041-0041.sfi
+		tested: FW Build: REL25171    Release Version: 22.60.0.3
+			25ddc612f ("linux-firmware: Update firmware file for Intel Bluetooth AX210")
+		tested: FW Build: REL17510    Release Version: 22.20.0.3
+			28185ecdc ("linux-firmware: Update firmware file for Intel Bluetooth AX210")
+
+
+GfP
+- USB(0x8087:0x0033)
+- TLV based Bootloader device
+- Driver flag: BTUSB_WIDEBAND_SPEECH | BTUSB_VALID_LE_STATES
+- HW variant:
