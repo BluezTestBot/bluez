@@ -8024,15 +8024,15 @@ static void print_cis_params(const void *data, int i)
 
 	print_field("CIS ID: 0x%2.2x", cis->cis_id);
 	print_field("Master to Slave Maximum SDU Size: %u",
-						le16_to_cpu(cis->m_sdu));
+						le16_to_cpu(cis->c_sdu));
 	print_field("Slave to Master Maximum SDU Size: %u",
-						le16_to_cpu(cis->s_sdu));
-	print_le_phy("Master to Slave PHY", cis->m_phy);
-	print_le_phy("Slave to Master PHY", cis->s_phy);
+						le16_to_cpu(cis->p_sdu));
+	print_le_phy("Master to Slave PHY", cis->c_phy);
+	print_le_phy("Slave to Master PHY", cis->p_phy);
 	print_field("Master to Slave Retransmission attempts: 0x%2.2x",
-							cis->m_rtn);
+							cis->c_rtn);
 	print_field("Slave to Master Retransmission attempts: 0x%2.2x",
-							cis->s_rtn);
+							cis->p_rtn);
 }
 
 static void le_set_cig_params_cmd(const void *data, uint8_t size)
@@ -8040,15 +8040,15 @@ static void le_set_cig_params_cmd(const void *data, uint8_t size)
 	const struct bt_hci_cmd_le_set_cig_params *cmd = data;
 
 	print_field("CIG ID: 0x%2.2x", cmd->cig_id);
-	print_usec_interval("Master to Slave SDU Interval", cmd->m_interval);
-	print_usec_interval("Slave to Master SDU Interval", cmd->s_interval);
+	print_usec_interval("Master to Slave SDU Interval", cmd->c_interval);
+	print_usec_interval("Slave to Master SDU Interval", cmd->p_interval);
 	print_sca(cmd->sca);
 	print_packing(cmd->packing);
 	print_framing(cmd->framing);
 	print_field("Master to Slave Maximum Latency: %d ms (0x%4.4x)",
-		le16_to_cpu(cmd->m_latency), le16_to_cpu(cmd->m_latency));
+		le16_to_cpu(cmd->c_latency), le16_to_cpu(cmd->c_latency));
 	print_field("Slave to Master Maximum Latency: %d ms (0x%4.4x)",
-		le16_to_cpu(cmd->s_latency), le16_to_cpu(cmd->s_latency));
+		le16_to_cpu(cmd->p_latency), le16_to_cpu(cmd->p_latency));
 	print_field("Number of CIS: %u", cmd->num_cis);
 
 	size -= sizeof(*cmd);
@@ -8063,16 +8063,16 @@ static void print_cis_params_test(const void *data, int i)
 
 	print_field("CIS ID: 0x%2.2x", cis->cis_id);
 	print_field("NSE: 0x%2.2x", cis->nse);
-	print_field("Master to Slave Maximum SDU: 0x%4.4x", cis->m_sdu);
+	print_field("Master to Slave Maximum SDU: 0x%4.4x", cis->c_sdu);
 	print_field("Slave to Master Maximum SDU: 0x%4.4x",
-						le16_to_cpu(cis->s_sdu));
+						le16_to_cpu(cis->p_sdu));
 	print_field("Master to Slave Maximum PDU: 0x%2.2x",
-						le16_to_cpu(cis->m_pdu));
-	print_field("Slave to Master Maximum PDU: 0x%2.2x", cis->s_pdu);
-	print_le_phy("Master to Slave PHY", cis->m_phy);
-	print_le_phy("Slave to Master PHY", cis->s_phy);
-	print_field("Master to Slave Burst Number: 0x%2.2x", cis->m_bn);
-	print_field("Slave to Master Burst Number: 0x%2.2x", cis->s_bn);
+						le16_to_cpu(cis->c_pdu));
+	print_field("Slave to Master Maximum PDU: 0x%2.2x", cis->p_pdu);
+	print_le_phy("Master to Slave PHY", cis->c_phy);
+	print_le_phy("Slave to Master PHY", cis->p_phy);
+	print_field("Master to Slave Burst Number: 0x%2.2x", cis->c_bn);
+	print_field("Slave to Master Burst Number: 0x%2.2x", cis->p_bn);
 }
 
 static void le_set_cig_params_test_cmd(const void *data, uint8_t size)
@@ -8080,10 +8080,10 @@ static void le_set_cig_params_test_cmd(const void *data, uint8_t size)
 	const struct bt_hci_cmd_le_set_cig_params_test *cmd = data;
 
 	print_field("CIG ID: 0x%2.2x", cmd->cig_id);
-	print_usec_interval("Master to Slave SDU Interval", cmd->m_interval);
-	print_usec_interval("Master to Slave SDU Interval", cmd->s_interval);
-	print_field("Master to Slave Flush Timeout: 0x%2.2x", cmd->m_ft);
-	print_field("Slave to Master Flush Timeout: 0x%2.2x", cmd->s_ft);
+	print_usec_interval("Master to Slave SDU Interval", cmd->c_interval);
+	print_usec_interval("Master to Slave SDU Interval", cmd->p_interval);
+	print_field("Master to Slave Flush Timeout: 0x%2.2x", cmd->c_ft);
+	print_field("Slave to Master Flush Timeout: 0x%2.2x", cmd->p_ft);
 	print_field("ISO Interval: %.2f ms (0x%4.4x)",
 				le16_to_cpu(cmd->iso_interval) * 1.25,
 				le16_to_cpu(cmd->iso_interval));
@@ -10775,17 +10775,17 @@ static void le_cis_established_evt(const void *data, uint8_t size)
 	print_field("Connection Handle: %d", le16_to_cpu(evt->conn_handle));
 	print_usec_interval("CIG Synchronization Delay", evt->cig_sync_delay);
 	print_usec_interval("CIS Synchronization Delay", evt->cis_sync_delay);
-	print_usec_interval("Master to Slave Latency", evt->m_latency);
-	print_usec_interval("Slave to Master Latency", evt->s_latency);
-	print_le_phy("Master to Slave PHY", evt->m_phy);
-	print_le_phy("Slave to Master PHY", evt->s_phy);
+	print_usec_interval("Master to Slave Latency", evt->c_latency);
+	print_usec_interval("Slave to Master Latency", evt->p_latency);
+	print_le_phy("Master to Slave PHY", evt->c_phy);
+	print_le_phy("Slave to Master PHY", evt->p_phy);
 	print_field("Number of Subevents: %u", evt->nse);
-	print_field("Master to Slave Burst Number: %u", evt->m_bn);
-	print_field("Slave to Master Burst Number: %u", evt->s_bn);
-	print_field("Master to Slave Flush Timeout: %u", evt->m_ft);
-	print_field("Slave to Master Flush Timeout: %u", evt->s_ft);
-	print_field("Master to Slave MTU: %u", le16_to_cpu(evt->m_mtu));
-	print_field("Slave to Master MTU: %u", le16_to_cpu(evt->s_mtu));
+	print_field("Master to Slave Burst Number: %u", evt->c_bn);
+	print_field("Slave to Master Burst Number: %u", evt->p_bn);
+	print_field("Master to Slave Flush Timeout: %u", evt->c_ft);
+	print_field("Slave to Master Flush Timeout: %u", evt->p_ft);
+	print_field("Master to Slave MTU: %u", le16_to_cpu(evt->c_mtu));
+	print_field("Slave to Master MTU: %u", le16_to_cpu(evt->p_mtu));
 	print_field("ISO Interval: %u", le16_to_cpu(evt->interval));
 }
 

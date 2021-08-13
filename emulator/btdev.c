@@ -5350,24 +5350,24 @@ static void le_cis_estabilished(struct btdev *dev, struct btdev_conn *conn,
 		struct btdev *remote = conn->link->dev;
 
 		/* TODO: Figure out if these values makes sense */
-		memcpy(evt.cig_sync_delay, remote->le_cig.params.m_interval,
-				sizeof(remote->le_cig.params.m_interval));
-		memcpy(evt.cis_sync_delay, remote->le_cig.params.s_interval,
-				sizeof(remote->le_cig.params.s_interval));
-		memcpy(evt.m_latency, &remote->le_cig.params.m_latency,
-				sizeof(remote->le_cig.params.m_latency));
-		memcpy(evt.s_latency, &remote->le_cig.params.s_latency,
-				sizeof(remote->le_cig.params.s_latency));
-		evt.m_phy = remote->le_cig.cis[0].m_phy;
-		evt.s_phy = remote->le_cig.cis[0].s_phy;
+		memcpy(evt.cig_sync_delay, remote->le_cig.params.c_interval,
+				sizeof(remote->le_cig.params.c_interval));
+		memcpy(evt.cis_sync_delay, remote->le_cig.params.p_interval,
+				sizeof(remote->le_cig.params.p_interval));
+		memcpy(evt.c_latency, &remote->le_cig.params.c_latency,
+				sizeof(remote->le_cig.params.c_latency));
+		memcpy(evt.p_latency, &remote->le_cig.params.p_latency,
+				sizeof(remote->le_cig.params.p_latency));
+		evt.c_phy = remote->le_cig.cis[0].c_phy;
+		evt.p_phy = remote->le_cig.cis[0].p_phy;
 		evt.nse = 0x01;
-		evt.m_bn = 0x01;
-		evt.s_bn = 0x01;
-		evt.m_ft = 0x01;
-		evt.s_ft = 0x01;
-		evt.m_mtu = remote->le_cig.cis[0].m_sdu;
-		evt.s_mtu = remote->le_cig.cis[0].s_sdu;
-		evt.interval = remote->le_cig.params.m_latency;
+		evt.c_bn = 0x01;
+		evt.p_bn = 0x01;
+		evt.c_ft = 0x01;
+		evt.p_ft = 0x01;
+		evt.c_mtu = remote->le_cig.cis[0].c_sdu;
+		evt.p_mtu = remote->le_cig.cis[0].p_sdu;
+		evt.interval = remote->le_cig.params.c_latency;
 	}
 
 	le_meta_event(dev, BT_HCI_EVT_LE_CIS_ESTABLISHED, &evt, sizeof(evt));

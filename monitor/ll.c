@@ -505,16 +505,16 @@ static void phy_update_ind(const void *data, uint8_t size)
 	const struct bt_ll_phy_update_ind *pdu = data;
 	uint8_t mask;
 
-	print_field("M_TO_S_PHY: 0x%2.2x", pdu->m_phy);
+	print_field("M_TO_S_PHY: 0x%2.2x", pdu->c_phy);
 
-	mask = print_bitfield(2, pdu->m_phy, le_phys);
+	mask = print_bitfield(2, pdu->c_phy, le_phys);
 	if (mask)
 		print_text(COLOR_UNKNOWN_OPTIONS_BIT, "  Reserved"
 							" (0x%2.2x)", mask);
 
-	print_field("S_TO_M_PHY: 0x%2.2x", pdu->s_phy);
+	print_field("S_TO_M_PHY: 0x%2.2x", pdu->p_phy);
 
-	mask = print_bitfield(2, pdu->s_phy, le_phys);
+	mask = print_bitfield(2, pdu->p_phy, le_phys);
 	if (mask)
 		print_text(COLOR_UNKNOWN_OPTIONS_BIT, "  Reserved"
 							" (0x%2.2x)", mask);
@@ -596,38 +596,38 @@ static void cis_req(const void *data, uint8_t size)
 
 	print_field("CIG ID: 0x%2.2x", cmd->cig);
 	print_field("CIS ID: 0x%2.2x", cmd->cis);
-	print_field("Master to Slave PHY: 0x%2.2x", cmd->m_phy);
+	print_field("Master to Slave PHY: 0x%2.2x", cmd->c_phy);
 
-	mask = print_bitfield(2, cmd->m_phy, le_phys);
+	mask = print_bitfield(2, cmd->c_phy, le_phys);
 	if (mask)
 		print_text(COLOR_UNKNOWN_OPTIONS_BIT, "  Reserved"
 							" (0x%2.2x)", mask);
 
-	print_field("Slave To Master PHY: 0x%2.2x", cmd->s_phy);
+	print_field("Slave To Master PHY: 0x%2.2x", cmd->p_phy);
 
-	mask = print_bitfield(2, cmd->s_phy, le_phys);
+	mask = print_bitfield(2, cmd->p_phy, le_phys);
 	if (mask)
 		print_text(COLOR_UNKNOWN_OPTIONS_BIT, "  Reserved"
 							" (0x%2.2x)", mask);
 
-	print_field("Master to Slave Maximum SDU: %u", cmd->m_sdu);
-	print_field("Slave to Master Maximum SDU: %u", cmd->s_sdu);
+	print_field("Master to Slave Maximum SDU: %u", cmd->c_sdu);
+	print_field("Slave to Master Maximum SDU: %u", cmd->p_sdu);
 
-	memcpy(&interval, cmd->m_interval, sizeof(cmd->m_interval));
+	memcpy(&interval, cmd->c_interval, sizeof(cmd->c_interval));
 	print_field("Master to Slave Interval: 0x%6.6x", le32_to_cpu(interval));
-	memcpy(&interval, cmd->s_interval, sizeof(cmd->s_interval));
+	memcpy(&interval, cmd->p_interval, sizeof(cmd->p_interval));
 	print_field("Slave to Master Interval: 0x%6.6x", le32_to_cpu(interval));
 
-	print_field("Master to Slave Maximum PDU: %u", cmd->m_pdu);
-	print_field("Slave to Master Maximum PDU: %u", cmd->s_pdu);
+	print_field("Master to Slave Maximum PDU: %u", cmd->c_pdu);
+	print_field("Slave to Master Maximum PDU: %u", cmd->p_pdu);
 
 	print_field("Burst Number: %u us", cmd->bn);
 
 	memcpy(&interval, cmd->sub_interval, sizeof(cmd->sub_interval));
 	print_field("Sub-Interval: 0x%6.6x", le32_to_cpu(interval));
 
-	print_field("Master to Slave Flush Timeout: %u", cmd->m_ft);
-	print_field("Slave to Master Flush Timeout: %u", cmd->s_ft);
+	print_field("Master to Slave Flush Timeout: %u", cmd->c_ft);
+	print_field("Slave to Master Flush Timeout: %u", cmd->p_ft);
 
 	print_field("ISO Interval: 0x%4.4x", le16_to_cpu(cmd->iso_interval));
 
