@@ -564,13 +564,13 @@ void csr_dump(int level, struct frame *frm)
 			switch (type) {
 			case 0x0f:
 				frm->handle =  ((uint8_t *) frm->ptr)[17];
-				frm->master = 0;
+				frm->central = 0;
 				frm->len--;
 				lmp_dump(level, frm);
 				return;
 			case 0x10:
 				frm->handle = ((uint8_t *) frm->ptr)[17];
-				frm->master = 1;
+				frm->central = 1;
 				frm->len--;
 				lmp_dump(level, frm);
 				return;

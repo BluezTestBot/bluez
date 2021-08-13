@@ -1141,7 +1141,7 @@ void lmp_dump(int level, struct frame *frm)
 		opcode += tmp << 7;
 	}
 
-	printf("LMP(%c): %s(%c): ", frm->master ? 's' : 'r',
+	printf("LMP(%c): %s(%c): ", frm->central ? 's' : 'r',
 				opcode2str(opcode), tid ? 's' : 'm');
 
 	if (opcode > 123)
