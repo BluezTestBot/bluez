@@ -2784,17 +2784,17 @@ void emu_remote_connect_hci_action(void)
 	struct step *current_data_step = queue_peek_head(data->steps);
 	struct bt_action_data *action_data = current_data_step->set_data;
 	struct step *step = g_new0(struct step, 1);
-	const uint8_t *master_addr;
+	const uint8_t *central_addr;
 
-	master_addr = hciemu_get_central_bdaddr(data->hciemu);
+	central_addr = hciemu_get_central_bdaddr(data->hciemu);
 
 	tester_print("Trying to connect hci");
 
 	if (action_data)
-		bthost_hci_connect(bthost, master_addr,
+		bthost_hci_connect(bthost, central_addr,
 						action_data->bearer_type);
 	else
-		bthost_hci_connect(bthost, master_addr, BDADDR_BREDR);
+		bthost_hci_connect(bthost, central_addr, BDADDR_BREDR);
 
 	step->action_status = BT_STATUS_SUCCESS;
 

@@ -2198,7 +2198,7 @@ static void mgmt_device_unpaired_event(uint16_t index, uint16_t length,
 	dev->in_white_list = false;
 }
 
-static void store_ltk(const bdaddr_t *dst, uint8_t bdaddr_type, bool master,
+static void store_ltk(const bdaddr_t *dst, uint8_t bdaddr_type, bool central,
 			const uint8_t *key, uint8_t key_type, uint8_t enc_size,
 			uint16_t ediv, uint64_t rand)
 {
@@ -2218,11 +2218,11 @@ static void store_ltk(const bdaddr_t *dst, uint8_t bdaddr_type, bool master,
 
 	ba2str(dst, addr);
 
-	key_s = master ? "LongTermKey" : "SlaveLongTermKey";
-	keytype_s = master ? "LongTermKeyType" : "SlaveLongTermKeyType";
-	encsize_s = master ? "LongTermKeyEncSize" : "SlaveLongTermKeyEncSize";
-	ediv_s = master ? "LongTermKeyEDiv" : "SlaveLongTermKeyEDiv";
-	rand_s = master ? "LongTermKeyRand" : "SlaveLongTermKeyRand";
+	key_s = central ? "LongTermKey" : "SlaveLongTermKey";
+	keytype_s = central ? "LongTermKeyType" : "SlaveLongTermKeyType";
+	encsize_s = central ? "LongTermKeyEncSize" : "SlaveLongTermKeyEncSize";
+	ediv_s = central ? "LongTermKeyEDiv" : "SlaveLongTermKeyEDiv";
+	rand_s = central ? "LongTermKeyRand" : "SlaveLongTermKeyRand";
 
 	for (i = 0; i < 16; i++)
 		sprintf(key_str + (i * 2), "%2.2X", key[i]);
@@ -3059,18 +3059,18 @@ failed:
 }
 
 static struct mgmt_ltk_info *get_ltk_info(GKeyFile *key_file, const char *peer,
-								bool master)
+								bool central)
 {
 	const char *key_s, *keytype_s, *encsize_s, *ediv_s, *rand_s;
 	struct mgmt_ltk_info *info = NULL;
 	char *key;
 	unsigned int i;
 
-	key_s = master ? "LongTermKey" : "SlaveLongTermKey";
-	keytype_s = master ? "LongTermKeyType" : "SlaveLongTermKeyType";
-	encsize_s = master ? "LongTermKeyEncSize" : "SlaveLongTermKeyEncSize";
-	ediv_s = master ? "LongTermKeyEDiv" : "SlaveLongTermKeyEDiv";
-	rand_s = master ? "LongTermKeyRand" : "SlaveLongTermKeyRand";
+	key_s = central ? "LongTermKey" : "SlaveLongTermKey";
+	keytype_s = central ? "LongTermKeyType" : "SlaveLongTermKeyType";
+	encsize_s = central ? "LongTermKeyEncSize" : "SlaveLongTermKeyEncSize";
+	ediv_s = central ? "LongTermKeyEDiv" : "SlaveLongTermKeyEDiv";
+	rand_s = central ? "LongTermKeyRand" : "SlaveLongTermKeyRand";
 
 	key = g_key_file_get_string(key_file, peer, key_s, NULL);
 	if (!key || strlen(key) != 32)
@@ -3097,7 +3097,7 @@ static struct mgmt_ltk_info *get_ltk_info(GKeyFile *key_file, const char *peer,
 	info->ediv = g_key_file_get_integer(key_file, peer, ediv_s, NULL);
 	info->ediv = cpu_to_le16(info->ediv);
 
-	info->central = master;
+	info->central = central;
 
 failed:
 	g_free(key);
@@ -3201,7 +3201,7 @@ static void load_devices_info(bt_bluetooth_ready cb)
 		struct mgmt_link_key_info *key_info;
 		struct mgmt_ltk_info *ltk_info;
 		struct mgmt_irk_info *irk_info;
-		struct mgmt_ltk_info *slave_ltk_info;
+		struct mgmt_ltk_info *peripheral_ltk_info;
 		struct device *dev;
 
 		dev = create_device_from_info(key_file, devs[i]);
@@ -3209,15 +3209,15 @@ static void load_devices_info(bt_bluetooth_ready cb)
 		key_info = get_key_info(key_file, devs[i]);
 		irk_info = get_irk_info(key_file, devs[i]);
 		ltk_info = get_ltk_info(key_file, devs[i], true);
-		slave_ltk_info = get_ltk_info(key_file, devs[i], false);
+		peripheral_ltk_info = get_ltk_info(key_file, devs[i], false);
 
 		/*
 		 * Skip devices that have no permanent keys
 		 * (CSRKs are loaded by create_device_from_info())
 		 */
 		if (!dev->valid_local_csrk && !dev->valid_remote_csrk &&
-						!key_info && !ltk_info &&
-						!slave_ltk_info && !irk_info) {
+					!key_info && !ltk_info &&
+					!peripheral_ltk_info && !irk_info) {
 			error("Failed to load keys for %s, skipping", devs[i]);
 			free_device(dev);
 			continue;
@@ -3235,11 +3235,11 @@ static void load_devices_info(bt_bluetooth_ready cb)
 		if (ltk_info)
 			ltks = g_slist_prepend(ltks, ltk_info);
 
-		if (slave_ltk_info)
-			ltks = g_slist_prepend(ltks, slave_ltk_info);
+		if (peripheral_ltk_info)
+			ltks = g_slist_prepend(ltks, peripheral_ltk_info);
 
 		if (dev->valid_local_csrk || dev->valid_remote_csrk ||
-				irk_info || ltk_info || slave_ltk_info) {
+				irk_info || ltk_info || peripheral_ltk_info) {
 			dev->le_paired = true;
 			dev->le_bonded = true;
 		}
