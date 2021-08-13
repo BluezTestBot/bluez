@@ -1084,7 +1084,7 @@ static inline void remote_name_req_dump(int level, struct frame *frm)
 
 static inline void master_link_key_dump(int level, struct frame *frm)
 {
-	master_link_key_cp *cp = frm->ptr;
+	central_link_key_cp *cp = frm->ptr;
 
 	p_indent(level, frm);
 	printf("flag %d\n", cp->key_flag);
@@ -1771,7 +1771,7 @@ static inline void command_dump(int level, struct frame *frm)
 		case OCF_DISCONNECT_LOGICAL_LINK:
 			generic_command_dump(level + 1, frm);
 			return;
-		case OCF_MASTER_LINK_KEY:
+		case OCF_CENTRAL_LINK_KEY:
 			master_link_key_dump(level + 1, frm);
 			return;
 		case OCF_READ_REMOTE_EXT_FEATURES:
@@ -3116,7 +3116,7 @@ static inline void remote_name_req_complete_dump(int level, struct frame *frm)
 
 static inline void master_link_key_complete_dump(int level, struct frame *frm)
 {
-	evt_master_link_key_complete *evt = frm->ptr;
+	evt_central_link_key_complete *evt = frm->ptr;
 
 	p_indent(level, frm);
 	printf("status 0x%2.2x handle %d flag %d\n",
@@ -3874,7 +3874,7 @@ static inline void event_dump(int level, struct frame *frm)
 	case EVT_CHANGE_CONN_LINK_KEY_COMPLETE:
 		generic_response_dump(level + 1, frm);
 		break;
-	case EVT_MASTER_LINK_KEY_COMPLETE:
+	case EVT_CENTRAL_LINK_KEY_COMPLETE:
 		master_link_key_complete_dump(level + 1, frm);
 		break;
 	case EVT_REMOTE_NAME_REQ_COMPLETE:

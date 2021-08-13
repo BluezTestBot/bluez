@@ -421,11 +421,11 @@ typedef struct {
 } __attribute__ ((packed)) change_conn_link_key_cp;
 #define CHANGE_CONN_LINK_KEY_CP_SIZE 2
 
-#define OCF_MASTER_LINK_KEY		0x0017
+#define OCF_CENTRAL_LINK_KEY		0x0017
 typedef struct {
 	uint8_t		key_flag;
-} __attribute__ ((packed)) master_link_key_cp;
-#define MASTER_LINK_KEY_CP_SIZE 1
+} __attribute__ ((packed)) central_link_key_cp;
+#define CENTRAL_LINK_KEY_CP_SIZE 1
 
 #define OCF_REMOTE_NAME_REQ		0x0019
 typedef struct {
@@ -1804,13 +1804,13 @@ typedef struct {
 }  __attribute__ ((packed)) evt_change_conn_link_key_complete;
 #define EVT_CHANGE_CONN_LINK_KEY_COMPLETE_SIZE 3
 
-#define EVT_MASTER_LINK_KEY_COMPLETE		0x0A
+#define EVT_CENTRAL_LINK_KEY_COMPLETE		0x0A
 typedef struct {
 	uint8_t		status;
 	uint16_t	handle;
 	uint8_t		key_flag;
-} __attribute__ ((packed)) evt_master_link_key_complete;
-#define EVT_MASTER_LINK_KEY_COMPLETE_SIZE 4
+} __attribute__ ((packed)) evt_central_link_key_complete;
+#define EVT_CENTRAL_LINK_KEY_COMPLETE_SIZE 4
 
 #define EVT_READ_REMOTE_FEATURES_COMPLETE	0x0B
 typedef struct {
@@ -2149,7 +2149,7 @@ typedef struct {
 	uint16_t	interval;
 	uint16_t	latency;
 	uint16_t	supervision_timeout;
-	uint8_t		master_clock_accuracy;
+	uint8_t		central_clock_accuracy;
 } __attribute__ ((packed)) evt_le_connection_complete;
 #define EVT_LE_CONN_COMPLETE_SIZE 18
 
