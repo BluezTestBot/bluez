@@ -1561,28 +1561,28 @@ typedef struct {
 
 #define OCF_LE_CREATE_CONN_CANCEL		0x000E
 
-#define OCF_LE_READ_WHITE_LIST_SIZE		0x000F
+#define OCF_LE_READ_ACCEPT_LIST_SIZE		0x000F
 typedef struct {
 	uint8_t		status;
 	uint8_t		size;
-} __attribute__ ((packed)) le_read_white_list_size_rp;
-#define LE_READ_WHITE_LIST_SIZE_RP_SIZE 2
+} __attribute__ ((packed)) le_read_accept_list_size_rp;
+#define LE_READ_ACCEPT_LIST_SIZE_RP_SIZE 2
 
-#define OCF_LE_CLEAR_WHITE_LIST			0x0010
+#define OCF_LE_CLEAR_ACCEPT_LIST		0x0010
 
-#define OCF_LE_ADD_DEVICE_TO_WHITE_LIST		0x0011
+#define OCF_LE_ADD_DEVICE_TO_ACCEPT_LIST	0x0011
 typedef struct {
 	uint8_t		bdaddr_type;
 	bdaddr_t	bdaddr;
-} __attribute__ ((packed)) le_add_device_to_white_list_cp;
-#define LE_ADD_DEVICE_TO_WHITE_LIST_CP_SIZE 7
+} __attribute__ ((packed)) le_add_device_to_accept_list_cp;
+#define LE_ADD_DEVICE_TO_ACCEPT_LIST_CP_SIZE 7
 
-#define OCF_LE_REMOVE_DEVICE_FROM_WHITE_LIST	0x0012
+#define OCF_LE_REMOVE_DEVICE_FROM_ACCEPT_LIST	0x0012
 typedef struct {
 	uint8_t		bdaddr_type;
 	bdaddr_t	bdaddr;
-} __attribute__ ((packed)) le_remove_device_from_white_list_cp;
-#define LE_REMOVE_DEVICE_FROM_WHITE_LIST_CP_SIZE 7
+} __attribute__ ((packed)) le_remove_device_from_accept_list_cp;
+#define LE_REMOVE_DEVICE_FROM_ACCEPT_LIST_CP_SIZE 7
 
 #define OCF_LE_CONN_UPDATE			0x0013
 typedef struct {

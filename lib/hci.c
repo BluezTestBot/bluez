@@ -565,11 +565,11 @@ static hci_map commands_map[] = {
 	{ "LE Set Scan Enable",				211 },
 	{ "LE Create Connection",			212 },
 	{ "LE Create Connection Cancel",		213 },
-	{ "LE Read White List Size",			214 },
-	{ "LE Clear White List",			215 },
+	{ "LE Read Accept List Size",			214 },
+	{ "LE Clear Accept List",			215 },
 
-	{ "LE Add Device To White List",		216 },
-	{ "LE Remove Device From White List",		217 },
+	{ "LE Add Device To Accept List",		216 },
+	{ "LE Remove Device From Accept List",		217 },
 	{ "LE Connection Update",			218 },
 	{ "LE Set Host Channel Classification",		219 },
 	{ "LE Read Channel Map",			220 },
@@ -1322,10 +1322,10 @@ int hci_disconnect(int dd, uint16_t handle, uint8_t reason, int to)
 	return 0;
 }
 
-int hci_le_add_white_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to)
+int hci_le_add_accept_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to)
 {
 	struct hci_request rq;
-	le_add_device_to_white_list_cp cp;
+	le_add_device_to_accept_list_cp cp;
 	uint8_t status;
 
 	memset(&cp, 0, sizeof(cp));
@@ -1334,9 +1334,9 @@ int hci_le_add_white_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to)
 
 	memset(&rq, 0, sizeof(rq));
 	rq.ogf = OGF_LE_CTL;
-	rq.ocf = OCF_LE_ADD_DEVICE_TO_WHITE_LIST;
+	rq.ocf = OCF_LE_ADD_DEVICE_TO_ACCEPT_LIST;
 	rq.cparam = &cp;
-	rq.clen = LE_ADD_DEVICE_TO_WHITE_LIST_CP_SIZE;
+	rq.clen = LE_ADD_DEVICE_TO_ACCEPT_LIST_CP_SIZE;
 	rq.rparam = &status;
 	rq.rlen = 1;
 
@@ -1351,10 +1351,10 @@ int hci_le_add_white_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to)
 	return 0;
 }
 
-int hci_le_rm_white_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to)
+int hci_le_rm_accept_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to)
 {
 	struct hci_request rq;
-	le_remove_device_from_white_list_cp cp;
+	le_remove_device_from_accept_list_cp cp;
 	uint8_t status;
 
 	memset(&cp, 0, sizeof(cp));
@@ -1363,9 +1363,9 @@ int hci_le_rm_white_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to)
 
 	memset(&rq, 0, sizeof(rq));
 	rq.ogf = OGF_LE_CTL;
-	rq.ocf = OCF_LE_REMOVE_DEVICE_FROM_WHITE_LIST;
+	rq.ocf = OCF_LE_REMOVE_DEVICE_FROM_ACCEPT_LIST;
 	rq.cparam = &cp;
-	rq.clen = LE_REMOVE_DEVICE_FROM_WHITE_LIST_CP_SIZE;
+	rq.clen = LE_REMOVE_DEVICE_FROM_ACCEPT_LIST_CP_SIZE;
 	rq.rparam = &status;
 	rq.rlen = 1;
 
@@ -1380,18 +1380,18 @@ int hci_le_rm_white_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to)
 	return 0;
 }
 
-int hci_le_read_white_list_size(int dd, uint8_t *size, int to)
+int hci_le_read_accept_list_size(int dd, uint8_t *size, int to)
 {
 	struct hci_request rq;
-	le_read_white_list_size_rp rp;
+	le_read_accept_list_size_rp rp;
 
 	memset(&rp, 0, sizeof(rp));
 	memset(&rq, 0, sizeof(rq));
 
 	rq.ogf = OGF_LE_CTL;
-	rq.ocf = OCF_LE_READ_WHITE_LIST_SIZE;
+	rq.ocf = OCF_LE_READ_ACCEPT_LIST_SIZE;
 	rq.rparam = &rp;
-	rq.rlen = LE_READ_WHITE_LIST_SIZE_RP_SIZE;
+	rq.rlen = LE_READ_ACCEPT_LIST_SIZE_RP_SIZE;
 
 	if (hci_send_req(dd, &rq, to) < 0)
 		return -1;
@@ -1407,14 +1407,14 @@ int hci_le_read_white_list_size(int dd, uint8_t *size, int to)
 	return 0;
 }
 
-int hci_le_clear_white_list(int dd, int to)
+int hci_le_clear_accept_list(int dd, int to)
 {
 	struct hci_request rq;
 	uint8_t status;
 
 	memset(&rq, 0, sizeof(rq));
 	rq.ogf = OGF_LE_CTL;
-	rq.ocf = OCF_LE_CLEAR_WHITE_LIST;
+	rq.ocf = OCF_LE_CLEAR_ACCEPT_LIST;
 	rq.rparam = &status;
 	rq.rlen = 1;
 
