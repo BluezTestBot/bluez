@@ -449,9 +449,9 @@ static void reject_ind(const void *data, uint8_t size)
 	packet_print_error("Error code", pdu->error);
 }
 
-static void slave_feature_req(const void *data, uint8_t size)
+static void peripheral_feature_req(const void *data, uint8_t size)
 {
-	const struct bt_ll_slave_feature_req *pdu = data;
+	const struct bt_ll_peripheral_feature_req *pdu = data;
 
 	packet_print_features_ll(pdu->features);
 }
@@ -702,7 +702,7 @@ static const struct llcp_data llcp_table[] = {
 	{ 0x0b, "LL_PAUSE_ENC_RSP",         null_pdu,           0, true },
 	{ 0x0c, "LL_VERSION_IND",           version_ind,        5, true },
 	{ 0x0d, "LL_REJECT_IND",            reject_ind,         1, true },
-	{ 0x0e, "LL_SLAVE_FEATURE_REQ",     slave_feature_req,  8, true },
+	{ 0x0e, "LL_PERIPHERAL_FEATURE_REQ", peripheral_feature_req, 8, true },
 	{ 0x0f, "LL_CONNECTION_PARAM_REQ",  NULL,              23, true },
 	{ 0x10, "LL_CONNECTION_PARAM_RSP",  NULL,              23, true },
 	{ 0x11, "LL_REJECT_IND_EXT",        reject_ind_ext,     2, true },

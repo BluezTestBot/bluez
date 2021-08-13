@@ -88,8 +88,8 @@ struct bt_ll_reject_ind {
 	uint8_t  error;
 } __attribute__ ((packed));
 
-#define BT_LL_SLAVE_FEATURE_REQ	0x0e
-struct bt_ll_slave_feature_req {
+#define BT_LL_PERIPHERAL_FEATURE_REQ	0x0e
+struct bt_ll_peripheral_feature_req {
 	uint8_t  features[8];
 } __attribute__ ((packed));
 
