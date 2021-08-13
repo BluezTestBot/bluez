@@ -2426,7 +2426,7 @@ static gboolean get_btrole(struct mcap_mcl *mcl)
 	if (getsockopt(sock, SOL_L2CAP, L2CAP_LM, &flags, &len))
 		DBG("CSP: could not read role");
 
-	return flags & L2CAP_LM_MASTER;
+	return flags & L2CAP_LM_CENTRAL;
 }
 
 uint64_t mcap_get_timestamp(struct mcap_mcl *mcl,

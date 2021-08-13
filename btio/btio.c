@@ -369,13 +369,13 @@ static int l2cap_set_master(int sock, int master)
 		return -errno;
 
 	if (master) {
-		if (flags & L2CAP_LM_MASTER)
+		if (flags & L2CAP_LM_CENTRAL)
 			return 0;
-		flags |= L2CAP_LM_MASTER;
+		flags |= L2CAP_LM_CENTRAL;
 	} else {
-		if (!(flags & L2CAP_LM_MASTER))
+		if (!(flags & L2CAP_LM_CENTRAL))
 			return 0;
-		flags &= ~L2CAP_LM_MASTER;
+		flags &= ~L2CAP_LM_CENTRAL;
 	}
 
 	if (setsockopt(sock, SOL_L2CAP, L2CAP_LM, &flags, sizeof(flags)) < 0)
@@ -1180,7 +1180,7 @@ parse_opts:
 				return FALSE;
 			}
 			*(va_arg(args, gboolean *)) =
-				(flags & L2CAP_LM_MASTER) ? TRUE : FALSE;
+				(flags & L2CAP_LM_CENTRAL) ? TRUE : FALSE;
 			break;
 		case BT_IO_OPT_HANDLE:
 			if (l2cap_get_info(sock, &handle, dev_class) < 0) {
