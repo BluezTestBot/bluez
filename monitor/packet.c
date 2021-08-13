@@ -2227,10 +2227,10 @@ static void print_role(uint8_t role)
 
 	switch (role) {
 	case 0x00:
-		str = "Master";
+		str = "Central";
 		break;
 	case 0x01:
-		str = "Slave";
+		str = "Peripheral";
 		break;
 	default:
 		str = "Reserved";
@@ -2549,16 +2549,16 @@ static const struct bitfield_data features_page0[] = {
 	{ 31, "Extended SCO link (EV3 packets)"		},
 	{ 32, "EV4 packets"				},
 	{ 33, "EV5 packets"				},
-	{ 35, "AFH capable slave"			},
-	{ 36, "AFH classification slave"		},
+	{ 35, "AFH capable peripheral"			},
+	{ 36, "AFH classification peripheral"		},
 	{ 37, "BR/EDR Not Supported"			},
 	{ 38, "LE Supported (Controller)"		},
 	{ 39, "3-slot Enhanced Data Rate ACL packets"	},
 	{ 40, "5-slot Enhanced Data Rate ACL packets"	},
 	{ 41, "Sniff subrating"				},
 	{ 42, "Pause encryption"			},
-	{ 43, "AFH capable master"			},
-	{ 44, "AFH classification master"		},
+	{ 43, "AFH capable central"			},
+	{ 44, "AFH classification central"		},
 	{ 45, "Enhanced Data Rate eSCO 2 Mbps mode"	},
 	{ 46, "Enhanced Data Rate eSCO 3 Mbps mode"	},
 	{ 47, "3-slot Enhanced Data Rate eSCO packets"	},
@@ -2602,7 +2602,7 @@ static const struct bitfield_data features_le[] = {
 	{  0, "LE Encryption"					},
 	{  1, "Connection Parameter Request Procedure"		},
 	{  2, "Extended Reject Indication"			},
-	{  3, "Slave-initiated Features Exchange"		},
+	{  3, "Peripheral-initiated Features Exchange"		},
 	{  4, "LE Ping"						},
 	{  5, "LE Data Packet Length Extension"			},
 	{  6, "LL Privacy"					},
@@ -2627,8 +2627,8 @@ static const struct bitfield_data features_le[] = {
 	{ 25, "Periodic Advertising Sync Transfer - Recipient"	},
 	{ 26, "Sleep Clock Accuracy Updates"			},
 	{ 27, "Remote Public Key Validation"			},
-	{ 28, "Connected Isochronous Stream - Master"		},
-	{ 29, "Connected Isochronous Stream - Slave"		},
+	{ 28, "Connected Isochronous Stream - Central"		},
+	{ 29, "Connected Isochronous Stream - Peripheral"	},
 	{ 30, "Isochronous Broadcaster"				},
 	{ 31, "Synchronized Receiver"				},
 	{ 32, "Isochronous Channels (Host Support)"		},
@@ -2737,11 +2737,11 @@ static const struct bitfield_data le_states_desc_table[] = {
 	{  5, "Active Scanning State"				},
 	{  6, "Passive Scanning State"				},
 	{  7, "Initiating State"				},
-	{  8, "Connection State (Master Role)"			},
-	{  9, "Connection State (Slave Role)"			},
-	{ 10, "Master Role & Master Role"			},
-	{ 11, "Slave Role & Slave Role"				},
-	{ 12, "Master Role & Slave Role"			},
+	{  8, "Connection State (Central Role)"			},
+	{  9, "Connection State (Peripheral Role)"		},
+	{ 10, "Central Role & Central Role"			},
+	{ 11, "Peripheral Role & Peripheral Role"		},
+	{ 12, "Central Role & Peripheral Role"			},
 	{ }
 };
 
@@ -3058,7 +3058,7 @@ static void print_fec(uint8_t fec)
 #define BT_EIR_DEVICE_ID		0x10
 #define BT_EIR_SMP_TK			0x10
 #define BT_EIR_SMP_OOB_FLAGS		0x11
-#define BT_EIR_SLAVE_CONN_INTERVAL	0x12
+#define BT_EIR_PERIPHERAL_CONN_INTERVAL	0x12
 #define BT_EIR_SERVICE_UUID16		0x14
 #define BT_EIR_SERVICE_UUID128		0x15
 #define BT_EIR_SERVICE_DATA		0x16
@@ -3668,10 +3668,10 @@ static void print_eir(const uint8_t *eir, uint8_t eir_len, bool le)
 			print_field("SMP OOB Flags: 0x%2.2x", *data);
 			break;
 
-		case BT_EIR_SLAVE_CONN_INTERVAL:
+		case BT_EIR_PERIPHERAL_CONN_INTERVAL:
 			if (data_len < 4)
 				break;
-			print_field("Slave Conn. Interval: 0x%4.4x - 0x%4.4x",
+			print_field("Peripheral Conn. Interval: 0x%4.4x - 0x%4.4x",
 							get_le16(&data[0]),
 							get_le16(&data[2]));
 			break;
@@ -4140,10 +4140,10 @@ static void create_conn_cmd(const void *data, uint8_t size)
 
 	switch (cmd->role_switch) {
 	case 0x00:
-		str = "Stay master";
+		str = "Stay central";
 		break;
 	case 0x01:
-		str = "Allow slave";
+		str = "Allow peripheral";
 		break;
 	default:
 		str = "Reserved";
@@ -8023,15 +8023,15 @@ static void print_cis_params(const void *data, int i)
 	const struct bt_hci_cis_params *cis = data;
 
 	print_field("CIS ID: 0x%2.2x", cis->cis_id);
-	print_field("Master to Slave Maximum SDU Size: %u",
+	print_field("Central to Peripheral Maximum SDU Size: %u",
 						le16_to_cpu(cis->c_sdu));
-	print_field("Slave to Master Maximum SDU Size: %u",
+	print_field("Peripheral to Central Maximum SDU Size: %u",
 						le16_to_cpu(cis->p_sdu));
-	print_le_phy("Master to Slave PHY", cis->c_phy);
-	print_le_phy("Slave to Master PHY", cis->p_phy);
-	print_field("Master to Slave Retransmission attempts: 0x%2.2x",
+	print_le_phy("Central to Peripheral PHY", cis->c_phy);
+	print_le_phy("Peripheral to Central PHY", cis->p_phy);
+	print_field("Central to Peripheral Retransmission attempts: 0x%2.2x",
 							cis->c_rtn);
-	print_field("Slave to Master Retransmission attempts: 0x%2.2x",
+	print_field("Peripheral to Central Retransmission attempts: 0x%2.2x",
 							cis->p_rtn);
 }
 
@@ -8040,14 +8040,16 @@ static void le_set_cig_params_cmd(const void *data, uint8_t size)
 	const struct bt_hci_cmd_le_set_cig_params *cmd = data;
 
 	print_field("CIG ID: 0x%2.2x", cmd->cig_id);
-	print_usec_interval("Master to Slave SDU Interval", cmd->c_interval);
-	print_usec_interval("Slave to Master SDU Interval", cmd->p_interval);
+	print_usec_interval("Central to Peripheral SDU Interval",
+							cmd->c_interval);
+	print_usec_interval("Peripheral to Central SDU Interval",
+							cmd->p_interval);
 	print_sca(cmd->sca);
 	print_packing(cmd->packing);
 	print_framing(cmd->framing);
-	print_field("Master to Slave Maximum Latency: %d ms (0x%4.4x)",
+	print_field("Central to Peripheral Maximum Latency: %d ms (0x%4.4x)",
 		le16_to_cpu(cmd->c_latency), le16_to_cpu(cmd->c_latency));
-	print_field("Slave to Master Maximum Latency: %d ms (0x%4.4x)",
+	print_field("Peripheral to Central Maximum Latency: %d ms (0x%4.4x)",
 		le16_to_cpu(cmd->p_latency), le16_to_cpu(cmd->p_latency));
 	print_field("Number of CIS: %u", cmd->num_cis);
 
@@ -8063,16 +8065,16 @@ static void print_cis_params_test(const void *data, int i)
 
 	print_field("CIS ID: 0x%2.2x", cis->cis_id);
 	print_field("NSE: 0x%2.2x", cis->nse);
-	print_field("Master to Slave Maximum SDU: 0x%4.4x", cis->c_sdu);
-	print_field("Slave to Master Maximum SDU: 0x%4.4x",
+	print_field("Central to Peripheral Maximum SDU: 0x%4.4x", cis->c_sdu);
+	print_field("Peripheral to Central Maximum SDU: 0x%4.4x",
 						le16_to_cpu(cis->p_sdu));
-	print_field("Master to Slave Maximum PDU: 0x%2.2x",
+	print_field("Central to Peripheral Maximum PDU: 0x%2.2x",
 						le16_to_cpu(cis->c_pdu));
-	print_field("Slave to Master Maximum PDU: 0x%2.2x", cis->p_pdu);
-	print_le_phy("Master to Slave PHY", cis->c_phy);
-	print_le_phy("Slave to Master PHY", cis->p_phy);
-	print_field("Master to Slave Burst Number: 0x%2.2x", cis->c_bn);
-	print_field("Slave to Master Burst Number: 0x%2.2x", cis->p_bn);
+	print_field("Peripheral to Central Maximum PDU: 0x%2.2x", cis->p_pdu);
+	print_le_phy("Central to Peripheral PHY", cis->c_phy);
+	print_le_phy("Peripheral to Central PHY", cis->p_phy);
+	print_field("Central to Peripheral Burst Number: 0x%2.2x", cis->c_bn);
+	print_field("Peripheral to Central Burst Number: 0x%2.2x", cis->p_bn);
 }
 
 static void le_set_cig_params_test_cmd(const void *data, uint8_t size)
@@ -8080,10 +8082,12 @@ static void le_set_cig_params_test_cmd(const void *data, uint8_t size)
 	const struct bt_hci_cmd_le_set_cig_params_test *cmd = data;
 
 	print_field("CIG ID: 0x%2.2x", cmd->cig_id);
-	print_usec_interval("Master to Slave SDU Interval", cmd->c_interval);
-	print_usec_interval("Master to Slave SDU Interval", cmd->p_interval);
-	print_field("Master to Slave Flush Timeout: 0x%2.2x", cmd->c_ft);
-	print_field("Slave to Master Flush Timeout: 0x%2.2x", cmd->p_ft);
+	print_usec_interval("Central to Peripheral SDU Interval",
+							cmd->c_interval);
+	print_usec_interval("Peripheral to Central SDU Interval",
+							cmd->p_interval);
+	print_field("Central to Peripheral Flush Timeout: 0x%2.2x", cmd->c_ft);
+	print_field("Peripheral to Central Flush Timeout: 0x%2.2x", cmd->p_ft);
 	print_field("ISO Interval: %.2f ms (0x%4.4x)",
 				le16_to_cpu(cmd->iso_interval) * 1.25,
 				le16_to_cpu(cmd->iso_interval));
@@ -10279,7 +10283,7 @@ static void le_conn_complete_evt(const void *data, uint8_t size)
 	print_field("Supervision timeout: %d msec (0x%4.4x)",
 					le16_to_cpu(evt->supv_timeout) * 10,
 					le16_to_cpu(evt->supv_timeout));
-	print_field("Master clock accuracy: 0x%2.2x", evt->clock_accuracy);
+	print_field("Central clock accuracy: 0x%2.2x", evt->clock_accuracy);
 
 	if (evt->status == 0x00)
 		assign_handle(le16_to_cpu(evt->handle), 0x01);
@@ -10400,7 +10404,7 @@ static void le_enhanced_conn_complete_evt(const void *data, uint8_t size)
 	print_field("Supervision timeout: %d msec (0x%4.4x)",
 					le16_to_cpu(evt->supv_timeout) * 10,
 					le16_to_cpu(evt->supv_timeout));
-	print_field("Master clock accuracy: 0x%2.2x", evt->clock_accuracy);
+	print_field("Central clock accuracy: 0x%2.2x", evt->clock_accuracy);
 
 	if (evt->status == 0x00)
 		assign_handle(le16_to_cpu(evt->handle), 0x01);
@@ -10776,17 +10780,17 @@ static void le_cis_established_evt(const void *data, uint8_t size)
 	print_field("Connection Handle: %d", le16_to_cpu(evt->conn_handle));
 	print_usec_interval("CIG Synchronization Delay", evt->cig_sync_delay);
 	print_usec_interval("CIS Synchronization Delay", evt->cis_sync_delay);
-	print_usec_interval("Master to Slave Latency", evt->c_latency);
-	print_usec_interval("Slave to Master Latency", evt->p_latency);
-	print_le_phy("Master to Slave PHY", evt->c_phy);
-	print_le_phy("Slave to Master PHY", evt->p_phy);
+	print_usec_interval("Central to Peripheral Latency", evt->c_latency);
+	print_usec_interval("Peripheral to Central Latency", evt->p_latency);
+	print_le_phy("Central to Peripheral PHY", evt->c_phy);
+	print_le_phy("Peripheral to Central PHY", evt->p_phy);
 	print_field("Number of Subevents: %u", evt->nse);
-	print_field("Master to Slave Burst Number: %u", evt->c_bn);
-	print_field("Slave to Master Burst Number: %u", evt->p_bn);
-	print_field("Master to Slave Flush Timeout: %u", evt->c_ft);
-	print_field("Slave to Master Flush Timeout: %u", evt->p_ft);
-	print_field("Master to Slave MTU: %u", le16_to_cpu(evt->c_mtu));
-	print_field("Slave to Master MTU: %u", le16_to_cpu(evt->p_mtu));
+	print_field("Central to Peripheral Burst Number: %u", evt->c_bn);
+	print_field("Peripheral to Central Burst Number: %u", evt->p_bn);
+	print_field("Central to Peripheral Flush Timeout: %u", evt->c_ft);
+	print_field("Peripheral to Central Flush Timeout: %u", evt->p_ft);
+	print_field("Central to Peripheral MTU: %u", le16_to_cpu(evt->c_mtu));
+	print_field("Peripheral to Central MTU: %u", le16_to_cpu(evt->p_mtu));
 	print_field("ISO Interval: %u", le16_to_cpu(evt->interval));
 }
 
@@ -12163,7 +12167,7 @@ static void mgmt_print_long_term_key(const void *data)
 {
 	uint8_t address_type = get_u8(data + 6);
 	uint8_t key_type = get_u8(data + 7);
-	uint8_t master = get_u8(data + 8);
+	uint8_t central = get_u8(data + 8);
 	uint8_t enc_size = get_u8(data + 9);
 	const char *str;
 
@@ -12191,7 +12195,7 @@ static void mgmt_print_long_term_key(const void *data)
 	}
 
 	print_field("Key type: %s (0x%2.2x)", str, key_type);
-	print_field("Master: 0x%2.2x", master);
+	print_field("Central: 0x%2.2x", central);
 	print_field("Encryption size: %u", enc_size);
 	print_hex_field("Diversifier", data + 10, 2);
 	print_hex_field("Randomizer", data + 12, 8);

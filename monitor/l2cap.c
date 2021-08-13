@@ -1280,7 +1280,7 @@ static void sig_conn_param_req(const struct l2cap_frame *frame)
 
 	print_field("Min interval: %d", le16_to_cpu(pdu->min_interval));
 	print_field("Max interval: %d", le16_to_cpu(pdu->max_interval));
-	print_field("Slave latency: %d", le16_to_cpu(pdu->latency));
+	print_field("Peripheral latency: %d", le16_to_cpu(pdu->latency));
 	print_field("Timeout multiplier: %d", le16_to_cpu(pdu->timeout));
 }
 
