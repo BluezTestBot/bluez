@@ -840,7 +840,7 @@ static int sco_set_voice_volume(struct audio_hw_device *dev, float volume)
 	return 0;
 }
 
-static int sco_set_master_volume(struct audio_hw_device *dev, float volume)
+static int sco_set_main_volume(struct audio_hw_device *dev, float volume)
 {
 	DBG("%f", volume);
 
@@ -1292,13 +1292,13 @@ static int sco_dump(const audio_hw_device_t *device, int fd)
 }
 
 #if ANDROID_VERSION >= PLATFORM_VER(5, 0, 0)
-static int set_master_mute(struct audio_hw_device *dev, bool mute)
+static int set_main_mute(struct audio_hw_device *dev, bool mute)
 {
 	DBG("");
 	return -ENOSYS;
 }
 
-static int get_master_mute(struct audio_hw_device *dev, bool *mute)
+static int get_main_mute(struct audio_hw_device *dev, bool *mute)
 {
 	DBG("");
 	return -ENOSYS;
@@ -1477,7 +1477,7 @@ static int sco_open(const hw_module_t *module, const char *name,
 
 	dev->dev.init_check = sco_init_check;
 	dev->dev.set_voice_volume = sco_set_voice_volume;
-	dev->dev.set_master_volume = sco_set_master_volume;
+	dev->dev.set_main_volume = sco_set_main_volume;
 	dev->dev.set_mode = sco_set_mode;
 	dev->dev.set_mic_mute = sco_set_mic_mute;
 	dev->dev.get_mic_mute = sco_get_mic_mute;
@@ -1490,8 +1490,8 @@ static int sco_open(const hw_module_t *module, const char *name,
 	dev->dev.close_input_stream = sco_close_input_stream;
 	dev->dev.dump = sco_dump;
 #if ANDROID_VERSION >= PLATFORM_VER(5, 0, 0)
-	dev->dev.set_master_mute = set_master_mute;
-	dev->dev.get_master_mute = get_master_mute;
+	dev->dev.set_main_mute = set_main_mute;
+	dev->dev.get_main_mute = get_main_mute;
 	dev->dev.create_audio_patch = create_audio_patch;
 	dev->dev.release_audio_patch = release_audio_patch;
 	dev->dev.get_audio_port = get_audio_port;

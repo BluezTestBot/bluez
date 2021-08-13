@@ -514,16 +514,16 @@ struct audio_hw_device {
      * Range between 0.0 and 1.0. If any value other than 0 is returned,
      * the software mixer will emulate this capability.
      */
-    int (*set_master_volume)(struct audio_hw_device *dev, float volume);
+    int (*set_main_volume)(struct audio_hw_device *dev, float volume);
 
     /**
-     * Get the current master volume value for the HAL, if the HAL supports
-     * master volume control.  AudioFlinger will query this value from the
+     * Get the current main volume value for the HAL, if the HAL supports
+     * main volume control.  AudioFlinger will query this value from the
      * primary audio HAL when the service starts and use the value for setting
-     * the initial master volume across all HALs.  HALs which do not support
+     * the initial main volume across all HALs.  HALs which do not support
      * this method may leave it set to NULL.
      */
-    int (*get_master_volume)(struct audio_hw_device *dev, float *volume);
+    int (*get_main_volume)(struct audio_hw_device *dev, float *volume);
 
     /**
      * set_mode is called when the audio mode changes. AUDIO_MODE_NORMAL mode
@@ -592,16 +592,16 @@ struct audio_hw_device {
      * set the audio mute status for all audio activities.  If any value other
      * than 0 is returned, the software mixer will emulate this capability.
      */
-    int (*set_master_mute)(struct audio_hw_device *dev, bool mute);
+    int (*set_main_mute)(struct audio_hw_device *dev, bool mute);
 
     /**
-     * Get the current master mute status for the HAL, if the HAL supports
-     * master mute control.  AudioFlinger will query this value from the primary
+     * Get the current main mute status for the HAL, if the HAL supports
+     * main mute control.  AudioFlinger will query this value from the primary
      * audio HAL when the service starts and use the value for setting the
-     * initial master mute across all HALs.  HALs which do not support this
+     * initial main mute across all HALs.  HALs which do not support this
      * method may leave it set to NULL.
      */
-    int (*get_master_mute)(struct audio_hw_device *dev, bool *mute);
+    int (*get_main_mute)(struct audio_hw_device *dev, bool *mute);
 
     /**
      * Routing control

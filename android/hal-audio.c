@@ -1237,7 +1237,7 @@ static int audio_set_voice_volume(struct audio_hw_device *dev, float volume)
 	return -ENOSYS;
 }
 
-static int audio_set_master_volume(struct audio_hw_device *dev, float volume)
+static int audio_set_main_volume(struct audio_hw_device *dev, float volume)
 {
 	DBG("");
 	return -ENOSYS;
@@ -1346,13 +1346,13 @@ static int audio_dump(const audio_hw_device_t *device, int fd)
 }
 
 #if ANDROID_VERSION >= PLATFORM_VER(5, 0, 0)
-static int set_master_mute(struct audio_hw_device *dev, bool mute)
+static int set_main_mute(struct audio_hw_device *dev, bool mute)
 {
 	DBG("");
 	return -ENOSYS;
 }
 
-static int get_master_mute(struct audio_hw_device *dev, bool *mute)
+static int get_main_mute(struct audio_hw_device *dev, bool *mute)
 {
 	DBG("");
 	return -ENOSYS;
@@ -1574,7 +1574,7 @@ static int audio_open(const hw_module_t *module, const char *name,
 
 	a2dp_dev->dev.init_check = audio_init_check;
 	a2dp_dev->dev.set_voice_volume = audio_set_voice_volume;
-	a2dp_dev->dev.set_master_volume = audio_set_master_volume;
+	a2dp_dev->dev.set_main_volume = audio_set_main_volume;
 	a2dp_dev->dev.set_mode = audio_set_mode;
 	a2dp_dev->dev.set_mic_mute = audio_set_mic_mute;
 	a2dp_dev->dev.get_mic_mute = audio_get_mic_mute;
@@ -1587,8 +1587,8 @@ static int audio_open(const hw_module_t *module, const char *name,
 	a2dp_dev->dev.close_input_stream = audio_close_input_stream;
 	a2dp_dev->dev.dump = audio_dump;
 #if ANDROID_VERSION >= PLATFORM_VER(5, 0, 0)
-	a2dp_dev->dev.set_master_mute = set_master_mute;
-	a2dp_dev->dev.get_master_mute = get_master_mute;
+	a2dp_dev->dev.set_main_mute = set_main_mute;
+	a2dp_dev->dev.get_main_mute = get_main_mute;
 	a2dp_dev->dev.create_audio_patch = create_audio_patch;
 	a2dp_dev->dev.release_audio_patch = release_audio_patch;
 	a2dp_dev->dev.get_audio_port = get_audio_port;
