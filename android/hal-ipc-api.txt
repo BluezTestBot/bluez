@@ -2649,7 +2649,7 @@ Notifications:
 		                   0x03 = Error busy
 		                   0x04 = Error no answer
 		                   0x05 = Error delayed
-		                   0x06 = Error blacklisted
+		                   0x06 = Error blocked
 		                   0x07 = Error CME
 
 		Note: CME parameter is valid only for Error CME type

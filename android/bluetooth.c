@@ -89,7 +89,7 @@ struct device {
 	bool le_paired;
 	bool le_bonded;
 
-	bool in_white_list;
+	bool in_accept_list;
 
 	bool connected;
 
@@ -1649,8 +1649,8 @@ bool bt_auto_connect_add(const bdaddr_t *addr)
 		return false;
 	}
 
-	if (dev->in_white_list) {
-		DBG("Device already in white list");
+	if (dev->in_accept_list) {
+		DBG("Device already in accept list");
 		return true;
 	}
 
@@ -1661,7 +1661,7 @@ bool bt_auto_connect_add(const bdaddr_t *addr)
 
 	if (mgmt_send(mgmt_if, MGMT_OP_ADD_DEVICE, adapter.index, sizeof(cp),
 						&cp, NULL, NULL, NULL) > 0) {
-		dev->in_white_list = true;
+		dev->in_accept_list = true;
 		return true;
 	}
 
@@ -1687,8 +1687,8 @@ void bt_auto_connect_remove(const bdaddr_t *addr)
 		return;
 	}
 
-	if (!dev->in_white_list) {
-		DBG("Device already removed from white list");
+	if (!dev->in_accept_list) {
+		DBG("Device already removed from accept list");
 		return;
 	}
 
@@ -1698,7 +1698,7 @@ void bt_auto_connect_remove(const bdaddr_t *addr)
 
 	if (mgmt_send(mgmt_if, MGMT_OP_REMOVE_DEVICE, adapter.index,
 				sizeof(cp), &cp, NULL, NULL, NULL) > 0) {
-		dev->in_white_list = false;
+		dev->in_accept_list = false;
 		return;
 	}
 
@@ -2194,8 +2194,8 @@ static void mgmt_device_unpaired_event(uint16_t index, uint16_t length,
 	update_device_state(dev, ev->addr.type, HAL_STATUS_SUCCESS, false,
 								false, false);
 
-	/* Unpaired device is removed from the white list */
-	dev->in_white_list = false;
+	/* Unpaired device is removed from the accept list */
+	dev->in_accept_list = false;
 }
 
 static void store_ltk(const bdaddr_t *dst, uint8_t bdaddr_type, bool central,
