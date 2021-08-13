@@ -2698,20 +2698,20 @@ static const char load_ltks_invalid_param_2[] = {
 	0x00, 0x01, 0x02, 0x03, 0x04, 0x05,		/* bdaddr */
 	0x00,						/* addr type */
 	0x00,						/* authenticated */
-	0x00,						/* master */
+	0x00,						/* central */
 	0x00,						/* encryption size */
 	0x00, 0x00,					/* diversifier */
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,	/* rand */
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,	/* value (1/2) */
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,	/* value (2/2) */
 };
-/* Invalid master value */
+/* Invalid central value */
 static const char load_ltks_invalid_param_3[] = {
 	0x01, 0x00,					/* count */
 	0x00, 0x01, 0x02, 0x03, 0x04, 0x05,		/* bdaddr */
 	0x01,						/* addr type */
 	0x00,						/* authenticated */
-	0x02,						/* master */
+	0x02,						/* central */
 	0x00,						/* encryption size */
 	0x00, 0x00,					/* diversifier */
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,	/* rand */
@@ -4233,7 +4233,7 @@ static const uint8_t add_device_success_param_6[] = {
 					0x02,
 };
 
-static const uint8_t le_add_to_white_list_param[] = {
+static const uint8_t le_add_to_accept_list_param[] = {
 	0x00,					/* Type */
 	0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc,	/* Address */
 };
@@ -4249,8 +4249,8 @@ static const struct generic_data add_device_success_6 = {
 	.expect_alt_ev_param = add_device_success_param_6,
 	.expect_alt_ev_len = sizeof(add_device_success_param_6),
 	.expect_hci_command = BT_HCI_CMD_LE_ADD_TO_ACCEPT_LIST,
-	.expect_hci_param = le_add_to_white_list_param,
-	.expect_hci_len = sizeof(le_add_to_white_list_param),
+	.expect_hci_param = le_add_to_accept_list_param,
+	.expect_hci_len = sizeof(le_add_to_accept_list_param),
 };
 
 static const uint8_t le_add_to_resolv_list_param[] = {
@@ -4419,8 +4419,8 @@ static const struct generic_data remove_device_success_7 = {
 	.expect_len = sizeof(remove_device_param_2),
 	.expect_status = MGMT_STATUS_SUCCESS,
 	.expect_hci_command = BT_HCI_CMD_LE_REMOVE_FROM_ACCEPT_LIST,
-	.expect_hci_param = le_add_to_white_list_param,
-	.expect_hci_len = sizeof(le_add_to_white_list_param),
+	.expect_hci_param = le_add_to_accept_list_param,
+	.expect_hci_len = sizeof(le_add_to_accept_list_param),
 	.expect_alt_ev = MGMT_EV_DEVICE_REMOVED,
 	.expect_alt_ev_param = remove_device_param_2,
 	.expect_alt_ev_len = sizeof(remove_device_param_2),
@@ -4434,8 +4434,8 @@ static const struct generic_data remove_device_success_8 = {
 	.expect_len = sizeof(remove_device_param_2),
 	.expect_status = MGMT_STATUS_SUCCESS,
 	.expect_hci_command = BT_HCI_CMD_LE_REMOVE_FROM_RESOLV_LIST,
-	.expect_hci_param = le_add_to_white_list_param,
-	.expect_hci_len = sizeof(le_add_to_white_list_param),
+	.expect_hci_param = le_add_to_accept_list_param,
+	.expect_hci_len = sizeof(le_add_to_accept_list_param),
 	.expect_alt_ev = MGMT_EV_DEVICE_REMOVED,
 	.expect_alt_ev_param = remove_device_param_2,
 	.expect_alt_ev_len = sizeof(remove_device_param_2),
@@ -5336,40 +5336,40 @@ static const struct generic_data read_local_oob_success_sc_test = {
 	.expect_hci_command = BT_HCI_CMD_READ_LOCAL_OOB_EXT_DATA,
 };
 
-static const uint8_t le_states_conn_slave_adv_connectable[] = {
+static const uint8_t le_states_conn_peripheral_adv_connectable[] = {
 			0x00, 0x00, 0x20, 0x00, 0x40, 0x00, 0x00, 0x00};
-static const uint8_t le_states_conn_slave_adv_non_connectable[] = {
+static const uint8_t le_states_conn_peripheral_adv_non_connectable[] = {
 			0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00};
-static const uint8_t le_states_conn_master_adv_connectable[] = {
+static const uint8_t le_states_conn_central_adv_connectable[] = {
 			0x00, 0x00, 0x08, 0x00, 0x08, 0x00, 0x00, 0x00};
-static const uint8_t le_states_conn_master_adv_non_connectable[] = {
+static const uint8_t le_states_conn_central_adv_non_connectable[] = {
 			0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-static const struct generic_data conn_slave_adv_conneactable_test = {
+static const struct generic_data conn_peripheral_adv_connectable_test = {
 	.setup_le_states = true,
-	.le_states = le_states_conn_slave_adv_connectable,
+	.le_states = le_states_conn_peripheral_adv_connectable,
 	.setup_settings = settings_powered_le,
 	.client_enable_le = true
 };
 
-static const struct generic_data conn_slave_adv_non_conneactable_test = {
+static const struct generic_data conn_peripheral_adv_non_connectable_test = {
 	.setup_le_states = true,
-	.le_states = le_states_conn_slave_adv_non_connectable,
+	.le_states = le_states_conn_peripheral_adv_non_connectable,
 	.setup_settings = settings_powered_le,
 	.client_enable_le = true
 };
 
-static const struct generic_data conn_master_adv_conneactable_test = {
+static const struct generic_data conn_central_adv_connectable_test = {
 	.setup_le_states = true,
-	.le_states = le_states_conn_master_adv_connectable,
+	.le_states = le_states_conn_central_adv_connectable,
 	.setup_settings = settings_powered_le,
 	.client_enable_le = true,
 	.client_enable_adv = 1
 };
 
-static const struct generic_data conn_master_adv_non_conneactable_test = {
+static const struct generic_data conn_central_adv_non_connectable_test = {
 	.setup_le_states = true,
-	.le_states = le_states_conn_master_adv_non_connectable,
+	.le_states = le_states_conn_central_adv_non_connectable,
 	.setup_settings = settings_powered_le,
 	.client_enable_le = true,
 	.client_enable_adv = 1
@@ -10874,9 +10874,9 @@ int main(int argc, char *argv[])
 				&add_device_success_5,
 				NULL, test_command_generic);
 	/* MGMT_OP_ADD_DEVICE
-	 * Add device and check the device is added to the whitelist
+	 * Add device and check the device is added to the accept list
 	 */
-	test_bredrle50("Add Device - Success 6 - Add to whitelist",
+	test_bredrle50("Add Device - Success 6 - Add to accept list",
 				&add_device_success_6,
 				NULL, test_command_generic);
 	/* MGMT_OP_ADD_DEVICE
@@ -10928,7 +10928,7 @@ int main(int argc, char *argv[])
 	 * Remove the device and check the device is removed from the whilte
 	 * list as well.
 	 */
-	test_bredrle50("Remove Device - Success 7 - Remove from whitelist",
+	test_bredrle50("Remove Device - Success 7 - Remove from accept list",
 				&remove_device_success_7,
 				setup_ll_privacy_device2, test_command_generic);
 	/* MGMT_OP_REMOVE_DEVICE
@@ -11135,23 +11135,24 @@ int main(int argc, char *argv[])
 					 &add_advertising_name_data_appear,
 					 setup_command_generic,
 					 test_command_generic);
-	test_le_full("Adv. connectable & connected (slave) - Success",
-					&conn_slave_adv_conneactable_test,
+
+	test_le_full("Adv. connectable & connected (peripheral) - Success",
+					&conn_peripheral_adv_connectable_test,
 					setup_advertise_while_connected,
 					test_connected_and_advertising, 10);
 
-	test_le_full("Adv. non-connectable & connected (slave) - Success",
-					&conn_slave_adv_non_conneactable_test,
+	test_le_full("Adv. non-connectable & connected (peripheral) - Success",
+				&conn_peripheral_adv_non_connectable_test,
+				setup_advertise_while_connected,
+				test_connected_and_advertising, 10);
+
+	test_le_full("Adv. connectable & connected (central) - Success",
+					&conn_central_adv_connectable_test,
 					setup_advertise_while_connected,
 					test_connected_and_advertising, 10);
 
-	test_le_full("Adv. connectable & connected (master) - Success",
-					&conn_master_adv_conneactable_test,
-					setup_advertise_while_connected,
-					test_connected_and_advertising, 10);
-
-	test_le_full("Adv. non-connectable & connected (master) - Success",
-					&conn_master_adv_non_conneactable_test,
+	test_le_full("Adv. non-connectable & connected (central) - Success",
+					&conn_central_adv_non_connectable_test,
 					setup_advertise_while_connected,
 					test_connected_and_advertising, 10);
 
@@ -11547,23 +11548,23 @@ int main(int argc, char *argv[])
 				&device_found_invalid_field,
 				NULL, test_device_found);
 
-	test_bredrle50_full("Ext Adv. connectable & connected (slave) - Success",
-				&conn_slave_adv_conneactable_test,
+	test_bredrle50_full("Ext Adv. connectable & connected (peripheral) - Success",
+				&conn_peripheral_adv_connectable_test,
 				setup_advertise_while_connected,
 				test_connected_and_advertising, 10);
 
-	test_bredrle50_full("Ext Adv. non-connectable & connected (slave) - Success",
-				&conn_slave_adv_non_conneactable_test,
+	test_bredrle50_full("Ext Adv. non-connectable & connected (peripheral) - Success",
+				&conn_peripheral_adv_non_connectable_test,
 				setup_advertise_while_connected,
 				test_connected_and_advertising, 10);
 
-	test_bredrle50_full("Ext Adv. connectable & connected (master) - Success",
-				&conn_master_adv_conneactable_test,
+	test_bredrle50_full("Ext Adv. connectable & connected (central) - Success",
+				&conn_central_adv_connectable_test,
 				setup_advertise_while_connected,
 				test_connected_and_advertising, 10);
 
-	test_bredrle50_full("Ext Adv. non-connectable & connected (master) - Success",
-				&conn_master_adv_non_conneactable_test,
+	test_bredrle50_full("Ext Adv. non-connectable & connected (central) - Success",
+				&conn_central_adv_non_connectable_test,
 				setup_advertise_while_connected,
 				test_connected_and_advertising, 10);
 
