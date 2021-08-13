@@ -4026,8 +4026,8 @@ struct bt_l2cap_smp_encrypt_info {
 	uint8_t  ltk[16];
 } __attribute__ ((packed));
 
-#define BT_L2CAP_SMP_MASTER_IDENT	0x07
-struct bt_l2cap_smp_master_ident {
+#define BT_L2CAP_SMP_CENTRAL_IDENT	0x07
+struct bt_l2cap_smp_central_ident {
 	uint16_t ediv;
 	uint64_t rand;
 } __attribute__ ((packed));

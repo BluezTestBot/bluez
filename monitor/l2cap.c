@@ -3017,9 +3017,9 @@ static void smp_encrypt_info(const struct l2cap_frame *frame)
 	print_hex_field("Long term key", pdu->ltk, 16);
 }
 
-static void smp_master_ident(const struct l2cap_frame *frame)
+static void smp_central_ident(const struct l2cap_frame *frame)
 {
-	const struct bt_l2cap_smp_master_ident *pdu = frame->data;
+	const struct bt_l2cap_smp_central_ident *pdu = frame->data;
 
 	print_field("EDIV: 0x%4.4x", le16_to_cpu(pdu->ediv));
 	print_field("Rand: 0x%16.16" PRIx64, le64_to_cpu(pdu->rand));
@@ -3123,8 +3123,8 @@ static const struct smp_opcode_data smp_opcode_table[] = {
 			smp_pairing_failed, 1, true },
 	{ 0x06, "Encryption Information",
 			smp_encrypt_info, 16, true },
-	{ 0x07, "Master Identification",
-			smp_master_ident, 10, true },
+	{ 0x07, "Central Identification",
+			smp_central_ident, 10, true },
 	{ 0x08, "Identity Information",
 			smp_ident_info, 16, true },
 	{ 0x09, "Identity Address Information",
