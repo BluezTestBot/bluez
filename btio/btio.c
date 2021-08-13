@@ -394,13 +394,13 @@ static int rfcomm_set_master(int sock, int master)
 		return -errno;
 
 	if (master) {
-		if (flags & RFCOMM_LM_MASTER)
+		if (flags & RFCOMM_LM_CENTRAL)
 			return 0;
-		flags |= RFCOMM_LM_MASTER;
+		flags |= RFCOMM_LM_CENTRAL;
 	} else {
-		if (!(flags & RFCOMM_LM_MASTER))
+		if (!(flags & RFCOMM_LM_CENTRAL))
 			return 0;
-		flags &= ~RFCOMM_LM_MASTER;
+		flags &= ~RFCOMM_LM_CENTRAL;
 	}
 
 	if (setsockopt(sock, SOL_RFCOMM, RFCOMM_LM, &flags, sizeof(flags)) < 0)
@@ -1345,7 +1345,7 @@ static gboolean rfcomm_get(int sock, GError **err, BtIOOption opt1,
 				return FALSE;
 			}
 			*(va_arg(args, gboolean *)) =
-				(flags & RFCOMM_LM_MASTER) ? TRUE : FALSE;
+				(flags & RFCOMM_LM_CENTRAL) ? TRUE : FALSE;
 			break;
 		case BT_IO_OPT_HANDLE:
 			if (rfcomm_get_info(sock, &handle, dev_class) < 0) {

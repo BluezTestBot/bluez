@@ -435,7 +435,7 @@ static void cmd_listen(int ctl, int dev, bdaddr_t *bdaddr, int argc, char **argv
 
 	lm = 0;
 	if (master)
-		lm |= RFCOMM_LM_MASTER;
+		lm |= RFCOMM_LM_CENTRAL;
 	if (auth)
 		lm |= RFCOMM_LM_AUTH;
 	if (encryption)
