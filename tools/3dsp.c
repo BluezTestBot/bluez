@@ -492,7 +492,7 @@ static void start_display(void)
 	bt_hci_register(hci_dev, BT_HCI_EVT_CONN_REQUEST,
 						conn_request, NULL, NULL);
 
-	bt_hci_register(hci_dev, BT_HCI_EVT_SLAVE_PAGE_RESPONSE_TIMEOUT,
+	bt_hci_register(hci_dev, BT_HCI_EVT_PERIPHERAL_PAGE_RESPONSE_TIMEOUT,
 				slave_page_response_timeout, NULL, NULL);
 	bt_hci_register(hci_dev,
 			BT_HCI_EVT_PERIPHERAL_BROADCAST_CHANNEL_MAP_CHANGE,

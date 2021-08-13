@@ -3348,7 +3348,7 @@ struct bt_hci_evt_truncated_page_complete {
 	uint8_t  bdaddr[6];
 } __attribute__ ((packed));
 
-#define BT_HCI_EVT_SLAVE_PAGE_RESPONSE_TIMEOUT	0x54
+#define BT_HCI_EVT_PERIPHERAL_PAGE_RESPONSE_TIMEOUT	0x54
 
 #define BT_HCI_EVT_PERIPHERAL_BROADCAST_CHANNEL_MAP_CHANGE	0x55
 struct bt_hci_evt_peripheral_broadcast_channel_map_change {

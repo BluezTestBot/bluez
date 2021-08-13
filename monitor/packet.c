@@ -2985,7 +2985,7 @@ static const struct bitfield_data events_page2_table[] = {
 	{ 17, "Connectionless Peripheral Broadcast Receive"		},
 	{ 18, "Connectionless Peripheral Broadcast Timeout"		},
 	{ 19, "Truncated Page Complete"					},
-	{ 20, "Slave Page Response Timeout"				},
+	{ 20, "Peripheral Page Response Timeout"			},
 	{ 21, "Connectionless Peripheral Broadcast Channel Map Change"	},
 	{ 22, "Inquiry Response Notification"				},
 	{ 23, "Authenticated Payload Timeout Expired"			},
@@ -10238,7 +10238,7 @@ static void truncated_page_complete_evt(const void *data, uint8_t size)
 	print_bdaddr(evt->bdaddr);
 }
 
-static void slave_page_response_timeout_evt(const void *data, uint8_t size)
+static void peripheral_page_response_timeout_evt(const void *data, uint8_t size)
 {
 }
 
@@ -11197,8 +11197,8 @@ static const struct event_data event_table[] = {
 				peripheral_broadcast_timeout_evt, 7, true },
 	{ 0x53, "Truncated Page Complete",
 				truncated_page_complete_evt, 7, true },
-	{ 0x54, "Slave Page Response Timeout",
-				slave_page_response_timeout_evt, 0, true },
+	{ 0x54, "Peripheral Page Response Timeout",
+				peripheral_page_response_timeout_evt, 0, true },
 	{ 0x55, "Connectionless Peripheral Broadcast Channel Map Change",
 			peripheral_broadcast_channel_map_change_evt, 10, true },
 	{ 0x56, "Inquiry Response Notification",
