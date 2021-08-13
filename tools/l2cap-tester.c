@@ -1103,7 +1103,7 @@ static int create_l2cap_sock(struct test_data *data, uint16_t psm,
 				uint16_t cid, int sec_level, uint8_t mode)
 {
 	const struct l2cap_data *l2data = data->test_data;
-	const uint8_t *master_bdaddr;
+	const uint8_t *central_bdaddr;
 	struct sockaddr_l2 addr;
 	int sk, err;
 
@@ -1116,9 +1116,9 @@ static int create_l2cap_sock(struct test_data *data, uint16_t psm,
 		return err;
 	}
 
-	master_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
-	if (!master_bdaddr) {
-		tester_warn("No master bdaddr");
+	central_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
+	if (!central_bdaddr) {
+		tester_warn("No central bdaddr");
 		close(sk);
 		return -ENODEV;
 	}
@@ -1127,7 +1127,7 @@ static int create_l2cap_sock(struct test_data *data, uint16_t psm,
 	addr.l2_family = AF_BLUETOOTH;
 	addr.l2_psm = htobs(psm);
 	addr.l2_cid = htobs(cid);
-	bacpy(&addr.l2_bdaddr, (void *) master_bdaddr);
+	bacpy(&addr.l2_bdaddr, (void *) central_bdaddr);
 
 	if (l2data && l2data->addr_type_avail)
 		addr.l2_bdaddr_type = l2data->addr_type;
@@ -1836,7 +1836,7 @@ static void test_server(const void *test_data)
 {
 	struct test_data *data = tester_get_data();
 	const struct l2cap_data *l2data = data->test_data;
-	const uint8_t *master_bdaddr;
+	const uint8_t *central_bdaddr;
 	uint8_t addr_type;
 	struct bthost *bthost;
 	GIOChannel *io;
@@ -1869,9 +1869,9 @@ static void test_server(const void *test_data)
 		tester_print("Listening for connections");
 	}
 
-	master_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
-	if (!master_bdaddr) {
-		tester_warn("No master bdaddr");
+	central_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
+	if (!central_bdaddr) {
+		tester_warn("No central bdaddr");
 		tester_test_failed();
 		return;
 	}
@@ -1884,7 +1884,7 @@ static void test_server(const void *test_data)
 	else
 		addr_type = BDADDR_LE_PUBLIC;
 
-	bthost_hci_connect(bthost, master_bdaddr, addr_type);
+	bthost_hci_connect(bthost, central_bdaddr, addr_type);
 }
 
 static void test_getpeername_not_connected(const void *test_data)

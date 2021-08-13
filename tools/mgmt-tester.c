@@ -9759,7 +9759,7 @@ static void test_pairing_acceptor(const void *test_data)
 {
 	struct test_data *data = tester_get_data();
 	const struct generic_data *test = data->test_data;
-	const uint8_t *master_bdaddr;
+	const uint8_t *central_bdaddr;
 	struct bthost *bthost;
 	uint8_t addr_type;
 
@@ -9775,9 +9775,9 @@ static void test_pairing_acceptor(const void *test_data)
 		test_add_condition(data);
 	}
 
-	master_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
-	if (!master_bdaddr) {
-		tester_warn("No master bdaddr");
+	central_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
+	if (!central_bdaddr) {
+		tester_warn("No central bdaddr");
 		tester_test_failed();
 		return;
 	}
@@ -9790,7 +9790,7 @@ static void test_pairing_acceptor(const void *test_data)
 	else
 		addr_type = BDADDR_LE_PUBLIC;
 
-	bthost_hci_connect(bthost, master_bdaddr, addr_type);
+	bthost_hci_connect(bthost, central_bdaddr, addr_type);
 }
 
 static void connected_event(uint16_t index, uint16_t length, const void *param,
@@ -9828,7 +9828,7 @@ static void test_command_generic_connect(const void *test_data)
 {
 	struct test_data *data = tester_get_data();
 	unsigned int id;
-	const uint8_t *master_bdaddr;
+	const uint8_t *central_bdaddr;
 	uint8_t addr_type;
 	struct bthost *bthost;
 
@@ -9840,9 +9840,9 @@ static void test_command_generic_connect(const void *test_data)
 	data->mgmt_alt_ev_id = id;
 	test_add_condition(data);
 
-	master_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
-	if (!master_bdaddr) {
-		tester_warn("No master bdaddr");
+	central_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
+	if (!central_bdaddr) {
+		tester_warn("No central bdaddr");
 		tester_test_failed();
 		return;
 	}
@@ -9851,7 +9851,7 @@ static void test_command_generic_connect(const void *test_data)
 							BDADDR_LE_PUBLIC;
 	tester_print("ADDR TYPE: %d", addr_type);
 	bthost = hciemu_client_get_host(data->hciemu);
-	bthost_hci_connect(bthost, master_bdaddr, addr_type);
+	bthost_hci_connect(bthost, central_bdaddr, addr_type);
 }
 
 static bool test_adv_enable_hook(const void *data, uint16_t len,
@@ -9904,7 +9904,7 @@ static void add_device_callback(uint8_t status, uint16_t len, const void *param,
 	struct test_data *data = user_data;
 	const struct generic_data *test = data->test_data;
 	struct bthost *bthost;
-	const uint8_t *master_bdaddr;
+	const uint8_t *central_bdaddr;
 
 	if (status != 0) {
 		tester_test_failed();
@@ -9919,18 +9919,19 @@ static void add_device_callback(uint8_t status, uint16_t len, const void *param,
 	if (test->client_enable_adv)
 		return;
 
-	master_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
-	if (!master_bdaddr) {
-		tester_warn("No master bdaddr");
+	central_bdaddr = hciemu_get_central_bdaddr(data->hciemu);
+	if (!central_bdaddr) {
+		tester_warn("No central bdaddr");
 		tester_test_failed();
 		return;
 	}
 
 	bthost = hciemu_client_get_host(data->hciemu);
 	if (data->hciemu_type >= HCIEMU_TYPE_BREDRLE50)
-		bthost_hci_ext_connect(bthost, master_bdaddr, BDADDR_LE_PUBLIC);
+		bthost_hci_ext_connect(bthost, central_bdaddr,
+		BDADDR_LE_PUBLIC);
 	else
-		bthost_hci_connect(bthost, master_bdaddr, BDADDR_LE_PUBLIC);
+		bthost_hci_connect(bthost, central_bdaddr, BDADDR_LE_PUBLIC);
 }
 
 static void test_connected_and_advertising(const void *test_data)
