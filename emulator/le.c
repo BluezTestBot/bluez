@@ -343,7 +343,7 @@ static void reset_defaults(struct bt_le *hci)
 	hci->le_features[0] |= 0x01;	/* LE Encryption */
 	//hci->le_features[0] |= 0x02;	/* Connection Parameter Request Procedure */
 	//hci->le_features[0] |= 0x04;	/* Extended Reject Indication */
-	//hci->le_features[0] |= 0x08;	/* Slave-initiated Features Exchange */
+	//hci->le_features[0] |= 0x08;	/* Peripheral-initiated Features Exchange */
 	hci->le_features[0] |= 0x10;	/* LE Ping */
 	hci->le_features[0] |= 0x20;	/* LE Data Packet Length Extension */
 	hci->le_features[0] |= 0x40;	/* LL Privacy */
@@ -399,8 +399,8 @@ static void reset_defaults(struct bt_le *hci)
 	hci->le_states[0] |= 0x08;	/* High Duty Cycle Directed Advertising */
 	hci->le_states[0] |= 0x10;	/* Passive Scanning */
 	hci->le_states[0] |= 0x20;	/* Active Scanning */
-	hci->le_states[0] |= 0x40;	/* Initiating + Connection (Master Role) */
-	hci->le_states[0] |= 0x80;	/* Connection (Slave Role) */
+	hci->le_states[0] |= 0x40;	/* Initiating + Connection (Central Role) */
+	hci->le_states[0] |= 0x80;	/* Connection (Peripheral Role) */
 	hci->le_states[1] |= 0x01;	/* Passive Scanning +
 					 * Non-connectable Advertising */
 

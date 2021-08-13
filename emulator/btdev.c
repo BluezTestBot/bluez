@@ -6019,13 +6019,13 @@ static void set_bredrle_features(struct btdev *btdev)
 	btdev->features[2] |= 0x08;	/* Transparent SCO */
 	btdev->features[3] |= 0x40;	/* RSSI with inquiry results */
 	btdev->features[3] |= 0x80;	/* Extended SCO link */
-	btdev->features[4] |= 0x08;	/* AFH capable slave */
-	btdev->features[4] |= 0x10;	/* AFH classification slave */
+	btdev->features[4] |= 0x08;	/* AFH capable peripheral */
+	btdev->features[4] |= 0x10;	/* AFH classification peripheral */
 	btdev->features[4] |= 0x40;	/* LE Supported */
 	btdev->features[5] |= 0x02;	/* Sniff subrating */
 	btdev->features[5] |= 0x04;	/* Pause encryption */
-	btdev->features[5] |= 0x08;	/* AFH capable master */
-	btdev->features[5] |= 0x10;	/* AFH classification master */
+	btdev->features[5] |= 0x08;	/* AFH capable central */
+	btdev->features[5] |= 0x10;	/* AFH classification central */
 	btdev->features[6] |= 0x01;	/* Extended Inquiry Response */
 	btdev->features[6] |= 0x02;	/* Simultaneous LE and BR/EDR */
 	btdev->features[6] |= 0x08;	/* Secure Simple Pairing */
@@ -6055,15 +6055,15 @@ static void set_bredrle_features(struct btdev *btdev)
 
 	if (btdev->type >= BTDEV_TYPE_BREDRLE52) {
 		btdev->le_features[1] |= 0x20;  /* LE PER ADV */
-		btdev->le_features[3] |= 0x10;  /* LE CIS Master */
-		btdev->le_features[3] |= 0x20;  /* LE CIS Slave */
+		btdev->le_features[3] |= 0x10;  /* LE CIS Central */
+		btdev->le_features[3] |= 0x20;  /* LE CIS Peripheral */
 		btdev->le_features[3] |= 0x40;  /* LE ISO Broadcaster */
 		btdev->le_features[3] |= 0x80;  /* LE Synchronized Receiver */
 		btdev->le_features[4] |= 0x01;  /* LE ISO channels */
 	}
 
-	btdev->feat_page_2[0] |= 0x01;	/* CSB - Master Operation */
-	btdev->feat_page_2[0] |= 0x02;	/* CSB - Slave Operation */
+	btdev->feat_page_2[0] |= 0x01;	/* CPB - Central Operation */
+	btdev->feat_page_2[0] |= 0x02;	/* CPB - Peripheral Operation */
 	btdev->feat_page_2[0] |= 0x04;	/* Synchronization Train */
 	btdev->feat_page_2[0] |= 0x08;	/* Synchronization Scan */
 	btdev->feat_page_2[0] |= 0x10;	/* Inquiry Response Notification */
@@ -6081,12 +6081,12 @@ static void set_bredr_features(struct btdev *btdev)
 	btdev->features[1] |= 0x08;	/* SCO link */
 	btdev->features[3] |= 0x40;	/* RSSI with inquiry results */
 	btdev->features[3] |= 0x80;	/* Extended SCO link */
-	btdev->features[4] |= 0x08;	/* AFH capable slave */
-	btdev->features[4] |= 0x10;	/* AFH classification slave */
+	btdev->features[4] |= 0x08;	/* AFH capable peripheral */
+	btdev->features[4] |= 0x10;	/* AFH classification peripheral */
 	btdev->features[5] |= 0x02;	/* Sniff subrating */
 	btdev->features[5] |= 0x04;	/* Pause encryption */
-	btdev->features[5] |= 0x08;	/* AFH capable master */
-	btdev->features[5] |= 0x10;	/* AFH classification master */
+	btdev->features[5] |= 0x08;	/* AFH capable central */
+	btdev->features[5] |= 0x10;	/* AFH classification central */
 	btdev->features[6] |= 0x01;	/* Extended Inquiry Response */
 	btdev->features[6] |= 0x08;	/* Secure Simple Pairing */
 	btdev->features[6] |= 0x10;	/* Encapsulated PDU */
@@ -6107,12 +6107,12 @@ static void set_bredr20_features(struct btdev *btdev)
 	btdev->features[1] |= 0x08;	/* SCO link */
 	btdev->features[3] |= 0x40;	/* RSSI with inquiry results */
 	btdev->features[3] |= 0x80;	/* Extended SCO link */
-	btdev->features[4] |= 0x08;	/* AFH capable slave */
-	btdev->features[4] |= 0x10;	/* AFH classification slave */
+	btdev->features[4] |= 0x08;	/* AFH capable peripheral */
+	btdev->features[4] |= 0x10;	/* AFH classification peripheral */
 	btdev->features[5] |= 0x02;	/* Sniff subrating */
 	btdev->features[5] |= 0x04;	/* Pause encryption */
-	btdev->features[5] |= 0x08;	/* AFH capable master */
-	btdev->features[5] |= 0x10;	/* AFH classification master */
+	btdev->features[5] |= 0x08;	/* AFH capable central */
+	btdev->features[5] |= 0x10;	/* AFH classification central */
 	btdev->features[7] |= 0x80;	/* Extended features */
 
 	btdev->max_page = 1;
@@ -6127,7 +6127,7 @@ static void set_le_features(struct btdev *btdev)
 
 	btdev->le_features[0] |= 0x01;	/* LE Encryption */
 	btdev->le_features[0] |= 0x02;	/* Connection Parameters Request */
-	btdev->le_features[0] |= 0x08;	/* Slave-initiated Features Exchange */
+	btdev->le_features[0] |= 0x08;	/* Peripheral-initiated Features Exchange */
 }
 
 static void set_le_states(struct btdev *btdev)
