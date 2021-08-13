@@ -1210,10 +1210,10 @@ static struct option cc_options[] = {
 
 static const char *cc_help =
 	"Usage:\n"
-	"\tcc [--role=m|s] [--ptype=pkt_types] <bdaddr>\n"
+	"\tcc [--role=c|p] [--ptype=pkt_types] <bdaddr>\n"
 	"Example:\n"
 	"\tcc --ptype=dm1,dh3,dh5 01:02:03:04:05:06\n"
-	"\tcc --role=m 01:02:03:04:05:06\n";
+	"\tcc --role=c 01:02:03:04:05:06\n";
 
 static void cmd_cc(int dev_id, int argc, char **argv)
 {
@@ -1360,10 +1360,10 @@ static void cmd_sr(int dev_id, int argc, char **argv)
 
 	str2ba(argv[0], &bdaddr);
 	switch (argv[1][0]) {
-	case 'm':
+	case 'c':
 		role = 0;
 		break;
-	case 's':
+	case 'p':
 		role = 1;
 		break;
 	default:
@@ -3287,7 +3287,7 @@ static const char *lecup_help =
 	"\t    --handle=<0xXXXX>  LE connection handle\n"
 	"\t    --min=<interval>   Range: 0x0006 to 0x0C80\n"
 	"\t    --max=<interval>   Range: 0x0006 to 0x0C80\n"
-	"\t    --latency=<range>  Slave latency. Range: 0x0000 to 0x03E8\n"
+	"\t    --latency=<range>  Peripheral latency. Range: 0x0000 to 0x03E8\n"
 	"\t    --timeout=<time>   N * 10ms. Range: 0x000A to 0x0C80\n"
 	"\n\t min/max range: 7.5ms to 4s. Multiply factor: 1.25ms"
 	"\n\t timeout range: 100ms to 32.0s. Larger than max interval\n";
@@ -3379,7 +3379,7 @@ static struct {
 	{ "con",      cmd_con,     "Display active connections"           },
 	{ "cc",       cmd_cc,      "Create connection to remote device"   },
 	{ "dc",       cmd_dc,      "Disconnect from remote device"        },
-	{ "sr",       cmd_sr,      "Switch master/slave role"             },
+	{ "sr",       cmd_sr,      "Switch central/peripheral role"       },
 	{ "cpt",      cmd_cpt,     "Change connection packet type"        },
 	{ "rssi",     cmd_rssi,    "Display connection RSSI"              },
 	{ "lq",       cmd_lq,      "Display link quality"                 },
