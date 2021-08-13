@@ -1437,7 +1437,7 @@ static gboolean test_close_socket_1_part_2(gpointer args)
 	tester_print("Will close socket during scan phase...");
 
 	/* We tried to conect to LE device that is not advertising. It
-	 * was added to kernel whitelist, and scan was started. We
+	 * was added to kernel accept list, and scan was started. We
 	 * should be still scanning.
 	 */
 	if (!hciemu_get_central_le_scan_enable(data->hciemu)) {
@@ -1446,7 +1446,7 @@ static gboolean test_close_socket_1_part_2(gpointer args)
 		return FALSE;
 	}
 
-	/* Calling close() should remove device from  whitelist, and stop
+	/* Calling close() should remove device from  accept list, and stop
 	 * the scan.
 	 */
 	if (close(sk) < 0) {
