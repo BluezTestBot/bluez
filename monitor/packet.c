@@ -2584,17 +2584,17 @@ static const struct bitfield_data features_page1[] = {
 };
 
 static const struct bitfield_data features_page2[] = {
-	{  0, "Connectionless Slave Broadcast - Master"	},
-	{  1, "Connectionless Slave Broadcast - Slave"	},
-	{  2, "Synchronization Train"			},
-	{  3, "Synchronization Scan"			},
-	{  4, "Inquiry Response Notification Event"	},
-	{  5, "Generalized interlaced scan"		},
-	{  6, "Coarse Clock Adjustment"			},
-	{  8, "Secure Connections (Controller Support)"	},
-	{  9, "Ping"					},
-	{ 10, "Slot Availability Mask"			},
-	{ 11, "Train nudging"				},
+	{  0, "Connectionless Peripheral Broadcast - Central"	},
+	{  1, "Connectionless Peripheral Broadcast - Peripheral"},
+	{  2, "Synchronization Train"				},
+	{  3, "Synchronization Scan"				},
+	{  4, "Inquiry Response Notification Event"		},
+	{  5, "Generalized interlaced scan"			},
+	{  6, "Coarse Clock Adjustment"				},
+	{  8, "Secure Connections (Controller Support)"		},
+	{  9, "Ping"						},
+	{ 10, "Slot Availability Mask"				},
+	{ 11, "Train nudging"					},
 	{ }
 };
 
@@ -2982,11 +2982,11 @@ static const struct bitfield_data events_page2_table[] = {
 	{ 14, "Triggered Clock Capture"					},
 	{ 15, "Synchronization Train Complete"				},
 	{ 16, "Synchronization Train Received"				},
-	{ 17, "Connectionless Slave Broadcast Receive"			},
-	{ 18, "Connectionless Slave Broadcast Timeout"			},
+	{ 17, "Connectionless Peripheral Broadcast Receive"		},
+	{ 18, "Connectionless Peripheral Broadcast Timeout"		},
 	{ 19, "Truncated Page Complete"					},
 	{ 20, "Slave Page Response Timeout"				},
-	{ 21, "Connectionless Slave Broadcast Channel Map Change"	},
+	{ 21, "Connectionless Peripheral Broadcast Channel Map Change"	},
 	{ 22, "Inquiry Response Notification"				},
 	{ 23, "Authenticated Payload Timeout Expired"			},
 	{ 24, "SAM Status Change"					},
@@ -4547,9 +4547,9 @@ static void truncated_page_cancel_cmd(const void *data, uint8_t size)
 	print_bdaddr(cmd->bdaddr);
 }
 
-static void set_slave_broadcast_cmd(const void *data, uint8_t size)
+static void set_peripheral_broadcast_cmd(const void *data, uint8_t size)
 {
-	const struct bt_hci_cmd_set_slave_broadcast *cmd = data;
+	const struct bt_hci_cmd_set_peripheral_broadcast *cmd = data;
 
 	print_field("Enable: 0x%2.2x", cmd->enable);
 	print_lt_addr(cmd->lt_addr);
@@ -4560,18 +4560,18 @@ static void set_slave_broadcast_cmd(const void *data, uint8_t size)
 	print_slot_625("Supervision timeout", cmd->timeout);
 }
 
-static void set_slave_broadcast_rsp(const void *data, uint8_t size)
+static void set_peripheral_broadcast_rsp(const void *data, uint8_t size)
 {
-	const struct bt_hci_rsp_set_slave_broadcast *rsp = data;
+	const struct bt_hci_rsp_set_peripheral_broadcast *rsp = data;
 
 	print_status(rsp->status);
 	print_lt_addr(rsp->lt_addr);
 	print_interval(rsp->interval);
 }
 
-static void set_slave_broadcast_receive_cmd(const void *data, uint8_t size)
+static void set_peripheral_broadcast_receive_cmd(const void *data, uint8_t size)
 {
-	const struct bt_hci_cmd_set_slave_broadcast_receive *cmd = data;
+	const struct bt_hci_cmd_set_peripheral_broadcast_receive *cmd = data;
 
 	print_field("Enable: 0x%2.2x", cmd->enable);
 	print_bdaddr(cmd->bdaddr);
@@ -4587,9 +4587,9 @@ static void set_slave_broadcast_receive_cmd(const void *data, uint8_t size)
 	print_channel_map(cmd->map);
 }
 
-static void set_slave_broadcast_receive_rsp(const void *data, uint8_t size)
+static void set_peripheral_broadcast_receive_rsp(const void *data, uint8_t size)
 {
-	const struct bt_hci_rsp_set_slave_broadcast_receive *rsp = data;
+	const struct bt_hci_rsp_set_peripheral_broadcast_receive *rsp = data;
 
 	print_status(rsp->status);
 	print_bdaddr(rsp->bdaddr);
@@ -5658,9 +5658,9 @@ static void delete_reserved_lt_addr_rsp(const void *data, uint8_t size)
 	print_lt_addr(rsp->lt_addr);
 }
 
-static void set_slave_broadcast_data_cmd(const void *data, uint8_t size)
+static void set_peripheral_broadcast_data_cmd(const void *data, uint8_t size)
 {
-	const struct bt_hci_cmd_set_slave_broadcast_data *cmd = data;
+	const struct bt_hci_cmd_set_peripheral_broadcast_data *cmd = data;
 
 	print_lt_addr(cmd->lt_addr);
 	print_broadcast_fragment(cmd->fragment);
@@ -5673,9 +5673,9 @@ static void set_slave_broadcast_data_cmd(const void *data, uint8_t size)
 	packet_hexdump(data + 3, size - 3);
 }
 
-static void set_slave_broadcast_data_rsp(const void *data, uint8_t size)
+static void set_peripheral_broadcast_data_rsp(const void *data, uint8_t size)
 {
-	const struct bt_hci_rsp_set_slave_broadcast_data *rsp = data;
+	const struct bt_hci_rsp_set_peripheral_broadcast_data *rsp = data;
 
 	print_status(rsp->status);
 	print_lt_addr(rsp->lt_addr);
@@ -8490,12 +8490,12 @@ static const struct opcode_data opcode_table[] = {
 	{ 0x0440, 247, "Truncated Page Cancel",
 				truncated_page_cancel_cmd, 6, true,
 				status_bdaddr_rsp, 7, true },
-	{ 0x0441, 248, "Set Connectionless Slave Broadcast",
-				set_slave_broadcast_cmd, 11, true,
-				set_slave_broadcast_rsp, 4, true },
-	{ 0x0442, 249, "Set Connectionless Slave Broadcast Receive",
-				set_slave_broadcast_receive_cmd, 34, true,
-				set_slave_broadcast_receive_rsp, 8, true },
+	{ 0x0441, 248, "Set Connectionless Peripheral Broadcast",
+				set_peripheral_broadcast_cmd, 11, true,
+				set_peripheral_broadcast_rsp, 4, true },
+	{ 0x0442, 249, "Set Connectionless Peripheral Broadcast Receive",
+				set_peripheral_broadcast_receive_cmd, 34, true,
+				set_peripheral_broadcast_receive_rsp, 8, true },
 	{ 0x0443, 250, "Start Synchronization Train",
 				null_cmd, 0, true },
 	{ 0x0444, 251, "Receive Synchronization Train",
@@ -8796,9 +8796,9 @@ static const struct opcode_data opcode_table[] = {
 	{ 0x0c75, 253, "Delete Reserved LT_ADDR",
 				delete_reserved_lt_addr_cmd, 1, true,
 				delete_reserved_lt_addr_rsp, 2, true },
-	{ 0x0c76, 254, "Set Connectionless Slave Broadcast Data",
-				set_slave_broadcast_data_cmd, 3, false,
-				set_slave_broadcast_data_rsp, 2, true },
+	{ 0x0c76, 254, "Set Connectionless Peripheral Broadcast Data",
+				set_peripheral_broadcast_data_cmd, 3, false,
+				set_peripheral_broadcast_data_rsp, 2, true },
 	{ 0x0c77, 255, "Read Synchronization Train Parameters",
 				null_cmd, 0, true,
 				read_sync_train_params_rsp, 8, true },
@@ -10200,9 +10200,9 @@ static void sync_train_received_evt(const void *data, uint8_t size)
 	print_field("Service Data: 0x%2.2x", evt->service_data);
 }
 
-static void slave_broadcast_receive_evt(const void *data, uint8_t size)
+static void peripheral_broadcast_receive_evt(const void *data, uint8_t size)
 {
-	const struct bt_hci_evt_slave_broadcast_receive *evt = data;
+	const struct bt_hci_evt_peripheral_broadcast_receive *evt = data;
 
 	print_bdaddr(evt->bdaddr);
 	print_lt_addr(evt->lt_addr);
@@ -10222,9 +10222,9 @@ static void slave_broadcast_receive_evt(const void *data, uint8_t size)
 		packet_hexdump(data + 18, size - 18);
 }
 
-static void slave_broadcast_timeout_evt(const void *data, uint8_t size)
+static void peripheral_broadcast_timeout_evt(const void *data, uint8_t size)
 {
-	const struct bt_hci_evt_slave_broadcast_timeout *evt = data;
+	const struct bt_hci_evt_peripheral_broadcast_timeout *evt = data;
 
 	print_bdaddr(evt->bdaddr);
 	print_lt_addr(evt->lt_addr);
@@ -10242,9 +10242,10 @@ static void slave_page_response_timeout_evt(const void *data, uint8_t size)
 {
 }
 
-static void slave_broadcast_channel_map_change_evt(const void *data, uint8_t size)
+static void peripheral_broadcast_channel_map_change_evt(const void *data,
+								uint8_t size)
 {
-	const struct bt_hci_evt_slave_broadcast_channel_map_change *evt = data;
+	const struct bt_hci_evt_peripheral_broadcast_channel_map_change *evt = data;
 
 	print_channel_map(evt->map);
 }
@@ -11190,16 +11191,16 @@ static const struct event_data event_table[] = {
 				sync_train_complete_evt, 1, true },
 	{ 0x50, "Synchronization Train Received",
 				sync_train_received_evt, 29, true },
-	{ 0x51, "Connectionless Slave Broadcast Receive",
-				slave_broadcast_receive_evt, 18, false },
-	{ 0x52, "Connectionless Slave Broadcast Timeout",
-				slave_broadcast_timeout_evt, 7, true },
+	{ 0x51, "Connectionless Peripheral Broadcast Receive",
+				peripheral_broadcast_receive_evt, 18, false },
+	{ 0x52, "Connectionless Peripheral Broadcast Timeout",
+				peripheral_broadcast_timeout_evt, 7, true },
 	{ 0x53, "Truncated Page Complete",
 				truncated_page_complete_evt, 7, true },
 	{ 0x54, "Slave Page Response Timeout",
 				slave_page_response_timeout_evt, 0, true },
-	{ 0x55, "Connectionless Slave Broadcast Channel Map Change",
-				slave_broadcast_channel_map_change_evt, 10, true },
+	{ 0x55, "Connectionless Peripheral Broadcast Channel Map Change",
+			peripheral_broadcast_channel_map_change_evt, 10, true },
 	{ 0x56, "Inquiry Response Notification",
 				inquiry_response_notify_evt, 4, true },
 	{ 0x57, "Authenticated Payload Timeout Expired",

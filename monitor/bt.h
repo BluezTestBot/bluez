@@ -898,8 +898,8 @@ struct bt_hci_cmd_truncated_page_cancel {
 	uint8_t  bdaddr[6];
 } __attribute__ ((packed));
 
-#define BT_HCI_CMD_SET_SLAVE_BROADCAST		0x0441
-struct bt_hci_cmd_set_slave_broadcast {
+#define BT_HCI_CMD_SET_PERIPHERAL_BROADCAST	0x0441
+struct bt_hci_cmd_set_peripheral_broadcast {
 	uint8_t  enable;
 	uint8_t  lt_addr;
 	uint8_t  lpo_allowed;
@@ -908,14 +908,14 @@ struct bt_hci_cmd_set_slave_broadcast {
 	uint16_t max_interval;
 	uint16_t timeout;
 } __attribute__ ((packed));
-struct bt_hci_rsp_set_slave_broadcast {
+struct bt_hci_rsp_set_peripheral_broadcast {
 	uint8_t  status;
 	uint8_t  lt_addr;
 	uint16_t interval;
 } __attribute__ ((packed));
 
-#define BT_HCI_CMD_SET_SLAVE_BROADCAST_RECEIVE	0x0442
-struct bt_hci_cmd_set_slave_broadcast_receive {
+#define BT_HCI_CMD_SET_PERIPHERAL_BROADCAST_RECEIVE	0x0442
+struct bt_hci_cmd_set_peripheral_broadcast_receive {
 	uint8_t  enable;
 	uint8_t  bdaddr[6];
 	uint8_t  lt_addr;
@@ -928,7 +928,7 @@ struct bt_hci_cmd_set_slave_broadcast_receive {
 	uint16_t pkt_type;
 	uint8_t  map[10];
 } __attribute__ ((packed));
-struct bt_hci_rsp_set_slave_broadcast_receive {
+struct bt_hci_rsp_set_peripheral_broadcast_receive {
 	uint8_t  status;
 	uint8_t  bdaddr[6];
 	uint8_t  lt_addr;
@@ -1599,13 +1599,13 @@ struct bt_hci_rsp_delete_reserved_lt_addr {
 	uint8_t  lt_addr;
 } __attribute__ ((packed));
 
-#define BT_HCI_CMD_SET_SLAVE_BROADCAST_DATA	0x0c76
-struct bt_hci_cmd_set_slave_broadcast_data {
+#define BT_HCI_CMD_SET_PERIPHERAL_BROADCAST_DATA	0x0c76
+struct bt_hci_cmd_set_peripheral_broadcast_data {
 	uint8_t  lt_addr;
 	uint8_t  fragment;
 	uint8_t  length;
 } __attribute__ ((packed));
-struct bt_hci_rsp_set_slave_broadcast_data {
+struct bt_hci_rsp_set_peripheral_broadcast_data {
 	uint8_t  status;
 	uint8_t  lt_addr;
 } __attribute__ ((packed));
@@ -3325,8 +3325,8 @@ struct bt_hci_evt_sync_train_received {
 	uint8_t  service_data;
 } __attribute__ ((packed));
 
-#define BT_HCI_EVT_SLAVE_BROADCAST_RECEIVE	0x51
-struct bt_hci_evt_slave_broadcast_receive {
+#define BT_HCI_EVT_PERIPHERAL_BROADCAST_RECEIVE	0x51
+struct bt_hci_evt_peripheral_broadcast_receive {
 	uint8_t  bdaddr[6];
 	uint8_t  lt_addr;
 	uint32_t clock;
@@ -3336,8 +3336,8 @@ struct bt_hci_evt_slave_broadcast_receive {
 	uint8_t  length;
 } __attribute__ ((packed));
 
-#define BT_HCI_EVT_SLAVE_BROADCAST_TIMEOUT	0x52
-struct bt_hci_evt_slave_broadcast_timeout {
+#define BT_HCI_EVT_PERIPHERAL_BROADCAST_TIMEOUT	0x52
+struct bt_hci_evt_peripheral_broadcast_timeout {
 	uint8_t  bdaddr[6];
 	uint8_t  lt_addr;
 } __attribute__ ((packed));
@@ -3350,8 +3350,8 @@ struct bt_hci_evt_truncated_page_complete {
 
 #define BT_HCI_EVT_SLAVE_PAGE_RESPONSE_TIMEOUT	0x54
 
-#define BT_HCI_EVT_SLAVE_BROADCAST_CHANNEL_MAP_CHANGE	0x55
-struct bt_hci_evt_slave_broadcast_channel_map_change {
+#define BT_HCI_EVT_PERIPHERAL_BROADCAST_CHANNEL_MAP_CHANGE	0x55
+struct bt_hci_evt_peripheral_broadcast_channel_map_change {
 	uint8_t  map[10];
 } __attribute__ ((packed));
 
