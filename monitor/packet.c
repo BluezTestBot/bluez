@@ -2164,16 +2164,16 @@ static void print_adv_filter_policy(const char *label, uint8_t value)
 			"Allow Connect Request from Any";
 		break;
 	case 0x01:
-		str = "Allow Scan Request from White List Only, "
+		str = "Allow Scan Request from Accept List Only, "
 			"Allow Connect Request from Any";
 		break;
 	case 0x02:
 		str = "Allow Scan Request from Any, "
-			"Allow Connect Request from White List Only";
+			"Allow Connect Request from Accept List Only";
 		break;
 	case 0x03:
-		str = "Allow Scan Request from White List Only, "
-			"Allow Connect Request from White List Only";
+		str = "Allow Scan Request from Accept List Only, "
+			"Allow Connect Request from Accept List Only";
 		break;
 	default:
 		str = "Reserved";
@@ -6534,13 +6534,13 @@ static void print_scan_filter_policy(uint8_t policy)
 		str = "Accept all advertisement";
 		break;
 	case 0x01:
-		str = "Ignore not in white list";
+		str = "Ignore not in accept list";
 		break;
 	case 0x02:
 		str = "Accept all advertisement, inc. directed unresolved RPA";
 		break;
 	case 0x03:
-		str = "Ignore not in white list, exc. directed unresolved RPA";
+		str = "Ignore not in accept list, exc. directed unresolved RPA";
 		break;
 	default:
 		str = "Reserved";
@@ -6579,10 +6579,10 @@ static void le_create_conn_cmd(const void *data, uint8_t size)
 
 	switch (cmd->filter_policy) {
 	case 0x00:
-		str = "White list is not used";
+		str = "Accept list is not used";
 		break;
 	case 0x01:
-		str = "White list is used";
+		str = "Accept list is used";
 		break;
 	default:
 		str = "Reserved";
@@ -6605,25 +6605,25 @@ static void le_create_conn_cmd(const void *data, uint8_t size)
 	print_slot_625("Max connection length", cmd->max_length);
 }
 
-static void le_read_white_list_size_rsp(const void *data, uint8_t size)
+static void le_read_accept_list_size_rsp(const void *data, uint8_t size)
 {
-	const struct bt_hci_rsp_le_read_white_list_size *rsp = data;
+	const struct bt_hci_rsp_le_read_accept_list_size *rsp = data;
 
 	print_status(rsp->status);
 	print_field("Size: %u", rsp->size);
 }
 
-static void le_add_to_white_list_cmd(const void *data, uint8_t size)
+static void le_add_to_accept_list_cmd(const void *data, uint8_t size)
 {
-	const struct bt_hci_cmd_le_add_to_white_list *cmd = data;
+	const struct bt_hci_cmd_le_add_to_accept_list *cmd = data;
 
 	print_addr_type("Address type", cmd->addr_type);
 	print_addr("Address", cmd->addr, cmd->addr_type);
 }
 
-static void le_remove_from_white_list_cmd(const void *data, uint8_t size)
+static void le_remove_from_accept_list_cmd(const void *data, uint8_t size)
 {
-	const struct bt_hci_cmd_le_remove_from_white_list *cmd = data;
+	const struct bt_hci_cmd_le_remove_from_accept_list *cmd = data;
 
 	print_addr_type("Address type", cmd->addr_type);
 	print_addr("Address", cmd->addr, cmd->addr_type);
@@ -7562,10 +7562,10 @@ static void le_ext_create_conn_cmd(const void *data, uint8_t size)
 
 	switch (cmd->filter_policy) {
 	case 0x00:
-		str = "White list is not used";
+		str = "Accept list is not used";
 		break;
 	case 0x01:
-		str = "White list is used";
+		str = "Accept list is used";
 		break;
 	default:
 		str = "Reserved";
@@ -8990,17 +8990,17 @@ static const struct opcode_data opcode_table[] = {
 	{ 0x200e, 213, "LE Create Connection Cancel",
 				null_cmd, 0, true,
 				status_rsp, 1, true },
-	{ 0x200f, 214, "LE Read White List Size",
+	{ 0x200f, 214, "LE Read Accept List Size",
 				null_cmd, 0, true,
-				le_read_white_list_size_rsp, 2, true },
-	{ 0x2010, 215, "LE Clear White List",
+				le_read_accept_list_size_rsp, 2, true },
+	{ 0x2010, 215, "LE Clear Accept List",
 				null_cmd, 0, true,
 				status_rsp, 1, true },
-	{ 0x2011, 216, "LE Add Device To White List",
-				le_add_to_white_list_cmd, 7, true,
+	{ 0x2011, 216, "LE Add Device To Accept List",
+				le_add_to_accept_list_cmd, 7, true,
 				status_rsp, 1, true },
-	{ 0x2012, 217, "LE Remove Device From White List",
-				le_remove_from_white_list_cmd, 7, true,
+	{ 0x2012, 217, "LE Remove Device From Accept List",
+				le_remove_from_accept_list_cmd, 7, true,
 				status_rsp, 1, true },
 	{ 0x2013, 218, "LE Connection Update",
 				le_conn_update_cmd, 14, true },

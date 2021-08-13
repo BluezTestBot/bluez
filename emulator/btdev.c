@@ -3512,11 +3512,11 @@ static int cmd_le_create_conn_complete(struct btdev *dev, const void *data,
 
 static int cmd_read_wl_size(struct btdev *dev, const void *data, uint8_t len)
 {
-	struct bt_hci_rsp_le_read_white_list_size rsp;
+	struct bt_hci_rsp_le_read_accept_list_size rsp;
 
 	rsp.status = BT_HCI_ERR_SUCCESS;
 	rsp.size = WL_SIZE;
-	cmd_complete(dev, BT_HCI_CMD_LE_READ_WHITE_LIST_SIZE, &rsp,
+	cmd_complete(dev, BT_HCI_CMD_LE_READ_ACCEPT_LIST_SIZE, &rsp,
 						sizeof(rsp));
 
 	return 0;
@@ -3564,7 +3564,7 @@ static int cmd_wl_clear(struct btdev *dev, const void *data, uint8_t len)
 	wl_clear(dev);
 
 	status = BT_HCI_ERR_SUCCESS;
-	cmd_complete(dev, BT_HCI_CMD_LE_CLEAR_WHITE_LIST, &status,
+	cmd_complete(dev, BT_HCI_CMD_LE_CLEAR_ACCEPT_LIST, &status,
 						sizeof(status));
 
 	return 0;
@@ -3581,7 +3581,7 @@ static void wl_add(struct btdev_wl *wl, uint8_t type, bdaddr_t *addr)
 
 static int cmd_add_wl(struct btdev *dev, const void *data, uint8_t len)
 {
-	const struct bt_hci_cmd_le_add_to_white_list *cmd = data;
+	const struct bt_hci_cmd_le_add_to_accept_list *cmd = data;
 	uint8_t status;
 	bool exists = false;
 	int i, pos = -1;
@@ -3617,14 +3617,14 @@ static int cmd_add_wl(struct btdev *dev, const void *data, uint8_t len)
 
 	if (pos < 0) {
 		cmd_status(dev, BT_HCI_ERR_MEM_CAPACITY_EXCEEDED,
-					BT_HCI_CMD_LE_ADD_TO_WHITE_LIST);
+					BT_HCI_CMD_LE_ADD_TO_ACCEPT_LIST);
 		return 0;
 	}
 
 	wl_add(&dev->le_wl[pos], cmd->addr_type, (bdaddr_t *)&cmd->addr);
 
 	status = BT_HCI_ERR_SUCCESS;
-	cmd_complete(dev, BT_HCI_CMD_LE_ADD_TO_WHITE_LIST,
+	cmd_complete(dev, BT_HCI_CMD_LE_ADD_TO_ACCEPT_LIST,
 						&status, sizeof(status));
 
 	return 0;
@@ -3632,7 +3632,7 @@ static int cmd_add_wl(struct btdev *dev, const void *data, uint8_t len)
 
 static int cmd_remove_wl(struct btdev *dev, const void *data, uint8_t len)
 {
-	const struct bt_hci_cmd_le_remove_from_white_list *cmd = data;
+	const struct bt_hci_cmd_le_remove_from_accept_list *cmd = data;
 	uint8_t status;
 	int i;
 	char addr[18];
@@ -3672,7 +3672,7 @@ static int cmd_remove_wl(struct btdev *dev, const void *data, uint8_t len)
 		return -EINVAL;
 
 	status = BT_HCI_ERR_SUCCESS;
-	cmd_complete(dev, BT_HCI_CMD_LE_REMOVE_FROM_WHITE_LIST,
+	cmd_complete(dev, BT_HCI_CMD_LE_REMOVE_FROM_ACCEPT_LIST,
 						&status, sizeof(status));
 
 	return 0;
@@ -4257,10 +4257,10 @@ static int cmd_gen_dhkey(struct btdev *dev, const void *data, uint8_t len)
 					cmd_set_scan_enable_complete), \
 	CMD(BT_HCI_CMD_LE_CREATE_CONN, cmd_le_create_conn, \
 					cmd_le_create_conn_complete), \
-	CMD(BT_HCI_CMD_LE_READ_WHITE_LIST_SIZE, cmd_read_wl_size, NULL), \
-	CMD(BT_HCI_CMD_LE_CLEAR_WHITE_LIST, cmd_wl_clear, NULL), \
-	CMD(BT_HCI_CMD_LE_ADD_TO_WHITE_LIST, cmd_add_wl, NULL), \
-	CMD(BT_HCI_CMD_LE_REMOVE_FROM_WHITE_LIST, cmd_remove_wl, NULL), \
+	CMD(BT_HCI_CMD_LE_READ_ACCEPT_LIST_SIZE, cmd_read_wl_size, NULL), \
+	CMD(BT_HCI_CMD_LE_CLEAR_ACCEPT_LIST, cmd_wl_clear, NULL), \
+	CMD(BT_HCI_CMD_LE_ADD_TO_ACCEPT_LIST, cmd_add_wl, NULL), \
+	CMD(BT_HCI_CMD_LE_REMOVE_FROM_ACCEPT_LIST, cmd_remove_wl, NULL), \
 	CMD(BT_HCI_CMD_LE_CONN_UPDATE, cmd_conn_update, \
 					cmd_conn_update_complete), \
 	CMD(BT_HCI_CMD_LE_READ_REMOTE_FEATURES, cmd_le_read_remote_features, \
