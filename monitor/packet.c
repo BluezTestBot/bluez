@@ -2901,7 +2901,7 @@ static const struct bitfield_data events_table[] = {
 	{  6, "Remote Name Request Complete"				},
 	{  7, "Encryption Change"					},
 	{  8, "Change Connection Link Key Complete"			},
-	{  9, "Master Link Key Complete"				},
+	{  9, "Link Key Type Changed"					},
 	{ 10, "Read Remote Supported Features Complete"			},
 	{ 11, "Read Remote Version Information Complete"		},
 	{ 12, "QoS Setup Complete"					},
@@ -4253,9 +4253,9 @@ static void change_conn_link_key_cmd(const void *data, uint8_t size)
 	print_handle(cmd->handle);
 }
 
-static void master_link_key_cmd(const void *data, uint8_t size)
+static void link_key_selection_cmd(const void *data, uint8_t size)
 {
-	const struct bt_hci_cmd_master_link_key *cmd = data;
+	const struct bt_hci_cmd_link_key_selection *cmd = data;
 
 	print_key_flag(cmd->key_flag);
 }
@@ -8416,8 +8416,8 @@ static const struct opcode_data opcode_table[] = {
 				set_conn_encrypt_cmd, 3, true },
 	{ 0x0415,  17, "Change Connection Link Key",
 				change_conn_link_key_cmd, 2, true },
-	{ 0x0417,  18, "Master Link Key",
-				master_link_key_cmd, 1, true },
+	{ 0x0417,  18, "Temporary Link Key",
+				link_key_selection_cmd, 1, true },
 	{ 0x0419,  19, "Remote Name Request",
 				remote_name_request_cmd, 10, true },
 	{ 0x041a,  20, "Remote Name Request Cancel",
@@ -9493,9 +9493,9 @@ static void change_conn_link_key_complete_evt(const void *data, uint8_t size)
 	print_handle(evt->handle);
 }
 
-static void master_link_key_complete_evt(const void *data, uint8_t size)
+static void link_key_type_changed_evt(const void *data, uint8_t size)
 {
-	const struct bt_hci_evt_master_link_key_complete *evt = data;
+	const struct bt_hci_evt_link_key_type_changed *evt = data;
 
 	print_status(evt->status);
 	print_handle(evt->handle);
@@ -11073,8 +11073,8 @@ static const struct event_data event_table[] = {
 				encrypt_change_evt, 4, true },
 	{ 0x09, "Change Connection Link Key Complete",
 				change_conn_link_key_complete_evt, 3, true },
-	{ 0x0a, "Master Link Key Complete",
-				master_link_key_complete_evt, 4, true },
+	{ 0x0a, "Link Key Type Changed",
+				link_key_type_changed_evt, 4, true },
 	{ 0x0b, "Read Remote Supported Features",
 				remote_features_complete_evt, 11, true },
 	{ 0x0c, "Read Remote Version Complete",

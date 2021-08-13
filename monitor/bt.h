@@ -628,8 +628,8 @@ struct bt_hci_cmd_change_conn_link_key {
 	uint16_t handle;
 } __attribute__ ((packed));
 
-#define BT_HCI_CMD_MASTER_LINK_KEY		0x0417
-struct bt_hci_cmd_master_link_key {
+#define BT_HCI_CMD_LINK_KEY_SELECTION		0x0417
+struct bt_hci_cmd_link_key_selection {
 	uint8_t  key_flag;
 } __attribute__ ((packed));
 
@@ -2931,8 +2931,8 @@ struct bt_hci_evt_change_conn_link_key_complete {
 	uint16_t handle;
 } __attribute__ ((packed));
 
-#define BT_HCI_EVT_MASTER_LINK_KEY_COMPLETE	0x0a
-struct bt_hci_evt_master_link_key_complete {
+#define BT_HCI_EVT_LINK_KEY_TYPE_CHANGED	0x0a
+struct bt_hci_evt_link_key_type_changed {
 	uint8_t  status;
 	uint16_t handle;
 	uint8_t  key_flag;
