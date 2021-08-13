@@ -230,10 +230,10 @@ lm [*mode*]
     sockets.
 
 block <*bdaddr*>
-    Add a device to the blacklist
+    Add a device to the reject list
 
 unblock <*bdaddr*>
-    Remove a device from the blacklist
+    Remove a device from the reject list
 
 lerandaddr <*bdaddr*>
     Set LE Random Address
