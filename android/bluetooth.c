@@ -2218,11 +2218,12 @@ static void store_ltk(const bdaddr_t *dst, uint8_t bdaddr_type, bool central,
 
 	ba2str(dst, addr);
 
-	key_s = central ? "LongTermKey" : "SlaveLongTermKey";
-	keytype_s = central ? "LongTermKeyType" : "SlaveLongTermKeyType";
-	encsize_s = central ? "LongTermKeyEncSize" : "SlaveLongTermKeyEncSize";
-	ediv_s = central ? "LongTermKeyEDiv" : "SlaveLongTermKeyEDiv";
-	rand_s = central ? "LongTermKeyRand" : "SlaveLongTermKeyRand";
+	key_s = central ? "LongTermKey" : "PeripheralLongTermKey";
+	keytype_s = central ? "LongTermKeyType" : "PeripheralLongTermKeyType";
+	encsize_s = central ?
+			"LongTermKeyEncSize" : "PeripheralLongTermKeyEncSize";
+	ediv_s = central ? "LongTermKeyEDiv" : "PeripheralLongTermKeyEDiv";
+	rand_s = central ? "LongTermKeyRand" : "PeripheralLongTermKeyRand";
 
 	for (i = 0; i < 16; i++)
 		sprintf(key_str + (i * 2), "%2.2X", key[i]);
@@ -3066,11 +3067,12 @@ static struct mgmt_ltk_info *get_ltk_info(GKeyFile *key_file, const char *peer,
 	char *key;
 	unsigned int i;
 
-	key_s = central ? "LongTermKey" : "SlaveLongTermKey";
-	keytype_s = central ? "LongTermKeyType" : "SlaveLongTermKeyType";
-	encsize_s = central ? "LongTermKeyEncSize" : "SlaveLongTermKeyEncSize";
-	ediv_s = central ? "LongTermKeyEDiv" : "SlaveLongTermKeyEDiv";
-	rand_s = central ? "LongTermKeyRand" : "SlaveLongTermKeyRand";
+	key_s = central ? "LongTermKey" : "PeripheralLongTermKey";
+	keytype_s = central ? "LongTermKeyType" : "PeripheralLongTermKeyType";
+	encsize_s = central ?
+			"LongTermKeyEncSize" : "PeripheralLongTermKeyEncSize";
+	ediv_s = central ? "LongTermKeyEDiv" : "PeripheralLongTermKeyEDiv";
+	rand_s = central ? "LongTermKeyRand" : "PeripheralLongTermKeyRand";
 
 	key = g_key_file_get_string(key_file, peer, key_s, NULL);
 	if (!key || strlen(key) != 32)
