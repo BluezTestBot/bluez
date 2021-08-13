@@ -157,23 +157,23 @@ clock [*bdaddr*] [*clock*]
     The *clock* can be **0** for the local clock or **1** for the piconet
     clock (which is default).
 
-lescan [--*privacy*] [--*passive*] [--*whitelist*] [--*discovery*\=g|l] [--*duplicates*]
+lescan [--*privacy*] [--*passive*] [--*acceptlist*] [--*discovery*\=g|l] [--*duplicates*]
     Start LE scan
 
 leinfo [--*static*] [--*random*] <*bdaddr*>
     Get LE remote information
 
-lewladd [--*random*] <*bdaddr*>
-    Add device to LE White List
+lealall [--*random*] <*bdaddr*>
+    Add device to LE Accept List
 
-lewlrm <*bdaddr*>
-    Remove device from LE White List
+lealrm <*bdaddr*>
+    Remove device from LE Accept List
 
-lewlsz
-    Read size of LE White List
+lealsz
+    Read size of LE Accept List
 
-lewlclr
-    Clear LE White List
+lealclr
+    Clear LE Accept List
 
 lerladd [--*local_irk*] [--*peer_irk*] [--*random*] <*bdaddr*>
     Add device to LE Resolving List
@@ -193,7 +193,7 @@ lerlon
 lerloff
     Disable LE Address Resolution
 
-lecc [--*static*] [--*random*] <*bdaddr*> | [--*whitelist*]
+lecc [--*static*] [--*random*] <*bdaddr*> | [--*acceptlist*]
     Create a LE Connection
 
 ledc <*handle*> [*reason*]
