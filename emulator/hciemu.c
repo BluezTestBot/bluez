@@ -596,6 +596,15 @@ void hciemu_set_master_le_rl_len(struct hciemu *hciemu, uint8_t len)
 	btdev_set_rl_len(hciemu->dev, len);
 }
 
+const uint8_t *hciemu_get_master_adv_addr(struct hciemu *hciemu, uint8_t handle)
+{
+	if (!hciemu || !hciemu->dev)
+		return NULL;
+
+
+	return btdev_get_adv_addr(hciemu->dev, handle);
+}
+
 bool hciemu_add_master_post_command_hook(struct hciemu *hciemu,
 			hciemu_command_func_t function, void *user_data)
 {
