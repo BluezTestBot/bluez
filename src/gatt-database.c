@@ -3615,6 +3615,93 @@ static DBusMessage *manager_unregister_app(DBusConnection *conn,
 	return dbus_message_new_method_return(msg);
 }
 
+static DBusMessage *notify_characteristic_changed(DBusConnection *conn,
+					DBusMessage *msg, void *user_data)
+{
+	struct btd_gatt_database *database = user_data;
+	uint8_t *value = NULL;
+	int value_len = 0;
+	DBusMessageIter args;
+	DBusMessageIter array;
+	const char *characteristic_path;
+	const char *client_path;
+	const char *application_path;
+	struct svc_match_data match_data;
+	const char *sender = dbus_message_get_sender(msg);
+	struct gatt_app *app;
+	struct external_service *service;
+	struct external_chrc *chrc;
+	struct notify notify;
+	struct device_state *client_state;
+	struct btd_device *client_device;
+
+	if (!dbus_message_iter_init(msg, &args))
+		return btd_error_invalid_args(msg);
+
+	if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_OBJECT_PATH)
+		return btd_error_invalid_args(msg);
+	dbus_message_iter_get_basic(&args, &application_path);
+
+	dbus_message_iter_next(&args);
+	if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_OBJECT_PATH)
+		return btd_error_invalid_args(msg);
+	dbus_message_iter_get_basic(&args, &client_path);
+
+	dbus_message_iter_next(&args);
+	if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_OBJECT_PATH)
+		return btd_error_invalid_args(msg);
+	dbus_message_iter_get_basic(&args, &characteristic_path);
+
+	dbus_message_iter_next(&args);
+	if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_ARRAY)
+		return btd_error_invalid_args(msg);
+
+
+	dbus_message_iter_recurse(&args, &array);
+	dbus_message_iter_get_fixed_array(&array, &value, &value_len);
+
+	match_data.path = application_path;
+	match_data.sender = sender;
+	app = queue_find(database->apps, match_app, &match_data);
+	if (!app)
+		return btd_error_does_not_exist(msg);
+
+
+	service = queue_find(app->services, match_service_by_chrc,
+					  characteristic_path);
+	if (!service)
+		return btd_error_does_not_exist(msg);
+
+
+	chrc = queue_find(service->chrcs, match_chrc, characteristic_path);
+	if (!chrc)
+		return btd_error_agent_not_available(msg);
+
+
+	client_device = btd_adapter_find_device_by_path(database->adapter,
+								 client_path);
+	if (!client_device)
+		return btd_error_does_not_exist(msg);
+
+	client_state = find_device_state(database,
+				device_get_address(client_device),
+				btd_device_get_bdaddr_type(client_device));
+	if (!client_state)
+		return btd_error_does_not_exist(msg);
+
+
+	notify.handle = gatt_db_attribute_get_handle(chrc->attrib);
+	notify.ccc_handle = gatt_db_attribute_get_handle(chrc->ccc);
+	notify.database = database;
+	notify.value = value;
+	notify.len = value_len;
+	notify.conf = conf_cb;
+
+	send_notification_to_device(client_state, &notify);
+	DBG("Notification/Indication sent to %s.", client_path);
+	return dbus_message_new_method_return(msg);
+}
+
 static const GDBusMethodTable manager_methods[] = {
 	{ GDBUS_ASYNC_METHOD("RegisterApplication",
 					GDBUS_ARGS({ "application", "o" },
@@ -3623,6 +3710,12 @@ static const GDBusMethodTable manager_methods[] = {
 	{ GDBUS_ASYNC_METHOD("UnregisterApplication",
 					GDBUS_ARGS({ "application", "o" }),
 					NULL, manager_unregister_app) },
+	{ GDBUS_ASYNC_METHOD("NotifyCharacteristicChanged",
+					GDBUS_ARGS({"application", "o" },
+					{ "device", "o" },
+					{ "characteristic_path", "o"},
+					{ "value", "ay"}),
+					NULL, notify_characteristic_changed) },
 	{ }
 };
 
