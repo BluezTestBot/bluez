@@ -4481,9 +4481,6 @@ static void device_remove_stored(struct btd_device *device)
 {
 	char device_addr[18];
 	char filename[PATH_MAX];
-	GKeyFile *key_file;
-	char *data;
-	gsize length = 0;
 
 	if (device->bredr_state.bonded)
 		device_remove_bonding(device, BDADDR_BREDR);
@@ -4507,19 +4504,7 @@ static void device_remove_stored(struct btd_device *device)
 	snprintf(filename, PATH_MAX, STORAGEDIR "/%s/cache/%s",
 				btd_adapter_get_storage_dir(device->adapter),
 				device_addr);
-
-	key_file = g_key_file_new();
-	g_key_file_load_from_file(key_file, filename, 0, NULL);
-	g_key_file_remove_group(key_file, "ServiceRecords", NULL);
-
-	data = g_key_file_to_data(key_file, &length, NULL);
-	if (length > 0) {
-		create_file(filename, 0600);
-		g_file_set_contents(filename, data, length, NULL);
-	}
-
-	g_free(data);
-	g_key_file_free(key_file);
+	unlink(filename);
 }
 
 void device_remove(struct btd_device *device, gboolean remove_stored)
