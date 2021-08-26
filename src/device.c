@@ -1471,6 +1471,26 @@ static gboolean dev_property_wake_allowed_exist(
 	return device_get_wake_support(device);
 }
 
+static gboolean
+dev_property_get_mtu(const GDBusPropertyTable *property,
+		     DBusMessageIter *iter, void *data)
+{
+	struct btd_device *device = data;
+
+	dbus_uint16_t mtu = bt_gatt_client_get_mtu(device->client);
+	dbus_message_iter_append_basic(iter, DBUS_TYPE_UINT16, &mtu);
+
+	return TRUE;
+}
+
+static gboolean
+dev_property_mtu_exist(const GDBusPropertyTable *property, void *data)
+{
+	struct btd_device *device = data;
+
+	return bt_gatt_client_get_mtu(device->client) != 0;
+}
+
 static bool disconnect_all(gpointer user_data)
 {
 	struct btd_device *device = user_data;
@@ -3014,6 +3034,7 @@ static const GDBusPropertyTable device_properties[] = {
 	{ "WakeAllowed", "b", dev_property_get_wake_allowed,
 				dev_property_set_wake_allowed,
 				dev_property_wake_allowed_exist },
+	{ "MTU", "q", dev_property_get_mtu, NULL, dev_property_mtu_exist },
 	{ }
 };
 
@@ -5244,6 +5265,9 @@ static void gatt_client_ready_cb(bool success, uint8_t att_ecode,
 									-EIO);
 		return;
 	}
+
+	g_dbus_emit_property_changed(dbus_conn, device->path,
+					DEVICE_INTERFACE, "MTU");
 
 	register_gatt_services(device);
 
