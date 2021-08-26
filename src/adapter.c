@@ -2888,6 +2888,13 @@ static void clear_discoverable(struct btd_adapter *adapter)
 	set_mode(adapter, MGMT_OP_SET_CONNECTABLE, 0x00);
 }
 
+static void adv_monitor_notify_power_down(struct btd_adapter *adapter)
+{
+	/* Notify Adv Monitor about power down */
+	if (adapter->adv_monitor_manager)
+		btd_adv_monitor_notify_power_down(adapter->adv_monitor_manager);
+}
+
 static void property_set_mode(struct btd_adapter *adapter, uint32_t setting,
 						DBusMessageIter *value,
 						GDBusPendingPropertySet id)
@@ -2928,6 +2935,7 @@ static void property_set_mode(struct btd_adapter *adapter, uint32_t setting,
 		len = sizeof(mode);
 
 		if (!mode) {
+			adv_monitor_notify_power_down(adapter);
 			clear_discoverable(adapter);
 			remove_temporary_devices(adapter);
 		}
