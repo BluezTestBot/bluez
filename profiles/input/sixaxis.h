@@ -74,6 +74,7 @@ get_pairing(uint16_t vid, uint16_t pid, const char *name)
 		},
 	};
 	guint i;
+	const struct cable_pairing *best_match = NULL;
 
 	for (i = 0; i < G_N_ELEMENTS(devices); i++) {
 		if (devices[i].vid != vid)
@@ -81,13 +82,16 @@ get_pairing(uint16_t vid, uint16_t pid, const char *name)
 		if (devices[i].pid != pid)
 			continue;
 
-		if (name && strcmp(name, devices[i].name))
+		/* if the device is unknown, use the next best match */
+		if (name && strcmp(name, devices[i].name)) {
+			best_match = &devices[i];
 			continue;
+		}
 
 		return &devices[i];
 	}
 
-	return NULL;
+	return best_match;
 }
 
 #endif /* _SIXAXIS_H_ */
