@@ -1246,7 +1246,7 @@ bool mesh_db_set_iv_index(uint32_t ivi)
 	return save_config();
 }
 
-static int get_blacklisted_by_iv_index(json_object *jarray, uint32_t iv_index)
+static int get_rejected_by_iv_index(json_object *jarray, uint32_t iv_index)
 {
 	int i, cnt;
 
@@ -1268,12 +1268,12 @@ static int get_blacklisted_by_iv_index(json_object *jarray, uint32_t iv_index)
 	return -1;
 }
 
-static bool load_blacklisted(json_object *jobj)
+static bool load_rejected_addresses(json_object *jobj)
 {
 	json_object *jarray;
 	int i, cnt;
 
-	json_object_object_get_ex(jobj, "blacklistedAddresses", &jarray);
+	json_object_object_get_ex(jobj, "rejectedAddresses", &jarray);
 	if (!jarray || json_object_get_type(jarray) != json_type_array)
 		return true;
 
@@ -1304,15 +1304,14 @@ static bool load_blacklisted(json_object *jobj)
 			if (sscanf(str, "%04hx", &unicast) != 1)
 				return false;
 
-			remote_add_blacklisted_address(unicast, iv_index,
-								false);
+			remote_add_rejected_address(unicast, iv_index, false);
 		}
 	}
 
 	return true;
 }
 
-bool mesh_db_add_blacklisted_addr(uint16_t unicast, uint32_t iv_index)
+bool mesh_db_add_rejected_addr(uint16_t unicast, uint32_t iv_index)
 {
 	json_object *jarray, *jobj, *jaddrs, *jstring;
 	int idx;
@@ -1321,14 +1320,13 @@ bool mesh_db_add_blacklisted_addr(uint16_t unicast, uint32_t iv_index)
 	if (!cfg || !cfg->jcfg)
 		return false;
 
-	json_object_object_get_ex(cfg->jcfg, "blacklistedAddresses", &jarray);
+	json_object_object_get_ex(cfg->jcfg, "rejectedAddresses", &jarray);
 	if (!jarray) {
 		jarray = json_object_new_array();
-		json_object_object_add(cfg->jcfg, "blacklistedAddresses",
-									jarray);
+		json_object_object_add(cfg->jcfg, "rejectedAddresses", jarray);
 	}
 
-	idx = get_blacklisted_by_iv_index(jarray, iv_index);
+	idx = get_rejected_by_iv_index(jarray, iv_index);
 
 	if (idx < 0) {
 		jobj = json_object_new_object();
@@ -1362,7 +1360,7 @@ fail:
 	return false;
 }
 
-bool mesh_db_clear_blacklisted(uint32_t iv_index)
+bool mesh_db_clear_rejected(uint32_t iv_index)
 {
 	json_object *jarray;
 	int idx;
@@ -1370,11 +1368,11 @@ bool mesh_db_clear_blacklisted(uint32_t iv_index)
 	if (!cfg || !cfg->jcfg)
 		return false;
 
-	json_object_object_get_ex(cfg->jcfg, "blacklistedAddresses", &jarray);
+	json_object_object_get_ex(cfg->jcfg, "rejectedAddresses", &jarray);
 	if (!jarray || json_object_get_type(jarray) != json_type_array)
 		return false;
 
-	idx = get_blacklisted_by_iv_index(jarray, iv_index);
+	idx = get_rejected_by_iv_index(jarray, iv_index);
 	if (idx < 0)
 		return true;
 
@@ -1437,7 +1435,7 @@ bool mesh_db_create(const char *fname, const uint8_t token[8],
 	if (!jarray)
 		goto fail;
 
-	json_object_object_add(jcfg, "blacklistedAddresses", jarray);
+	json_object_object_add(jcfg, "rejectedAddresses", jarray);
 
 	write_int(jcfg, "ivIndex", 0);
 
@@ -1504,7 +1502,7 @@ bool mesh_db_load(const char *fname)
 
 	load_remotes(jcfg);
 
-	load_blacklisted(jcfg);
+	load_rejected_addresses(jcfg);
 
 	return true;
 fail:

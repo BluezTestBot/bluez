@@ -110,7 +110,7 @@ static int seq_start = 0;
 static const char *filename = NULL;
 
 static int rfcmode = 0;
-static int master = 0;
+static int central = 0;
 static int auth = 0;
 static int encr = 0;
 static int secure = 0;
@@ -483,7 +483,7 @@ static int do_connect(char *svr)
 	opt = 0;
 	if (reliable)
 		opt |= L2CAP_LM_RELIABLE;
-	if (master)
+	if (central)
 		opt |= L2CAP_LM_MASTER;
 	if (auth)
 		opt |= L2CAP_LM_AUTH;
@@ -586,7 +586,7 @@ static void do_listen(void (*handler)(int sk))
 	opt = 0;
 	if (reliable)
 		opt |= L2CAP_LM_RELIABLE;
-	if (master)
+	if (central)
 		opt |= L2CAP_LM_MASTER;
 	if (auth)
 		opt |= L2CAP_LM_AUTH;
@@ -1306,7 +1306,7 @@ static void usage(void)
 		"\t[-W seconds] enable deferred setup\n"
 		"\t[-B filename] use data packets from file\n"
 		"\t[-N num] send num frames (default = infinite)\n"
-		"\t[-C num] send num frames before delay (default = 1)\n"
+		"\t[-M num] send num frames before delay (default = 1)\n"
 		"\t[-D milliseconds] delay after sending num frames (default = 0)\n"
 		"\t[-K milliseconds] delay before receiving (default = 0)\n"
 		"\t[-g milliseconds] delay before disconnecting (default = 0)\n"
@@ -1323,7 +1323,7 @@ static void usage(void)
 		"\t[-A] request authentication\n"
 		"\t[-E] request encryption\n"
 		"\t[-S] secure connection\n"
-		"\t[-M] become master\n"
+		"\t[-C] become central\n"
 		"\t[-T] enable timestamps\n"
 		"\t[-V type] address type (help for list, default = bredr)\n"
 		"\t[-e seq] initial sequence value (default = 0)\n");
@@ -1337,7 +1337,7 @@ int main(int argc, char *argv[])
 	bacpy(&bdaddr, BDADDR_ANY);
 
 	while ((opt = getopt(argc, argv, "a:b:cde:g:i:mnpqrstuwxyz"
-		"AB:C:D:EF:GH:I:J:K:L:MN:O:P:Q:RSTUV:W:X:Y:Z:")) != EOF) {
+		"AB:CD:EF:GH:I:J:K:L:M:N:O:P:Q:RSTUV:W:X:Y:Z:")) != EOF) {
 		switch (opt) {
 		case 'r':
 			mode = RECV;
@@ -1442,7 +1442,7 @@ int main(int argc, char *argv[])
 			num_frames = atoi(optarg);
 			break;
 
-		case 'C':
+		case 'M':
 			count = atoi(optarg);
 			break;
 
@@ -1488,8 +1488,8 @@ int main(int argc, char *argv[])
 			reliable = 1;
 			break;
 
-		case 'M':
-			master = 1;
+		case 'C':
+			central = 1;
 			break;
 
 		case 'A':
