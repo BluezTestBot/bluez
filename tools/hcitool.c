@@ -2793,7 +2793,7 @@ static void cmd_lewladd(int dev_id, int argc, char **argv)
 
 	str2ba(argv[0], &bdaddr);
 
-	err = hci_le_add_white_list(dd, &bdaddr, bdaddr_type, 1000);
+	err = hci_le_add_accept_list(dd, &bdaddr, bdaddr_type, 1000);
 	hci_close_dev(dd);
 
 	if (err < 0) {
@@ -2839,7 +2839,7 @@ static void cmd_lewlrm(int dev_id, int argc, char **argv)
 
 	str2ba(argv[0], &bdaddr);
 
-	err = hci_le_rm_white_list(dd, &bdaddr, LE_PUBLIC_ADDRESS, 1000);
+	err = hci_le_rm_accept_list(dd, &bdaddr, LE_PUBLIC_ADDRESS, 1000);
 	hci_close_dev(dd);
 
 	if (err < 0) {
@@ -2883,7 +2883,7 @@ static void cmd_lewlsz(int dev_id, int argc, char **argv)
 		exit(1);
 	}
 
-	err = hci_le_read_white_list_size(dd, &size, 1000);
+	err = hci_le_read_accept_list_size(dd, &size, 1000);
 	hci_close_dev(dd);
 
 	if (err < 0) {
@@ -2928,7 +2928,7 @@ static void cmd_lewlclr(int dev_id, int argc, char **argv)
 		exit(1);
 	}
 
-	err = hci_le_clear_white_list(dd, 1000);
+	err = hci_le_clear_accept_list(dd, 1000);
 	hci_close_dev(dd);
 
 	if (err < 0) {

@@ -117,10 +117,10 @@ int hci_le_create_conn(int dd, uint16_t interval, uint16_t window,
 int hci_le_conn_update(int dd, uint16_t handle, uint16_t min_interval,
 			uint16_t max_interval, uint16_t latency,
 			uint16_t supervision_timeout, int to);
-int hci_le_add_white_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to);
-int hci_le_rm_white_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to);
-int hci_le_read_white_list_size(int dd, uint8_t *size, int to);
-int hci_le_clear_white_list(int dd, int to);
+int hci_le_add_accept_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to);
+int hci_le_rm_accept_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to);
+int hci_le_read_accept_list_size(int dd, uint8_t *size, int to);
+int hci_le_clear_accept_list(int dd, int to);
 int hci_le_add_resolving_list(int dd, const bdaddr_t *bdaddr, uint8_t type,
 				uint8_t *peer_irk, uint8_t *local_irk, int to);
 int hci_le_rm_resolving_list(int dd, const bdaddr_t *bdaddr, uint8_t type, int to);

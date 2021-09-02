@@ -241,8 +241,8 @@ enum {
 
 #define LMP_EV4		0x01
 #define LMP_EV5		0x02
-#define LMP_AFH_CAP_SLV	0x08
-#define LMP_AFH_CLS_SLV	0x10
+#define LMP_AFH_CAP_PRP	0x08
+#define LMP_AFH_CLS_PRP	0x10
 #define LMP_NO_BREDR	0x20
 #define LMP_LE		0x40
 #define LMP_EDR_3SLOT	0x80
@@ -250,8 +250,8 @@ enum {
 #define LMP_EDR_5SLOT	0x01
 #define LMP_SNIFF_SUBR	0x02
 #define LMP_PAUSE_ENC	0x04
-#define LMP_AFH_CAP_MST	0x08
-#define LMP_AFH_CLS_MST	0x10
+#define LMP_AFH_CAP_CEN	0x08
+#define LMP_AFH_CLS_CEN	0x10
 #define LMP_EDR_ESCO_2M	0x20
 #define LMP_EDR_ESCO_3M	0x40
 #define LMP_EDR_3S_ESCO	0x80
@@ -281,7 +281,7 @@ enum {
 
 /* Link mode */
 #define HCI_LM_ACCEPT	0x8000
-#define HCI_LM_MASTER	0x0001
+#define HCI_LM_CENTRAL	0x0001
 #define HCI_LM_AUTH	0x0002
 #define HCI_LM_ENCRYPT	0x0004
 #define HCI_LM_TRUSTED	0x0008
@@ -421,11 +421,11 @@ typedef struct {
 } __attribute__ ((packed)) change_conn_link_key_cp;
 #define CHANGE_CONN_LINK_KEY_CP_SIZE 2
 
-#define OCF_MASTER_LINK_KEY		0x0017
+#define OCF_CENTRAL_LINK_KEY		0x0017
 typedef struct {
 	uint8_t		key_flag;
-} __attribute__ ((packed)) master_link_key_cp;
-#define MASTER_LINK_KEY_CP_SIZE 1
+} __attribute__ ((packed)) central_link_key_cp;
+#define CENTRAL_LINK_KEY_CP_SIZE 1
 
 #define OCF_REMOTE_NAME_REQ		0x0019
 typedef struct {
@@ -1561,28 +1561,28 @@ typedef struct {
 
 #define OCF_LE_CREATE_CONN_CANCEL		0x000E
 
-#define OCF_LE_READ_WHITE_LIST_SIZE		0x000F
+#define OCF_LE_READ_ACCEPT_LIST_SIZE		0x000F
 typedef struct {
 	uint8_t		status;
 	uint8_t		size;
-} __attribute__ ((packed)) le_read_white_list_size_rp;
-#define LE_READ_WHITE_LIST_SIZE_RP_SIZE 2
+} __attribute__ ((packed)) le_read_accept_list_size_rp;
+#define LE_READ_ACCEPT_LIST_SIZE_RP_SIZE 2
 
-#define OCF_LE_CLEAR_WHITE_LIST			0x0010
+#define OCF_LE_CLEAR_ACCEPT_LIST		0x0010
 
-#define OCF_LE_ADD_DEVICE_TO_WHITE_LIST		0x0011
+#define OCF_LE_ADD_DEVICE_TO_ACCEPT_LIST	0x0011
 typedef struct {
 	uint8_t		bdaddr_type;
 	bdaddr_t	bdaddr;
-} __attribute__ ((packed)) le_add_device_to_white_list_cp;
-#define LE_ADD_DEVICE_TO_WHITE_LIST_CP_SIZE 7
+} __attribute__ ((packed)) le_add_device_to_accept_list_cp;
+#define LE_ADD_DEVICE_TO_ACCEPT_LIST_CP_SIZE 7
 
-#define OCF_LE_REMOVE_DEVICE_FROM_WHITE_LIST	0x0012
+#define OCF_LE_REMOVE_DEVICE_FROM_ACCEPT_LIST	0x0012
 typedef struct {
 	uint8_t		bdaddr_type;
 	bdaddr_t	bdaddr;
-} __attribute__ ((packed)) le_remove_device_from_white_list_cp;
-#define LE_REMOVE_DEVICE_FROM_WHITE_LIST_CP_SIZE 7
+} __attribute__ ((packed)) le_remove_device_from_accept_list_cp;
+#define LE_REMOVE_DEVICE_FROM_ACCEPT_LIST_CP_SIZE 7
 
 #define OCF_LE_CONN_UPDATE			0x0013
 typedef struct {
@@ -1804,13 +1804,13 @@ typedef struct {
 }  __attribute__ ((packed)) evt_change_conn_link_key_complete;
 #define EVT_CHANGE_CONN_LINK_KEY_COMPLETE_SIZE 3
 
-#define EVT_MASTER_LINK_KEY_COMPLETE		0x0A
+#define EVT_CENTRAL_LINK_KEY_COMPLETE		0x0A
 typedef struct {
 	uint8_t		status;
 	uint16_t	handle;
 	uint8_t		key_flag;
-} __attribute__ ((packed)) evt_master_link_key_complete;
-#define EVT_MASTER_LINK_KEY_COMPLETE_SIZE 4
+} __attribute__ ((packed)) evt_central_link_key_complete;
+#define EVT_CENTRAL_LINK_KEY_COMPLETE_SIZE 4
 
 #define EVT_READ_REMOTE_FEATURES_COMPLETE	0x0B
 typedef struct {
@@ -2149,7 +2149,7 @@ typedef struct {
 	uint16_t	interval;
 	uint16_t	latency;
 	uint16_t	supervision_timeout;
-	uint8_t		master_clock_accuracy;
+	uint8_t		central_clock_accuracy;
 } __attribute__ ((packed)) evt_le_connection_complete;
 #define EVT_LE_CONN_COMPLETE_SIZE 18
 

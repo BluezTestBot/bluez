@@ -72,7 +72,7 @@ static int init_server(uint16_t mtu, int master, int compat)
 	}
 
 	if (master) {
-		int opt = L2CAP_LM_MASTER;
+		int opt = L2CAP_LM_CENTRAL;
 		if (setsockopt(l2cap_sock, SOL_L2CAP, L2CAP_LM, &opt, sizeof(opt)) < 0) {
 			error("setsockopt: %s", strerror(errno));
 			return -1;

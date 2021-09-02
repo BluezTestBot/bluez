@@ -484,7 +484,7 @@ static int do_connect(char *svr)
 	if (reliable)
 		opt |= L2CAP_LM_RELIABLE;
 	if (master)
-		opt |= L2CAP_LM_MASTER;
+		opt |= L2CAP_LM_CENTRAL;
 	if (auth)
 		opt |= L2CAP_LM_AUTH;
 	if (encr)
@@ -587,7 +587,7 @@ static void do_listen(void (*handler)(int sk))
 	if (reliable)
 		opt |= L2CAP_LM_RELIABLE;
 	if (master)
-		opt |= L2CAP_LM_MASTER;
+		opt |= L2CAP_LM_CENTRAL;
 	if (auth)
 		opt |= L2CAP_LM_AUTH;
 	if (encr)

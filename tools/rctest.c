@@ -203,7 +203,7 @@ static int do_connect(const char *svr)
 	/* Set link mode */
 	opt = 0;
 	if (master)
-		opt |= RFCOMM_LM_MASTER;
+		opt |= RFCOMM_LM_CENTRAL;
 	if (auth)
 		opt |= RFCOMM_LM_AUTH;
 	if (encr)
@@ -294,7 +294,7 @@ static void do_listen(void (*handler)(int sk))
 	/* Set link mode */
 	opt = 0;
 	if (master)
-		opt |= RFCOMM_LM_MASTER;
+		opt |= RFCOMM_LM_CENTRAL;
 	if (auth)
 		opt |= RFCOMM_LM_AUTH;
 	if (encr)
