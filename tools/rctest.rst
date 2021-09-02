@@ -56,7 +56,7 @@ OPTIONS
 
 -N num          send num frames
 
--C num          send num frames before delay (default: 1)
+-M num          send num frames before delay (default: 1)
 
 -D milliseconds     delay milliseconds after sending num frames (default: 0)
 
@@ -66,7 +66,7 @@ OPTIONS
 
 -S              secure connection
 
--M              become master
+-C              become central
 
 -T              enable timestamps
 
