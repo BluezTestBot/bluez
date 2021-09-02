@@ -112,7 +112,7 @@ static bool powering_down = false;
 
 static GSList *adapters = NULL;
 
-static struct mgmt *mgmt_master = NULL;
+static struct mgmt *mgmt_primary = NULL;
 
 static uint8_t mgmt_version = 0;
 static uint8_t mgmt_revision = 0;
@@ -134,7 +134,7 @@ struct smp_ltk_info {
 	bdaddr_t bdaddr;
 	uint8_t bdaddr_type;
 	uint8_t authenticated;
-	bool master;
+	bool central;
 	uint8_t enc_size;
 	uint16_t ediv;
 	uint64_t rand;
@@ -3689,7 +3689,7 @@ static struct smp_ltk_info *get_ltk(GKeyFile *key_file, const char *peer,
 {
 	struct smp_ltk_info *ltk = NULL;
 	GError *gerr = NULL;
-	bool master;
+	bool central;
 	char *key;
 	char *rand = NULL;
 
@@ -3703,8 +3703,8 @@ static struct smp_ltk_info *get_ltk(GKeyFile *key_file, const char *peer,
 
 	ltk = g_new0(struct smp_ltk_info, 1);
 
-	/* Default to assuming a master key */
-	ltk->master = true;
+	/* Default to assuming a central key */
+	ltk->central = true;
 
 	str2ba(peer, &ltk->bdaddr);
 	ltk->bdaddr_type = peer_type;
@@ -3745,11 +3745,11 @@ static struct smp_ltk_info *get_ltk(GKeyFile *key_file, const char *peer,
 									NULL);
 	ltk->ediv = g_key_file_get_integer(key_file, group, "EDiv", NULL);
 
-	master = g_key_file_get_boolean(key_file, group, "Master", &gerr);
+	central = g_key_file_get_boolean(key_file, group, "Master", &gerr);
 	if (gerr)
 		g_error_free(gerr);
 	else
-		ltk->master = master;
+		ltk->central = central;
 
 	ltk->is_blocked = is_blocked_key(HCI_BLOCKED_KEY_TYPE_LTK,
 								ltk->val);
@@ -3769,7 +3769,7 @@ static struct smp_ltk_info *get_ltk_info(GKeyFile *key_file, const char *peer,
 	return get_ltk(key_file, peer, bdaddr_type, "LongTermKey");
 }
 
-static struct smp_ltk_info *get_slave_ltk_info(GKeyFile *key_file,
+static struct smp_ltk_info *get_peripheral_ltk_info(GKeyFile *key_file,
 							const char *peer,
 							uint8_t bdaddr_type)
 {
@@ -3779,7 +3779,7 @@ static struct smp_ltk_info *get_slave_ltk_info(GKeyFile *key_file,
 
 	ltk = get_ltk(key_file, peer, bdaddr_type, "SlaveLongTermKey");
 	if (ltk)
-		ltk->master = false;
+		ltk->central = false;
 
 	return ltk;
 }
@@ -4122,7 +4122,7 @@ static void load_ltks(struct btd_adapter *adapter, GSList *keys)
 		key->rand = cpu_to_le64(info->rand);
 		key->ediv = cpu_to_le16(info->ediv);
 		key->type = info->authenticated;
-		key->central = info->master;
+		key->central = info->central;
 		key->enc_size = info->enc_size;
 	}
 
@@ -4582,7 +4582,7 @@ static void load_devices(struct btd_adapter *adapter)
 		GKeyFile *key_file;
 		struct link_key_info *key_info;
 		struct smp_ltk_info *ltk_info;
-		struct smp_ltk_info *slave_ltk_info;
+		struct smp_ltk_info *peripheral_ltk_info;
 		GSList *list;
 		struct irk_info *irk_info;
 		struct conn_param *param;
@@ -4607,16 +4607,16 @@ static void load_devices(struct btd_adapter *adapter)
 
 		ltk_info = get_ltk_info(key_file, entry->d_name, bdaddr_type);
 
-		slave_ltk_info = get_slave_ltk_info(key_file, entry->d_name,
-								bdaddr_type);
+		peripheral_ltk_info = get_peripheral_ltk_info(key_file,
+						entry->d_name, bdaddr_type);
 
 		irk_info = get_irk_info(key_file, entry->d_name, bdaddr_type);
 
 		// If any key for the device is blocked, we discard all.
 		if ((key_info && key_info->is_blocked) ||
 				(ltk_info && ltk_info->is_blocked) ||
-				(slave_ltk_info &&
-					slave_ltk_info->is_blocked) ||
+				(peripheral_ltk_info &&
+					peripheral_ltk_info->is_blocked) ||
 				(irk_info && irk_info->is_blocked)) {
 
 			if (key_info) {
@@ -4629,9 +4629,9 @@ static void load_devices(struct btd_adapter *adapter)
 				ltk_info = NULL;
 			}
 
-			if (slave_ltk_info) {
-				g_free(slave_ltk_info);
-				slave_ltk_info = NULL;
+			if (peripheral_ltk_info) {
+				g_free(peripheral_ltk_info);
+				peripheral_ltk_info = NULL;
 			}
 
 			if (irk_info) {
@@ -4648,8 +4648,8 @@ static void load_devices(struct btd_adapter *adapter)
 		if (ltk_info)
 			ltks = g_slist_append(ltks, ltk_info);
 
-		if (slave_ltk_info)
-			ltks = g_slist_append(ltks, slave_ltk_info);
+		if (peripheral_ltk_info)
+			ltks = g_slist_append(ltks, peripheral_ltk_info);
 
 		if (irk_info)
 			irks = g_slist_append(irks, irk_info);
@@ -4683,16 +4683,16 @@ device_exist:
 			device_set_bonded(device, BDADDR_BREDR);
 		}
 
-		if (ltk_info || slave_ltk_info) {
+		if (ltk_info || peripheral_ltk_info) {
 			device_set_paired(device, bdaddr_type);
 			device_set_bonded(device, bdaddr_type);
 
 			if (ltk_info)
 				device_set_ltk_enc_size(device,
 							ltk_info->enc_size);
-			else if (slave_ltk_info)
+			else if (peripheral_ltk_info)
 				device_set_ltk_enc_size(device,
-						slave_ltk_info->enc_size);
+						peripheral_ltk_info->enc_size);
 		}
 
 free:
@@ -5108,7 +5108,7 @@ void adapter_connect_list_remove(struct btd_adapter *adapter,
 	trigger_passive_scanning(adapter);
 }
 
-static void add_whitelist_complete(uint8_t status, uint16_t length,
+static void add_accept_list_complete(uint8_t status, uint16_t length,
 					const void *param, void *user_data)
 {
 	const struct mgmt_rp_add_device *rp = param;
@@ -5139,10 +5139,11 @@ static void add_whitelist_complete(uint8_t status, uint16_t length,
 		return;
 	}
 
-	DBG("%s added to kernel whitelist", addr);
+	DBG("%s added to kernel accept list", addr);
 }
 
-void adapter_whitelist_add(struct btd_adapter *adapter, struct btd_device *dev)
+void adapter_accept_list_add(struct btd_adapter *adapter,
+							struct btd_device *dev)
 {
 	struct mgmt_cp_add_device cp;
 
@@ -5156,10 +5157,10 @@ void adapter_whitelist_add(struct btd_adapter *adapter, struct btd_device *dev)
 
 	mgmt_send(adapter->mgmt, MGMT_OP_ADD_DEVICE,
 				adapter->dev_id, sizeof(cp), &cp,
-				add_whitelist_complete, adapter, NULL);
+				add_accept_list_complete, adapter, NULL);
 }
 
-static void remove_whitelist_complete(uint8_t status, uint16_t length,
+static void remove_accept_list_complete(uint8_t status, uint16_t length,
 					const void *param, void *user_data)
 {
 	const struct mgmt_rp_remove_device *rp = param;
@@ -5178,10 +5179,11 @@ static void remove_whitelist_complete(uint8_t status, uint16_t length,
 		return;
 	}
 
-	DBG("%s removed from kernel whitelist", addr);
+	DBG("%s removed from kernel accept list", addr);
 }
 
-void adapter_whitelist_remove(struct btd_adapter *adapter, struct btd_device *dev)
+void adapter_accept_list_remove(struct btd_adapter *adapter,
+							struct btd_device *dev)
 {
 	struct mgmt_cp_remove_device cp;
 
@@ -5194,7 +5196,7 @@ void adapter_whitelist_remove(struct btd_adapter *adapter, struct btd_device *de
 
 	mgmt_send(adapter->mgmt, MGMT_OP_REMOVE_DEVICE,
 				adapter->dev_id, sizeof(cp), &cp,
-				remove_whitelist_complete, adapter, NULL);
+				remove_accept_list_complete, adapter, NULL);
 }
 
 static void add_device_complete(uint8_t status, uint16_t length,
@@ -5751,7 +5753,7 @@ static void convert_ltk_entry(GKeyFile *key_file, void *value)
 {
 	char *auth_str, *rand_str, *str;
 	int i, ret;
-	unsigned char auth, master, enc_size;
+	unsigned char auth, central, enc_size;
 	unsigned short ediv;
 
 	auth_str = strchr(value, ' ');
@@ -5768,7 +5770,7 @@ static void convert_ltk_entry(GKeyFile *key_file, void *value)
 		rand_str++;
 	}
 
-	ret = sscanf(auth_str, " %hhd %hhd %hhd %hd", &auth, &master,
+	ret = sscanf(auth_str, " %hhd %hhd %hhd %hd", &auth, &central,
 							&enc_size, &ediv);
 	if (ret < 4)
 		return;
@@ -5778,7 +5780,7 @@ static void convert_ltk_entry(GKeyFile *key_file, void *value)
 	g_free(str);
 
 	g_key_file_set_integer(key_file, "LongTermKey", "Authenticated", auth);
-	g_key_file_set_integer(key_file, "LongTermKey", "Master", master);
+	g_key_file_set_integer(key_file, "LongTermKey", "Master", central);
 	g_key_file_set_integer(key_file, "LongTermKey", "EncSize", enc_size);
 	g_key_file_set_integer(key_file, "LongTermKey", "EDiv", ediv);
 
@@ -6467,7 +6469,7 @@ static struct btd_adapter *btd_adapter_new(uint16_t index)
 		return NULL;
 
 	adapter->dev_id = index;
-	adapter->mgmt = mgmt_ref(mgmt_master);
+	adapter->mgmt = mgmt_ref(mgmt_primary);
 	adapter->pincode_requested = false;
 
 	/*
@@ -8205,11 +8207,11 @@ static void new_link_key_callback(uint16_t index, uint16_t length,
 
 static void store_longtermkey(struct btd_adapter *adapter, const bdaddr_t *peer,
 				uint8_t bdaddr_type, const unsigned char *key,
-				uint8_t master, uint8_t authenticated,
+				uint8_t central, uint8_t authenticated,
 				uint8_t enc_size, uint16_t ediv,
 				uint64_t rand)
 {
-	const char *group = master ? "LongTermKey" : "SlaveLongTermKey";
+	const char *group = central ? "LongTermKey" : "SlaveLongTermKey";
 	char device_addr[18];
 	char filename[PATH_MAX];
 	GKeyFile *key_file;
@@ -8218,8 +8220,8 @@ static void store_longtermkey(struct btd_adapter *adapter, const bdaddr_t *peer,
 	char *str;
 	int i;
 
-	if (master != 0x00 && master != 0x01) {
-		error("Unsupported LTK type %u", master);
+	if (central != 0x00 && central != 0x01) {
+		error("Unsupported LTK type %u", central);
 		return;
 	}
 
@@ -9382,7 +9384,8 @@ static bool set_blocked_keys(struct btd_adapter *adapter)
 						sizeof(cp->keys[i].val));
 	}
 
-	return mgmt_send(mgmt_master, MGMT_OP_SET_BLOCKED_KEYS, adapter->dev_id,
+	return mgmt_send(mgmt_primary, MGMT_OP_SET_BLOCKED_KEYS,
+						adapter->dev_id,
 						sizeof(buffer),	buffer,
 						set_blocked_keys_complete,
 						adapter, NULL);
@@ -9860,7 +9863,7 @@ static void reset_adv_monitors(uint16_t index)
 
 	/* Handle 0 indicates to remove all */
 	cp.monitor_handle = 0;
-	if (mgmt_send(mgmt_master, MGMT_OP_REMOVE_ADV_MONITOR, index,
+	if (mgmt_send(mgmt_primary, MGMT_OP_REMOVE_ADV_MONITOR, index,
 			sizeof(cp), &cp, reset_adv_monitors_complete, NULL,
 			NULL) > 0) {
 		return;
@@ -9910,7 +9913,7 @@ static void index_added(uint16_t index, uint16_t length, const void *param,
 
 	DBG("sending read info command for index %u", index);
 
-	if (mgmt_send(mgmt_master, MGMT_OP_READ_INFO, index, 0, NULL,
+	if (mgmt_send(mgmt_primary, MGMT_OP_READ_INFO, index, 0, NULL,
 					read_info_complete, adapter, NULL) > 0)
 		return;
 
@@ -10094,18 +10097,18 @@ static void read_version_complete(uint8_t status, uint16_t length,
 	 * It is irrelevant if this command succeeds or fails. In case of
 	 * failure safe settings are assumed.
 	 */
-	mgmt_send(mgmt_master, MGMT_OP_READ_COMMANDS,
+	mgmt_send(mgmt_primary, MGMT_OP_READ_COMMANDS,
 				MGMT_INDEX_NONE, 0, NULL,
 				read_commands_complete, NULL, NULL);
 
-	mgmt_register(mgmt_master, MGMT_EV_INDEX_ADDED, MGMT_INDEX_NONE,
+	mgmt_register(mgmt_primary, MGMT_EV_INDEX_ADDED, MGMT_INDEX_NONE,
 						index_added, NULL, NULL);
-	mgmt_register(mgmt_master, MGMT_EV_INDEX_REMOVED, MGMT_INDEX_NONE,
+	mgmt_register(mgmt_primary, MGMT_EV_INDEX_REMOVED, MGMT_INDEX_NONE,
 						index_removed, NULL, NULL);
 
 	DBG("sending read index list command");
 
-	if (mgmt_send(mgmt_master, MGMT_OP_READ_INDEX_LIST,
+	if (mgmt_send(mgmt_primary, MGMT_OP_READ_INDEX_LIST,
 				MGMT_INDEX_NONE, 0, NULL,
 				read_index_list_complete, NULL, NULL) > 0)
 		return;
@@ -10124,18 +10127,18 @@ int adapter_init(void)
 {
 	dbus_conn = btd_get_dbus_connection();
 
-	mgmt_master = mgmt_new_default();
-	if (!mgmt_master) {
+	mgmt_primary = mgmt_new_default();
+	if (!mgmt_primary) {
 		error("Failed to access management interface");
 		return -EIO;
 	}
 
 	if (getenv("MGMT_DEBUG"))
-		mgmt_set_debug(mgmt_master, mgmt_debug, "mgmt: ", NULL);
+		mgmt_set_debug(mgmt_primary, mgmt_debug, "mgmt: ", NULL);
 
 	DBG("sending read version command");
 
-	if (mgmt_send(mgmt_master, MGMT_OP_READ_VERSION,
+	if (mgmt_send(mgmt_primary, MGMT_OP_READ_VERSION,
 				MGMT_INDEX_NONE, 0, NULL,
 				read_version_complete, NULL, NULL) > 0)
 		return 0;
@@ -10164,7 +10167,7 @@ void adapter_cleanup(void)
 	 * This is just an extra precaution to be safe, and in
 	 * reality should not make a difference.
 	 */
-	mgmt_unregister_index(mgmt_master, MGMT_INDEX_NONE);
+	mgmt_unregister_index(mgmt_primary, MGMT_INDEX_NONE);
 
 	/*
 	 * In case there is another reference active, cancel
@@ -10174,10 +10177,10 @@ void adapter_cleanup(void)
 	 * that potentially then could leak memory or access
 	 * an invalid structure.
 	 */
-	mgmt_cancel_index(mgmt_master, MGMT_INDEX_NONE);
+	mgmt_cancel_index(mgmt_primary, MGMT_INDEX_NONE);
 
-	mgmt_unref(mgmt_master);
-	mgmt_master = NULL;
+	mgmt_unref(mgmt_primary);
+	mgmt_primary = NULL;
 
 	dbus_conn = NULL;
 }
