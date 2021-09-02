@@ -52,15 +52,15 @@
 struct mcap_csp {
 	uint64_t	base_tmstamp;	/* CSP base timestamp */
 	struct timespec	base_time;	/* CSP base time when timestamp set */
-	guint		local_caps;	/* CSP-Master: have got remote caps */
-	guint		remote_caps;	/* CSP-Slave: remote master got caps */
-	guint		rem_req_acc;	/* CSP-Slave: accuracy required by master */
-	guint		ind_expected;	/* CSP-Master: indication expected */
-	uint8_t		csp_req;	/* CSP-Master: Request control flag */
-	guint		ind_timer;	/* CSP-Slave: indication timer */
-	guint		set_timer;	/* CSP-Slave: delayed set timer */
-	void		*set_data;	/* CSP-Slave: delayed set data */
-	void		*csp_priv_data;	/* CSP-Master: In-flight request data */
+	guint		local_caps;	/* CSP-Central: have got remote caps */
+	guint		remote_caps;	/* CSP-Peripheral: remote central got caps */
+	guint		rem_req_acc;	/* CSP-Peripheral: accuracy required by central */
+	guint		ind_expected;	/* CSP-Central: indication expected */
+	uint8_t		csp_req;	/* CSP-Central: Request control flag */
+	guint		ind_timer;	/* CSP-Peripheral: indication timer */
+	guint		set_timer;	/* CSP-Peripheral: delayed set timer */
+	void		*set_data;	/* CSP-Peripheral: delayed set data */
+	void		*csp_priv_data;	/* CSP-Central: In-flight request data */
 };
 
 struct mcap_sync_cap_cbdata {
@@ -3139,7 +3139,7 @@ void mcap_sync_set_req(struct mcap_mcl *mcl, uint8_t update, uint32_t btclock,
 		g_set_error(err,
 			MCAP_CSP_ERROR,
 			MCAP_ERROR_RESOURCE_UNAVAILABLE,
-			"Did not get CSP caps from slave yet");
+			"Did not get CSP caps from peripheral yet");
 		return;
 	}
 
