@@ -76,7 +76,7 @@ static const char *filename = NULL;
 static const char *savefile = NULL;
 static int save_fd = -1;
 
-static int master = 0;
+static int central = 0;
 static int auth = 0;
 static int encr = 0;
 static int secure = 0;
@@ -202,7 +202,7 @@ static int do_connect(const char *svr)
 
 	/* Set link mode */
 	opt = 0;
-	if (master)
+	if (central)
 		opt |= RFCOMM_LM_MASTER;
 	if (auth)
 		opt |= RFCOMM_LM_AUTH;
@@ -293,7 +293,7 @@ static void do_listen(void (*handler)(int sk))
 
 	/* Set link mode */
 	opt = 0;
-	if (master)
+	if (central)
 		opt |= RFCOMM_LM_MASTER;
 	if (auth)
 		opt |= RFCOMM_LM_AUTH;
@@ -679,13 +679,13 @@ static void usage(void)
 		"\t[-B filename] use data packets from file\n"
 		"\t[-O filename] save received data to file\n"
 		"\t[-N num] number of frames to send\n"
-		"\t[-C num] send num frames before delay (default = 1)\n"
+		"\t[-M num] send num frames before delay (default = 1)\n"
 		"\t[-D milliseconds] delay after sending num frames (default = 0)\n"
 		"\t[-Y priority] socket priority\n"
 		"\t[-A] request authentication\n"
 		"\t[-E] request encryption\n"
 		"\t[-S] secure connection\n"
-		"\t[-M] become master\n"
+		"\t[-C] become central\n"
 		"\t[-T] enable timestamps\n");
 }
 
@@ -697,7 +697,8 @@ int main(int argc, char *argv[])
 	bacpy(&bdaddr, BDADDR_ANY);
 	bacpy(&auto_bdaddr, BDADDR_ANY);
 
-	while ((opt=getopt(argc,argv,"rdscuwmna:b:i:P:U:B:O:N:MAESL:W:C:D:Y:T")) != EOF) {
+	while ((opt = getopt(argc, argv,
+			"rdscuwmna:b:i:P:U:B:O:N:CAESL:W:M:D:Y:T")) != EOF) {
 		switch (opt) {
 		case 'r':
 			mode = RECV;
@@ -769,8 +770,8 @@ int main(int argc, char *argv[])
 				uuid = atoi(optarg);
 			break;
 
-		case 'M':
-			master = 1;
+		case 'C':
+			central = 1;
 			break;
 
 		case 'A':
@@ -805,7 +806,7 @@ int main(int argc, char *argv[])
 			num_frames = atoi(optarg);
 			break;
 
-		case 'C':
+		case 'M':
 			count = atoi(optarg);
 			break;
 
