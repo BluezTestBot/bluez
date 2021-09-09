@@ -3856,6 +3856,33 @@ Add Advertisement Patterns Monitor With RSSI Threshold Command
 				No Resources
 				Invalid Parameters
 
+Test Command
+============
+	Command Code:		0xffff
+	Controller Index:	<controller id>
+	Command Parameters:	Subcommand code (1 Octet)
+				Subcommand length (2 Octects)
+	Return Parameters:      subcommand return (variable)
+
+	This command is meant for testing only, it shall not be used in
+	production.
+
+	Possible subcommands:
+
+	Suspend
+	-------
+	Subcommand Code:	0x0001
+	Subcommand Parameters:
+	Subcommand Return Parameters:
+
+	Resume
+	-------
+	Subcommand Code:	0x0002
+	Subcommand Parameters:
+	Subcommand Return Parameters:
+
+	Possible errors:	Failed
+				Subcommand errors
 
 Command Complete Event
 ======================
