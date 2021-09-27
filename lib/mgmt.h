@@ -1014,6 +1014,13 @@ struct mgmt_ev_controller_resume {
 	uint8_t wake_reason;
 } __packed;
 
+#define MGMT_EV_ADV_MONITOR_TRACKING	0x002f
+struct mgmt_ev_adv_monitor_tracking {
+	uint16_t monitor_handle;
+	uint8_t monitor_state;
+	struct mgmt_addr_info addr;
+} __packed;
+
 static const char *mgmt_op[] = {
 	"<0x0000>",
 	"Read Version",
@@ -1152,6 +1159,7 @@ static const char *mgmt_ev[] = {
 	"Advertisement Monitor Removed",
 	"Controller Suspend",
 	"Controller Resume",
+	"Advertisement Monitor Device Tracking",	/* 0x002f */
 };
 
 static const char *mgmt_status[] = {
