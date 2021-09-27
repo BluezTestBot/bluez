@@ -107,7 +107,8 @@ Configuration command, Default Runtime Configuration Changed event, Get
 Device Flags command, Set Device Flags command, Device Flags Changed event,
 Read Advertisement Monitor Features command, Add Advertisement Patterns
 Monitor command, Remove Advertisement Monitor command, Advertisement Monitor
-Added event and Advertisement Monitor Removed event.
+Added event, Advertisement Monitor Removed event and Advertisement Monitor
+Device Tracking event.
 
 
 Example
@@ -4908,5 +4909,29 @@ Controller Resume Event
 	If the Wake_Reason is Remote wake due to connection, the address of the
 	peer device that caused the event will be shared in Address and
 	Address_Type. Otherwise, Address and Address_Type will both be zero.
+
+	This event will be sent to all management sockets.
+
+
+Advertisement Monitor Device Tracking Event
+===========================================
+
+	Event code:		0x002f
+	Controller Index:	<controller_id>
+	Event Parameters:	Monitor_Handle (2 octets)
+				Monitor_State (1 octet)
+				Address (6 octets)
+				Address_Type (1 octet)
+
+	This event indicates that the controller has started/stopped tracking
+	a particular device matching the Advertisement Monitor with handle
+	Monitor_Handle.
+
+	Possible values for the Monitor_State parameter:
+		0	The controller has stopped tracking a device
+		1	The controller has started tracking a device
+
+	The address of the device being tracked will be shared in Address and
+	Address_Type.
 
 	This event will be sent to all management sockets.
