@@ -253,7 +253,13 @@ Properties	string UUID [read-only]
 			Defines how the characteristic value can be used. See
 			Core spec "Table 3.5: Characteristic Properties bit
 			field", and "Table 3.8: Characteristic Extended
-			Properties bit field". Allowed values:
+			Properties bit field".
+
+			The "x-asynchronous" flags allow a characteristic to impose write
+			restrictions on its client characteristic configuration descriptor,
+			if applicable, restricting access to notifications and indications.
+
+			Allowed values:
 
 				"broadcast"
 				"read"
@@ -267,10 +273,13 @@ Properties	string UUID [read-only]
 				"writable-auxiliaries"
 				"encrypt-read"
 				"encrypt-write"
+				"encrypt-asynchronous" (Server only)
 				"encrypt-authenticated-read"
 				"encrypt-authenticated-write"
+				"encrypt-authenticated-asynchronous" (Server only)
 				"secure-read" (Server only)
 				"secure-write" (Server only)
+				"secure-asynchronous" (Server only)
 				"authorize"
 
 		uint16 Handle [read-write, optional] (Server Only)
