@@ -137,6 +137,10 @@ struct bt_att_pdu_error_rsp {
 					BT_ATT_PERM_WRITE_AUTHEN | \
 					BT_ATT_PERM_WRITE_ENCRYPT | \
 					BT_ATT_PERM_WRITE_SECURE)
+/* Permissions to be applied to the CCC*/
+#define BT_ATT_PERM_SERVER_INITIATED_UPDATE_ENCRYPT 0x0400
+#define BT_ATT_PERM_SERVER_INITIATED_UPDATE_AUTHEN 0x0800
+#define BT_ATT_PERM_SERVER_INITIATED_UPDATE_SECURE 0x1000
 
 /* GATT Characteristic Properties Bitfield values */
 #define BT_GATT_CHRC_PROP_BROADCAST			0x01

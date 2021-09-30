@@ -1060,17 +1060,33 @@ service_add_ccc(struct gatt_db_attribute *service,
 				struct btd_gatt_database *database,
 				btd_gatt_database_ccc_write_t write_callback,
 				void *user_data,
+				uint32_t parent_permissions,
 				btd_gatt_database_destroy_t destroy)
 {
 	struct gatt_db_attribute *ccc;
 	struct ccc_cb_data *ccc_cb;
 	bt_uuid_t uuid;
+	uint32_t permissions;
 
 	ccc_cb = new0(struct ccc_cb_data, 1);
 
+	/*
+	 * Provide a way for the permissions on a characteristic to dictate
+	 * the permissions on the CCC
+	 */
+	permissions = BT_ATT_PERM_READ | BT_ATT_PERM_WRITE;
+
+	if (parent_permissions & BT_ATT_PERM_SERVER_INITIATED_UPDATE_ENCRYPT)
+		permissions |= BT_ATT_PERM_WRITE_ENCRYPT;
+
+	if (parent_permissions & BT_ATT_PERM_SERVER_INITIATED_UPDATE_AUTHEN)
+		permissions |= BT_ATT_PERM_WRITE_AUTHEN;
+
+	if (parent_permissions & BT_ATT_PERM_SERVER_INITIATED_UPDATE_SECURE)
+		permissions |= BT_ATT_PERM_WRITE_SECURE;
+
 	bt_uuid16_create(&uuid, GATT_CLIENT_CHARAC_CFG_UUID);
-	ccc = gatt_db_service_add_descriptor(service, &uuid,
-				BT_ATT_PERM_READ | BT_ATT_PERM_WRITE,
+	ccc = gatt_db_service_add_descriptor(service, &uuid, permissions,
 				gatt_ccc_read_cb, gatt_ccc_write_cb, database);
 	if (!ccc) {
 		error("Failed to create CCC entry in database");
@@ -1227,7 +1243,7 @@ static void populate_gatt_service(struct btd_gatt_database *database)
 				NULL, NULL, database);
 
 	database->svc_chngd_ccc = service_add_ccc(service, database, NULL, NULL,
-									NULL);
+								    0, NULL);
 
 	bt_uuid16_create(&uuid, GATT_CHARAC_CLI_FEAT);
 	database->cli_feat = gatt_db_service_add_characteristic(service,
@@ -1690,6 +1706,24 @@ static bool parse_chrc_flags(DBusMessageIter *array, uint8_t *props,
 			*perm |= BT_ATT_PERM_WRITE | BT_ATT_PERM_WRITE_SECURE;
 		} else if (!strcmp("authorize", flag)) {
 			*req_prep_authorization = true;
+		} else if (!strcmp("encrypt-notify", flag)) {
+			*perm |= BT_ATT_PERM_SERVER_INITIATED_UPDATE_ENCRYPT;
+			*props |= BT_GATT_CHRC_PROP_NOTIFY;
+		} else if (!strcmp("encrypt-authenticated-notify", flag)) {
+			*perm |= BT_ATT_PERM_SERVER_INITIATED_UPDATE_AUTHEN;
+			*props |= BT_GATT_CHRC_PROP_NOTIFY;
+		} else if (!strcmp("secure-notify", flag)) {
+			*perm |= BT_ATT_PERM_SERVER_INITIATED_UPDATE_SECURE;
+			*props |= BT_GATT_CHRC_PROP_NOTIFY;
+		} else if (!strcmp("encrypt-indicate", flag)) {
+			*perm |= BT_ATT_PERM_SERVER_INITIATED_UPDATE_ENCRYPT;
+			*props |= BT_GATT_CHRC_PROP_INDICATE;
+		} else if (!strcmp("encrypt-authenticated-indicate", flag)) {
+			*perm |= BT_ATT_PERM_SERVER_INITIATED_UPDATE_AUTHEN;
+			*props |= BT_GATT_CHRC_PROP_INDICATE;
+		} else if (!strcmp("secure-indicate", flag)) {
+			*perm |= BT_ATT_PERM_SERVER_INITIATED_UPDATE_SECURE;
+			*props |= BT_GATT_CHRC_PROP_INDICATE;
 		} else {
 			error("Invalid characteristic flag: %s", flag);
 			return false;
@@ -2796,7 +2830,7 @@ static bool database_add_ccc(struct external_service *service,
 		return true;
 
 	chrc->ccc = service_add_ccc(service->attrib, service->app->database,
-						ccc_write_cb, chrc, NULL);
+					ccc_write_cb, chrc, chrc->perm, NULL);
 	if (!chrc->ccc) {
 		error("Failed to create CCC entry for characteristic");
 		return false;
