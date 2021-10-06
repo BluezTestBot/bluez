@@ -10722,6 +10722,27 @@ static void test_suspend_resume_success_7(const void *test_data)
 	test_command_generic(test_data);
 }
 
+static const struct generic_data suspend_resume_success_8 = {
+	.setup_settings = settings_powered_le,
+	.send_opcode = MGMT_OP_START_DISCOVERY,
+	.send_param = start_discovery_le_param,
+	.send_len = sizeof(start_discovery_le_param),
+	.expect_status = MGMT_STATUS_SUCCESS,
+	.expect_param = start_discovery_le_param,
+	.expect_len = sizeof(start_discovery_le_param),
+	.expect_hci_command = BT_HCI_CMD_LE_SET_EXT_SCAN_ENABLE,
+	.expect_hci_param = start_discovery_valid_ext_scan_enable,
+	.expect_hci_len = sizeof(start_discovery_valid_ext_scan_enable),
+	.expect_alt_ev = MGMT_EV_CONTROLLER_SUSPEND,
+	.expect_alt_ev_param = suspend_state_param_disconnect,
+	.expect_alt_ev_len = sizeof(suspend_state_param_disconnect),
+};
+
+static void test_suspend_resume_success_8(const void *test_data)
+{
+	test_command_generic(test_data);
+	tester_wait(1, trigger_force_suspend, NULL);
+}
 
 int main(int argc, char *argv[])
 {
@@ -12496,6 +12517,15 @@ int main(int argc, char *argv[])
 	test_bredrle50("Suspend/Resume - Success 7 (Suspend/Force Wakeup)",
 				&suspend_resume_success_7,
 				NULL, test_suspend_resume_success_7);
+
+	/* Suspend/Resume
+	 * Setup : Power on
+	 * Run: Start discover and enable suspend
+	 * Expect: Receive the Suspend Event
+	 */
+	test_bredrle50_full("Suspend/Resume - Success 8 (Discovering)",
+				&suspend_resume_success_8,
+				NULL, test_suspend_resume_success_8, 4);
 
 	/* MGMT_OP_READ_EXP_FEATURE
 	 * Read Experimental features - success
