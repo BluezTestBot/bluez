@@ -77,17 +77,23 @@ struct attribute_notify {
 
 struct pending_read {
 	struct gatt_db_attribute *attrib;
+	struct bt_att *att;
 	unsigned int id;
 	unsigned int timeout_id;
 	gatt_db_attribute_read_t func;
+	bool disconn;
+	unsigned int disconn_id;
 	void *user_data;
 };
 
 struct pending_write {
 	struct gatt_db_attribute *attrib;
+	struct bt_att *att;
 	unsigned int id;
 	unsigned int timeout_id;
 	gatt_db_attribute_write_t func;
+	bool disconn;
+	unsigned int disconn_id;
 	void *user_data;
 };
 
@@ -139,8 +145,10 @@ static void pending_read_result(struct pending_read *p, int err,
 	if (p->timeout_id > 0)
 		timeout_remove(p->timeout_id);
 
-	p->func(p->attrib, err, data, length, p->user_data);
+	if (!p->disconn)
+		p->func(p->attrib, err, data, length, p->user_data);
 
+	bt_att_unregister_disconnect(p->att, p->disconn_id);
 	free(p);
 }
 
@@ -156,8 +164,10 @@ static void pending_write_result(struct pending_write *p, int err)
 	if (p->timeout_id > 0)
 		timeout_remove(p->timeout_id);
 
-	p->func(p->attrib, err, p->user_data);
+	if (!p->disconn)
+		p->func(p->attrib, err, p->user_data);
 
+	bt_att_unregister_disconnect(p->att, p->disconn_id);
 	free(p);
 }
 
@@ -1868,6 +1878,13 @@ bool gatt_db_attribute_set_fixed_length(struct gatt_db_attribute *attrib,
 	return true;
 }
 
+static void pending_read_cb(int err, void *user_data)
+{
+	struct pending_read *p = user_data;
+
+	p->disconn = 1;
+}
+
 bool gatt_db_attribute_read(struct gatt_db_attribute *attrib, uint16_t offset,
 				uint8_t opcode, struct bt_att *att,
 				gatt_db_attribute_read_t func, void *user_data)
@@ -1900,6 +1917,11 @@ bool gatt_db_attribute_read(struct gatt_db_attribute *attrib, uint16_t offset,
 								p, NULL);
 		p->func = func;
 		p->user_data = user_data;
+
+		p->disconn = 0;
+		p->disconn_id = bt_att_register_disconnect(att,
+				     	pending_read_cb, p, NULL);
+		p->att = att;
 
 		queue_push_tail(attrib->pending_reads, p);
 
@@ -1956,6 +1978,13 @@ static bool write_timeout(void *user_data)
 	return false;
 }
 
+static void pending_write_cb(int err, void *user_data)
+{
+	struct pending_write *p = user_data;
+
+	p->disconn = 1;
+}
+
 bool gatt_db_attribute_write(struct gatt_db_attribute *attrib, uint16_t offset,
 					const uint8_t *value, size_t len,
 					uint8_t opcode, struct bt_att *att,
@@ -1994,6 +2023,11 @@ bool gatt_db_attribute_write(struct gatt_db_attribute *attrib, uint16_t offset,
 								p, NULL);
 		p->func = func;
 		p->user_data = user_data;
+
+		p->disconn = 0;
+		p->disconn_id = bt_att_register_disconnect(att,
+					pending_write_cb, p, NULL);
+		p->att = att;
 
 		queue_push_tail(attrib->pending_writes, p);
 
