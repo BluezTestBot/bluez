@@ -91,6 +91,7 @@ struct avrcp_player_cb {
 };
 
 int avrcp_set_volume(struct btd_device *dev, int8_t volume, bool notify);
+int8_t avrcp_get_last_volume(struct btd_device *dev);
 
 struct avrcp_player *avrcp_register_player(struct btd_adapter *adapter,
 						struct avrcp_player_cb *cb,

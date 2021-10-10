@@ -276,6 +276,8 @@ struct avrcp {
 	uint8_t transaction;
 	uint8_t transaction_events[AVRCP_EVENT_LAST + 1];
 	struct pending_pdu *pending_pdu;
+
+	int8_t last_device_volume;
 };
 
 struct passthrough_handler {
@@ -1759,6 +1761,7 @@ static uint8_t avrcp_handle_set_absolute_volume(struct avrcp *session,
 	volume = pdu->params[0] & 0x7F;
 
 	media_transport_update_device_volume(session->dev, volume);
+	session->last_device_volume = volume;
 
 	return AVC_CTYPE_ACCEPTED;
 
@@ -3731,6 +3734,7 @@ static void avrcp_volume_changed(struct avrcp *session,
 
 	/* Always attempt to update the transport volume */
 	media_transport_update_device_volume(session->dev, volume);
+	session->last_device_volume = volume;
 
 	if (player)
 		player->cb->set_volume(volume, session->dev, player->user_data);
@@ -4145,6 +4149,7 @@ static void target_init(struct avrcp *session)
 
 		init_volume = media_player_get_device_volume(session->dev);
 		media_transport_update_device_volume(session->dev, init_volume);
+		session->last_device_volume = init_volume;
 	}
 
 	session->supported_events |= (1 << AVRCP_EVENT_STATUS_CHANGED) |
@@ -4308,6 +4313,7 @@ static struct avrcp *session_create(struct avrcp_server *server,
 	session->server = server;
 	session->conn = avctp_connect(device);
 	session->dev = device;
+	session->last_device_volume = -1;
 
 	server->sessions = g_slist_append(server->sessions, session);
 
@@ -4497,6 +4503,7 @@ static gboolean avrcp_handle_set_volume(struct avctp *conn, uint8_t code,
 
 	/* Always attempt to update the transport volume */
 	media_transport_update_device_volume(session->dev, volume);
+	session->last_device_volume = volume;
 
 	if (player != NULL)
 		player->cb->set_volume(volume, session->dev, player->user_data);
@@ -4596,6 +4603,22 @@ int avrcp_set_volume(struct btd_device *dev, int8_t volume, bool notify)
 					AVC_CTYPE_CONTROL, AVC_SUBUNIT_PANEL,
 					buf, sizeof(buf),
 					avrcp_handle_set_volume, session);
+}
+
+int8_t avrcp_get_last_volume(struct btd_device *dev)
+{
+	struct avrcp_server *server;
+	struct avrcp *session;
+
+	server = find_server(servers, device_get_adapter(dev));
+	if (server == NULL)
+		return -1;
+
+	session = find_session(server->sessions, dev);
+	if (session == NULL)
+		return -1;
+
+	return session->last_device_volume;
 }
 
 struct avrcp_player *avrcp_get_target_player_by_device(struct btd_device *dev)
