@@ -107,7 +107,8 @@ Configuration command, Default Runtime Configuration Changed event, Get
 Device Flags command, Set Device Flags command, Device Flags Changed event,
 Read Advertisement Monitor Features command, Add Advertisement Patterns
 Monitor command, Remove Advertisement Monitor command, Advertisement Monitor
-Added event and Advertisement Monitor Removed event.
+Added event, Advertisement Monitor Removed event, Updated Device Found event
+and Added Advertisement Monitor Device Lost event.
 
 
 Example
@@ -4247,6 +4248,7 @@ Device Found Event
 				Address_Type (1 Octet)
 				RSSI (1 Octet)
 				Flags (4 Octets)
+				Monitor_Handle (2 Octets)
 				EIR_Data_Length (2 Octets)
 				EIR_Data (0-65535 Octets)
 
@@ -4263,6 +4265,7 @@ Device Found Event
 		1	Legacy Pairing
 		2	Not Connectable
 		3	Reserved (not in use)
+		4	Device Tracked
 
 	For the RSSI field a value of 127 indicates that the RSSI is
 	not available. That can happen with Bluetooth 1.1 and earlier
@@ -4284,6 +4287,10 @@ Device Found Event
 	The Not Connectable flag indicates that the device will not
 	accept any connections. This can be indicated by Low Energy
 	devices that are in broadcaster role.
+
+	The Device Tracked flag indicates that the controller has started
+	monitoring a particular device matching the Advertisement Monitor
+	with handle Monitor_Handle.
 
 
 Discovering Event
@@ -4908,5 +4915,28 @@ Controller Resume Event
 	If the Wake_Reason is Remote wake due to connection, the address of the
 	peer device that caused the event will be shared in Address and
 	Address_Type. Otherwise, Address and Address_Type will both be zero.
+
+	This event will be sent to all management sockets.
+
+
+Advertisement Monitor Device Lost Event
+=======================================
+
+	Event code:		0x002f
+	Controller Index:	<controller_id>
+	Event Parameters:	Monitor_Handle (2 Octets)
+				Address (6 Octets)
+				Address_Type (1 Octet)
+
+	This event indicates that the controller has stopped tracking the
+	device that was being tracked by monitor with handle Monitor_Handle.
+
+	The address of the device being tracked will be shared in Address and
+	Address_Type.
+
+	Possible values for the Address_Type parameter:
+		0	BR/EDR
+		1	LE Public
+		2	LE Random
 
 	This event will be sent to all management sockets.
