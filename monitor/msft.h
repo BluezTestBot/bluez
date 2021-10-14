@@ -68,6 +68,7 @@ struct msft_rsp_cancel_monitor_rssi {
 
 #define MSFT_SUBCMD_LE_MONITOR_ADV		0x03
 
+#define MSFT_SUBCMD_LE_MONITOR_ADV_PATTERN	0x01
 struct msft_le_monitor_pattern {
 	uint8_t  len;
 	uint8_t  type;
@@ -75,12 +76,13 @@ struct msft_le_monitor_pattern {
 	uint8_t  data[];
 } __attribute__((packed));
 
-struct msft_le_monitor_adv_pattern_type {
-	uint8_t num_patterns;
+struct msft_le_monitor_adv_patterns {
+	uint8_t num;
 	struct msft_le_monitor_pattern data[];
 } __attribute__((packed));
 
-struct msft_le_monitor_adv_uuid_type {
+#define MSFT_SUBCMD_LE_MONITOR_ADV_UUID		0x02
+struct msft_le_monitor_adv_uuid {
 	uint8_t  type;
 	union {
 		uint16_t u16;
@@ -89,7 +91,8 @@ struct msft_le_monitor_adv_uuid_type {
 	} value;
 } __attribute__((packed));
 
-struct msft_le_monitor_adv_irk_type {
+#define MSFT_SUBCMD_LE_MONITOR_ADV_IRK		0x03
+struct msft_le_monitor_adv_irk {
 	uint8_t  irk[8];
 } __attribute__((packed));
 
