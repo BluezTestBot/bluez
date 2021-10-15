@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/uio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "lib/bluetooth.h"
 #include "lib/hci.h"
@@ -29,8 +31,11 @@
 #include "btdev.h"
 #include "vhci.h"
 
+#define DEBUGFS_PATH "/sys/kernel/debug/bluetooth"
+
 struct vhci {
 	enum btdev_type type;
+	uint16_t index;
 	struct io *io;
 	struct btdev *btdev;
 };
@@ -140,6 +145,7 @@ struct vhci *vhci_open(uint8_t type)
 
 	memset(vhci, 0, sizeof(*vhci));
 	vhci->type = type;
+	vhci->index = rsp.index;
 	vhci->io = io_new(fd);
 
 	io_set_close_on_destroy(vhci->io, true);
@@ -174,4 +180,106 @@ struct btdev *vhci_get_btdev(struct vhci *vhci)
 		return NULL;
 
 	return vhci->btdev;
+}
+
+static int vhci_debugfs_open(struct vhci *vhci, char *option)
+{
+	char path[64];
+
+	if (!vhci)
+		return -EINVAL;
+
+	memset(path, 0, sizeof(path));
+	sprintf(path, DEBUGFS_PATH "/hci%d/%s", vhci->index, option);
+
+	return open(path, O_RDWR);
+}
+
+int vhci_set_force_suspend(struct vhci *vhci, bool enable)
+{
+	int fd, err;
+	char val;
+
+	fd = vhci_debugfs_open(vhci, "force_suspend");
+	if (fd < 0)
+		return -errno;
+
+	val = (enable) ? 'Y' : 'N';
+
+	err = write(fd, &val, sizeof(val));
+	if (err < 0) {
+		err = -errno;
+		goto done;
+	}
+
+done:
+	close(fd);
+	return err;
+}
+
+int vhci_set_force_wakeup(struct vhci *vhci, bool enable)
+{
+	int fd, err;
+	char val;
+
+	fd = vhci_debugfs_open(vhci, "force_wakeup");
+	if (fd < 0)
+		return -errno;
+
+	val = (enable) ? 'Y' : 'N';
+
+	err = write(fd, &val, sizeof(val));
+	if (err < 0) {
+		err = -errno;
+		goto done;
+	}
+
+done:
+	close(fd);
+	return err;
+}
+
+int vhci_set_msft_opcode(struct vhci *vhci, uint16_t opcode)
+{
+	int fd, err;
+
+	fd = vhci_debugfs_open(vhci, "msft_opcode");
+	if (fd < 0)
+		return -errno;
+
+	err = write(fd, &opcode, sizeof(opcode));
+	if (err < 0) {
+		err = -errno;
+		goto done;
+	}
+
+	btdev_set_msft_opcode(vhci->btdev, opcode);
+
+done:
+	close(fd);
+	return err;
+}
+
+int vhci_set_aosp_capable(struct vhci *vhci, bool enable)
+{
+	int fd, err;
+	char val;
+
+	fd = vhci_debugfs_open(vhci, "aosp_capable");
+	if (fd < 0)
+		return -errno;
+
+	val = (enable) ? 'Y' : 'N';
+
+	err = write(fd, &val, sizeof(val));
+	if (err < 0) {
+		err = -errno;
+		goto done;
+	}
+
+	btdev_set_aosp_capable(vhci->btdev, enable);
+
+done:
+	close(fd);
+	return err;
 }
