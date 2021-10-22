@@ -399,6 +399,7 @@ static gboolean store_device_info_cb(gpointer user_data)
 		error("Unable to load key file from %s: (%s)", filename,
 								gerr->message);
 		g_error_free(gerr);
+		gerr = NULL;
 	}
 
 	g_key_file_set_string(key_file, "General", "Name", device->name);
