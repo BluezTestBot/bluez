@@ -107,7 +107,8 @@ Configuration command, Default Runtime Configuration Changed event, Get
 Device Flags command, Set Device Flags command, Device Flags Changed event,
 Read Advertisement Monitor Features command, Add Advertisement Patterns
 Monitor command, Remove Advertisement Monitor command, Advertisement Monitor
-Added event and Advertisement Monitor Removed event.
+Added event, Advertisement Monitor Removed event, Advertisement Monitor Device
+Found event and Advertisement Monitor Device Lost event.
 
 
 Example
@@ -4908,5 +4909,52 @@ Controller Resume Event
 	If the Wake_Reason is Remote wake due to connection, the address of the
 	peer device that caused the event will be shared in Address and
 	Address_Type. Otherwise, Address and Address_Type will both be zero.
+
+	This event will be sent to all management sockets.
+
+
+Advertisement Monitor Device Found Event
+========================================
+
+	Event code:		0x002f
+	Controller Index:	<controller_id>
+	Event Parameters:	Monitor_Handle (2 Octets)
+				Address (6 Octets)
+				Address_Type (1 Octet)
+
+	This event indicates that the controller has started tracking a device
+	matching an Advertisement Monitor with handle Monitor_Handle.
+
+	The address of the device being tracked will be shared in Address and
+	Address_Type.
+
+	Possible values for the Address_Type parameter:
+		0	Reserved (not in use)
+		1	LE Public
+		2	LE Random
+
+	This event will be sent to all management sockets.
+
+
+Advertisement Monitor Device Lost Event
+=======================================
+
+	Event code:		0x0030
+	Controller Index:	<controller_id>
+	Event Parameters:	Monitor_Handle (2 Octets)
+				Address (6 Octets)
+				Address_Type (1 Octet)
+
+	This event indicates that the controller has stopped tracking a device
+	that was being tracked by an Advertisement Monitor with handle
+	Monitor_Handle.
+
+	The address of the device being tracked will be shared in Address and
+	Address_Type.
+
+	Possible values for the Address_Type parameter:
+		0	Reserved (not in use)
+		1	LE Public
+		2	LE Random
 
 	This event will be sent to all management sockets.
