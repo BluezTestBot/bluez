@@ -274,6 +274,7 @@ struct generic_data {
 	const uint16_t *setup_settings;
 	bool setup_nobredr;
 	bool setup_limited_discov;
+	bool setup_limited_priv;
 	const void *setup_exp_feat_param;
 	uint16_t setup_expect_hci_command;
 	const void *setup_expect_hci_param;
@@ -7160,6 +7161,8 @@ proceed:
 		}
 
 		if (*cmd == MGMT_OP_SET_PRIVACY) {
+			if (test->setup_limited_priv)
+				privacy_param[0] = 0x02;
 			param_size = sizeof(privacy_param);
 			param = privacy_param;
 		}
@@ -10185,6 +10188,7 @@ static const struct generic_data ll_privacy_add_device_3 = {
 
 static const struct generic_data ll_privacy_add_device_4 = {
 	.setup_settings = settings_le_privacy_ll_privacy,
+	.setup_limited_priv = true,
 	.setup_exp_feat_param = set_exp_feat_param_ll_privacy,
 	.send_opcode = MGMT_OP_ADD_DEVICE,
 	.send_param = add_device_le_public_param_2,
@@ -10202,6 +10206,7 @@ static const struct generic_data ll_privacy_add_device_4 = {
 
 static const struct generic_data ll_privacy_add_device_5 = {
 	.setup_settings = settings_le_privacy_ll_privacy,
+	.setup_limited_priv = true,
 	.setup_exp_feat_param = set_exp_feat_param_ll_privacy,
 	.send_opcode = MGMT_OP_ADD_DEVICE,
 	.send_param = add_device_le_public_param_2,
