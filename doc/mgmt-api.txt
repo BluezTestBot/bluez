@@ -2027,7 +2027,8 @@ Add Device Command
 	Possible values for the Action parameter:
 		0	Background scan for device
 		1	Allow incoming connection
-		2	Auto-connect remote device
+		2	Auto-connect remote devices using Network Privacy Mode
+		3	Auto-connect remote devices using Device Privacy Mode
 
 	With the Action 0, when the device is found, a new Device Found
 	event will be sent indicating this device is available. This
@@ -2041,7 +2042,12 @@ Add Device Command
 
 	With the Action 2, when the device is found, it will be connected
 	and if successful a Device Connected event will be sent. This
-	action is only valid for LE Public and LE Random address types.
+	action is only valid for LE Public and LE Random address types using
+	Network Privacy Mode.
+
+	With the Action 3, works like Action 2 but instead uses Device Privacy
+	Mode for devices using LE Random address which allows the use of both
+	random and identity addresses.
 
 	When a device is blocked using Block Device command, then it is
 	valid to add the device here, but all actions will be ignored
