@@ -6786,7 +6786,8 @@ static void confirm_name_complete(uint8_t status, uint16_t length,
 }
 
 static void confirm_name(struct btd_adapter *adapter, const bdaddr_t *bdaddr,
-					uint8_t bdaddr_type, bool name_known)
+					uint8_t bdaddr_type, bool name_known,
+					bool name_resolve_allowed)
 {
 	struct mgmt_cp_confirm_name cp;
 	char addr[18];
@@ -6817,7 +6818,13 @@ static void confirm_name(struct btd_adapter *adapter, const bdaddr_t *bdaddr,
 	memset(&cp, 0, sizeof(cp));
 	bacpy(&cp.addr.bdaddr, bdaddr);
 	cp.addr.type = bdaddr_type;
-	cp.name_known = name_known;
+
+	if (name_known)
+		cp.name_state = MGMT_CONFIRM_NAME_KNOWN;
+	else if (name_resolve_allowed)
+		cp.name_state = MGMT_CONFIRM_NAME_UNKNOWN;
+	else
+		cp.name_state = MGMT_CONFIRM_NAME_DONT_CARE;
 
 	adapter->confirm_name_id = mgmt_reply(adapter->mgmt,
 					MGMT_OP_CONFIRM_NAME,
@@ -6979,12 +6986,13 @@ static void update_found_devices(struct btd_adapter *adapter,
 					uint8_t bdaddr_type, int8_t rssi,
 					bool confirm, bool legacy,
 					bool not_connectable,
+					bool name_resolve_fail,
 					const uint8_t *data, uint8_t data_len)
 {
 	struct btd_device *dev;
 	struct bt_ad *ad = NULL;
 	struct eir_data eir_data;
-	bool name_known, discoverable;
+	bool name_known, discoverable, name_resolve_allowed;
 	char addr[18];
 	bool duplicate = false;
 	struct queue *matched_monitors = NULL;
@@ -7071,6 +7079,9 @@ static void update_found_devices(struct btd_adapter *adapter,
 
 	device_set_legacy(dev, legacy);
 
+	if (name_resolve_fail)
+		device_name_resolve_fail(dev);
+
 	if (adapter->filtered_discovery)
 		device_set_rssi_with_delta(dev, rssi, 0);
 	else
@@ -7141,8 +7152,11 @@ static void update_found_devices(struct btd_adapter *adapter,
 	if (g_slist_find(adapter->discovery_found, dev))
 		return;
 
-	if (confirm)
-		confirm_name(adapter, bdaddr, bdaddr_type, name_known);
+	if (confirm) {
+		name_resolve_allowed = device_name_resolve_allowed(dev);
+		confirm_name(adapter, bdaddr, bdaddr_type, name_known,
+							name_resolve_allowed);
+	}
 
 	adapter->discovery_found = g_slist_prepend(adapter->discovery_found,
 									dev);
@@ -7191,6 +7205,8 @@ static void device_found_callback(uint16_t index, uint16_t length,
 	uint32_t flags;
 	bool confirm_name;
 	bool legacy;
+	bool not_connectable;
+	bool name_resolve_fail;
 	char addr[18];
 
 	if (length < sizeof(*ev)) {
@@ -7220,10 +7236,12 @@ static void device_found_callback(uint16_t index, uint16_t length,
 
 	confirm_name = (flags & MGMT_DEV_FOUND_CONFIRM_NAME);
 	legacy = (flags & MGMT_DEV_FOUND_LEGACY_PAIRING);
+	not_connectable = (flags & MGMT_DEV_FOUND_NOT_CONNECTABLE);
+	name_resolve_fail = (flags & MGMT_DEV_FOUND_NAME_RESOLVE_FAIL);
 
 	update_found_devices(adapter, &ev->addr.bdaddr, ev->addr.type,
 					ev->rssi, confirm_name, legacy,
-					flags & MGMT_DEV_FOUND_NOT_CONNECTABLE,
+					not_connectable, name_resolve_fail,
 					eir, eir_len);
 }
 

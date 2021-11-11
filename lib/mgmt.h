@@ -299,10 +299,14 @@ struct mgmt_cp_stop_discovery {
 	uint8_t type;
 } __packed;
 
+#define MGMT_CONFIRM_NAME_UNKNOWN	0
+#define MGMT_CONFIRM_NAME_KNOWN		1
+#define MGMT_CONFIRM_NAME_DONT_CARE	2
+
 #define MGMT_OP_CONFIRM_NAME		0x0025
 struct mgmt_cp_confirm_name {
 	struct mgmt_addr_info addr;
-	uint8_t name_known;
+	uint8_t name_state;
 } __packed;
 struct mgmt_rp_confirm_name {
 	struct mgmt_addr_info addr;
@@ -857,6 +861,7 @@ struct mgmt_ev_auth_failed {
 #define MGMT_DEV_FOUND_CONFIRM_NAME	0x01
 #define MGMT_DEV_FOUND_LEGACY_PAIRING	0x02
 #define MGMT_DEV_FOUND_NOT_CONNECTABLE	0x04
+#define MGMT_DEV_FOUND_NAME_RESOLVE_FAIL 0x10
 
 #define MGMT_EV_DEVICE_FOUND		0x0012
 struct mgmt_ev_device_found {

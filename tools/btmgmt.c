@@ -667,9 +667,9 @@ static void device_found(uint16_t index, uint16_t len, const void *param,
 		memset(&cp, 0, sizeof(cp));
 		memcpy(&cp.addr, &ev->addr, sizeof(cp.addr));
 		if (resolve_names)
-			cp.name_known = 0;
+			cp.name_state = MGMT_CONFIRM_NAME_UNKNOWN;
 		else
-			cp.name_known = 1;
+			cp.name_state = MGMT_CONFIRM_NAME_DONT_CARE;
 
 		mgmt_reply(mgmt, MGMT_OP_CONFIRM_NAME, index, sizeof(cp), &cp,
 						confirm_name_rsp, NULL, NULL);
