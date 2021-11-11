@@ -1493,7 +1493,7 @@ Confirm Name Command
 	Controller Index:	<controller id>
 	Command Parameters:	Address (6 Octets)
 				Address_Type (1 Octet)
-				Name_Known (1 Octet)
+				Name_State (1 Octet)
 	Return Parameters:	Address (6 Octets)
 				Address_Type (1 Octet)
 
@@ -1506,10 +1506,11 @@ Confirm Name Command
 		1	LE Public
 		2	LE Random
 
-	The Name_Known parameter should be set to 0x01 if user space
-	knows the name for the device and 0x00 if it doesn't. If set to
-	0x00 the kernel will perform a name resolving procedure for the
-	device in question.
+	The Name_State parameter should be set to 0x00 if user space
+	doesn't know the name for the device to make the kernel
+	perform a name resolving procedure for the device in question.
+	Otherwise, set to 0x01 if user space already knew the device's
+	name, or 0x02 if it doesn't care.
 
 	This command can only be used when the controller is powered.
 
@@ -4090,6 +4091,7 @@ Device Connected Event
 		1	Legacy Pairing
 		2	Reserved (not in use)
 		3	Initiated Connection
+		4	Reserved (not in use)
 
 
 Device Disconnected Event
@@ -4264,6 +4266,7 @@ Device Found Event
 		1	Legacy Pairing
 		2	Not Connectable
 		3	Reserved (not in use)
+		4	Name Resolve Fail
 
 	For the RSSI field a value of 127 indicates that the RSSI is
 	not available. That can happen with Bluetooth 1.1 and earlier
@@ -4285,6 +4288,11 @@ Device Found Event
 	The Not Connectable flag indicates that the device will not
 	accept any connections. This can be indicated by Low Energy
 	devices that are in broadcaster role.
+
+	The Name Resolve Fail flag indicates that name resolving
+	procedure has ended with failure for this device. The user space
+	should use this information to determine when is a good time to
+	retry the name resolving procedure.
 
 
 Discovering Event
