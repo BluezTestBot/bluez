@@ -568,6 +568,63 @@ void device_store_cached_name(struct btd_device *dev, const char *name)
 	g_key_file_free(key_file);
 }
 
+static void device_store_cached_name_resolve_attempts(struct btd_device *dev)
+{
+	char filename[PATH_MAX];
+	char d_addr[18];
+	GKeyFile *key_file;
+	GError *gerr = NULL;
+	char *data;
+	char *data_old;
+	gsize length = 0;
+	gsize length_old = 0;
+	uint64_t earliest_allowed;
+	unsigned int num_failures;
+
+	if (device_address_is_private(dev)) {
+		DBG("Can't store name resolve for private addressed device %s",
+								dev->path);
+		return;
+	}
+
+	ba2str(&dev->bdaddr, d_addr);
+	snprintf(filename, PATH_MAX, STORAGEDIR "/%s/cache/%s",
+			btd_adapter_get_storage_dir(dev->adapter), d_addr);
+	create_file(filename, 0600);
+
+	key_file = g_key_file_new();
+	if (!g_key_file_load_from_file(key_file, filename, 0, &gerr)) {
+		error("Unable to load key file from %s: (%s)", filename,
+								gerr->message);
+		g_error_free(gerr);
+	}
+
+	earliest_allowed = (uint64_t) dev->name_resolve_earliest_allow_time;
+	num_failures = dev->name_resolve_fail_count;
+
+	data_old = g_key_file_to_data(key_file, &length_old, NULL);
+
+	g_key_file_set_uint64(key_file, "NameResolve", "EarliestAllowed",
+							earliest_allowed);
+	g_key_file_set_integer(key_file, "NameResolve", "NumFailures",
+							num_failures);
+
+	data = g_key_file_to_data(key_file, &length, NULL);
+
+	if ((length != length_old) || (memcmp(data, data_old, length))) {
+		if (!g_file_set_contents(filename, data, length, &gerr)) {
+			error("Unable set contents for %s: (%s)", filename,
+								gerr->message);
+			g_error_free(gerr);
+		}
+	}
+
+	g_free(data);
+	g_free(data_old);
+
+	g_key_file_free(key_file);
+}
+
 static void browse_request_free(struct browse_req *req)
 {
 	struct btd_device *device = req->device;
@@ -3305,6 +3362,36 @@ failed:
 	return str;
 }
 
+static void load_cached_name_resolve_attempts(struct btd_device *device,
+					const char *local, const char *peer)
+{
+	char filename[PATH_MAX];
+	GKeyFile *key_file;
+	uint64_t earliest_allowed;
+	unsigned int num_failures;
+
+	if (device_address_is_private(device))
+		return;
+
+	snprintf(filename, PATH_MAX, STORAGEDIR "/%s/cache/%s", local, peer);
+
+	key_file = g_key_file_new();
+
+	if (!g_key_file_load_from_file(key_file, filename, 0, NULL))
+		goto failed;
+
+	earliest_allowed = g_key_file_get_uint64(key_file, "NameResolve",
+						"EarliestAllowed", NULL);
+	num_failures = g_key_file_get_uint64(key_file, "NameResolve",
+						"NumFailures", NULL);
+
+	device->name_resolve_earliest_allow_time = earliest_allowed;
+	device->name_resolve_fail_count = (uint8_t) num_failures;
+
+failed:
+	g_key_file_free(key_file);
+}
+
 static struct csrk_info *load_csrk(GKeyFile *key_file, const char *group)
 {
 	struct csrk_info *csrk;
@@ -4312,6 +4399,7 @@ struct btd_device *device_create(struct btd_adapter *adapter,
 	struct btd_device *device;
 	char dst[18];
 	char *str;
+	const char *storage_dir;
 
 	ba2str(bdaddr, dst);
 	DBG("dst %s", dst);
@@ -4327,12 +4415,14 @@ struct btd_device *device_create(struct btd_adapter *adapter,
 	else
 		device->le = true;
 
-	str = load_cached_name(device, btd_adapter_get_storage_dir(adapter),
-									dst);
+	storage_dir = btd_adapter_get_storage_dir(adapter);
+	str = load_cached_name(device, storage_dir, dst);
 	if (str) {
 		strcpy(device->name, str);
 		g_free(str);
 	}
+
+	load_cached_name_resolve_attempts(device, storage_dir, dst);
 
 	return device;
 }
@@ -4410,6 +4500,8 @@ void device_name_resolve_fail(struct btd_device *device)
 	device->name_resolve_fail_count++;
 	device->name_resolve_earliest_allow_time = time(NULL) +
 		NAME_RESOLVE_RETRY_DELAY * device->name_resolve_fail_count;
+
+	device_store_cached_name_resolve_attempts(device);
 }
 
 void device_set_class(struct btd_device *device, uint32_t class)
