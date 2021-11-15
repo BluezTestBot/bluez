@@ -409,6 +409,9 @@ struct avdtp {
 
 	/* Attempt stream setup instead of disconnecting */
 	gboolean stream_setup;
+
+	/* use offload for transport */
+	gboolean use_offload;
 };
 
 static GSList *state_callbacks = NULL;
@@ -2425,6 +2428,7 @@ struct avdtp *avdtp_new(GIOChannel *chan, struct btd_device *device,
 							struct queue *lseps)
 {
 	struct avdtp *session;
+	char *use_offload;
 
 	session = g_new0(struct avdtp, 1);
 
@@ -2435,6 +2439,10 @@ struct avdtp *avdtp_new(GIOChannel *chan, struct btd_device *device,
 	session->lseps = lseps;
 
 	session->version = get_version(session);
+
+	use_offload = getenv("USE_OFFLOAD");
+	if (use_offload && !strncmp(use_offload, "1", 1))
+		session->use_offload = TRUE;
 
 	if (!chan)
 		return session;
