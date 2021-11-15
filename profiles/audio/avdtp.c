@@ -2352,6 +2352,47 @@ static uint16_t get_version(struct avdtp *session)
 	return ver;
 }
 
+static gboolean avdtp_offload_open(struct avdtp_stream *stream)
+{
+	int sock;
+	struct avdtp_service_capability *cap;
+	GSList *l;
+
+	if (!stream->io)
+		return FALSE;
+
+	sock = g_io_channel_unix_get_fd(stream->io);
+
+	for (l = stream->caps; l ; l = g_slist_next(l)) {
+		cap = l->data;
+
+		if (cap->category != AVDTP_MEDIA_CODEC)
+			continue;
+		break;
+	}
+
+	if (setsockopt(sock, SOL_BLUETOOTH, BT_MSFT_OPEN, cap,
+		       sizeof(*cap) + cap->length))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean avdtp_offload_close(struct avdtp_stream *stream)
+{
+	int sock;
+
+	if (!stream->io)
+		return FALSE;
+
+	sock = g_io_channel_unix_get_fd(stream->io);
+
+	if (setsockopt(sock, SOL_BLUETOOTH, BT_MSFT_CLOSE, 0, 0))
+		return FALSE;
+
+	return TRUE;
+}
+
 static void avdtp_connect_cb(GIOChannel *chan, GError *err, gpointer user_data)
 {
 	struct avdtp *session = user_data;
@@ -2384,6 +2425,13 @@ static void avdtp_connect_cb(GIOChannel *chan, GError *err, gpointer user_data)
 	DBG("AVDTP: connected %s channel to %s",
 			session->pending_open ? "transport" : "signaling",
 			address);
+
+	if (session->pending_open && session->use_offload) {
+		if (!avdtp_offload_open(session->pending_open)) {
+			avdtp_offload_close(session->pending_open);
+			goto failed;
+		}
+	}
 
 	if (session->state == AVDTP_SESSION_STATE_CONNECTING) {
 		DBG("AVDTP imtu=%u, omtu=%u", session->imtu, session->omtu);
