@@ -2910,6 +2910,21 @@ static gboolean avdtp_open_resp(struct avdtp *session, struct avdtp_stream *stre
 	return TRUE;
 }
 
+static gboolean avdtp_offload_start(struct avdtp_stream *stream)
+{
+	int sock;
+
+	if (!stream->io)
+		return FALSE;
+
+	sock = g_io_channel_unix_get_fd(stream->io);
+
+	if (setsockopt(sock, SOL_BLUETOOTH, BT_MSFT_START, 0, 0))
+		return FALSE;
+
+	return TRUE;
+}
+
 static gboolean avdtp_start_resp(struct avdtp *session,
 					struct avdtp_stream *stream,
 					struct seid_rej *resp, int size)
@@ -2923,6 +2938,9 @@ static gboolean avdtp_start_resp(struct avdtp *session,
 	 * same time and the one in SNK role doesn't reject it as it should */
 	if (sep->state != AVDTP_STATE_STREAMING)
 		avdtp_sep_set_state(session, sep, AVDTP_STATE_STREAMING);
+
+	if (session->use_offload)
+		avdtp_offload_start(stream);
 
 	return TRUE;
 }

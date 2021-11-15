@@ -159,6 +159,7 @@ struct bt_codecs {
 } __attribute__((packed));
 
 #define BT_MSFT_OPEN	20
+#define BT_MSFT_START	21
 #define BT_MSFT_CLOSE	23
 
 /* Connection and socket states */
