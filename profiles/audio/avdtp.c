@@ -2953,6 +2953,9 @@ static gboolean avdtp_close_resp(struct avdtp *session,
 
 	avdtp_sep_set_state(session, sep, AVDTP_STATE_CLOSING);
 
+	if (session->use_offload)
+		avdtp_offload_close(stream);
+
 	close_stream(stream);
 
 	return TRUE;
