@@ -2958,6 +2958,21 @@ static gboolean avdtp_close_resp(struct avdtp *session,
 	return TRUE;
 }
 
+static gboolean avdtp_offload_suspend(struct avdtp_stream *stream)
+{
+	int sock;
+
+	if (!stream->io)
+		return FALSE;
+
+	sock = g_io_channel_unix_get_fd(stream->io);
+
+	if (setsockopt(sock, SOL_BLUETOOTH, BT_MSFT_SUSPEND, 0, 0))
+		return FALSE;
+
+	return TRUE;
+}
+
 static gboolean avdtp_suspend_resp(struct avdtp *session,
 					struct avdtp_stream *stream,
 					void *data, int size)
@@ -2968,6 +2983,9 @@ static gboolean avdtp_suspend_resp(struct avdtp *session,
 
 	if (sep->cfm && sep->cfm->suspend)
 		sep->cfm->suspend(session, sep, stream, NULL, sep->user_data);
+
+	if (session->use_offload)
+		avdtp_offload_suspend(stream);
 
 	return TRUE;
 }
