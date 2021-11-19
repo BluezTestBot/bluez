@@ -10616,7 +10616,7 @@ static const struct hci_cmd_data ll_privacy_set_device_flags_1_hci_list[] = {
 static const uint8_t device_flags_changed_params_1[] = {
 	0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc,	/* BDADDR */
 	0x01,					/* Type - LE Public */
-	0x03, 0x00, 0x00, 0x00,			/* Supported Flags */
+	0x02, 0x00, 0x00, 0x00,			/* Supported Flags */
 	0x02, 0x00, 0x00, 0x00			/* Current Flags */
 };
 
@@ -11293,6 +11293,23 @@ static void check_scan(void *user_data)
 	}
 
 	test_condition_complete(data);
+}
+
+static void test_device_flags(const void *test_data)
+{
+	struct test_data *data = tester_get_data();
+	struct vhci *vhci = hciemu_get_vhci(data->hciemu);
+	int err;
+
+	/* Set Force Wakeup */
+	err = vhci_set_force_wakeup(vhci, true);
+	if (err) {
+		tester_warn("Unable to enable the force_wakeup");
+		tester_test_failed();
+		return;
+	}
+
+	test_command_generic(test_data);
 }
 
 static void test_remove_device(const void *test_data)
@@ -14038,7 +14055,7 @@ int main(int argc, char *argv[])
 	test_bredrle50("Get Device Flags - Success",
 				&get_dev_flags_success,
 				setup_get_dev_flags,
-				test_command_generic);
+				test_device_flags);
 
 	/* MGMT_OP_GET_DEVICE_FLAGS
 	 * Fail - Invalid parameter
@@ -14046,7 +14063,7 @@ int main(int argc, char *argv[])
 	test_bredrle50("Get Device Flags - Invalid Parameter",
 				&get_dev_flags_fail_1,
 				setup_get_dev_flags,
-				test_command_generic);
+				test_device_flags);
 
 	/* MGMT_OP_SET_DEVICE_FLAGS
 	 * Success
@@ -14054,7 +14071,7 @@ int main(int argc, char *argv[])
 	test_bredrle50("Set Device Flags - Success",
 				&set_dev_flags_success,
 				setup_get_dev_flags,
-				test_command_generic);
+				test_device_flags);
 
 	/* MGMT_OP_SET_DEVICE_FLAGS
 	 * Invalid Parameter - Missing parameter
@@ -14062,7 +14079,7 @@ int main(int argc, char *argv[])
 	test_bredrle50("Set Device Flags - Invalid Parameter 1",
 				&set_dev_flags_fail_1,
 				setup_get_dev_flags,
-				test_command_generic);
+				test_device_flags);
 
 	/* MGMT_OP_SET_DEVICE_FLAGS
 	 * Invalid Parameter - Not supported value
@@ -14070,7 +14087,7 @@ int main(int argc, char *argv[])
 	test_bredrle50("Set Device Flags - Invalid Parameter 2",
 				&set_dev_flags_fail_2,
 				setup_get_dev_flags,
-				test_command_generic);
+				test_device_flags);
 
 	/* MGMT_OP_SET_DEVICE_FLAGS
 	 * Device not exist
@@ -14078,7 +14095,7 @@ int main(int argc, char *argv[])
 	test_bredrle50("Set Device Flags - Device not found",
 				&set_dev_flags_fail_3,
 				setup_get_dev_flags,
-				test_command_generic);
+				test_device_flags);
 
 	/* Suspend/Resume
 	 * Setup : Power on and register Suspend Event
