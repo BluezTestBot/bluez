@@ -2945,6 +2945,24 @@ static gboolean avdtp_start_resp(struct avdtp *session,
 	return TRUE;
 }
 
+static gboolean msft_avdtp_close(struct avdtp_stream *stream)
+{
+	int sock;
+	struct bt_msft cmd;
+
+	if (!stream->io)
+		return FALSE;
+
+	sock = g_io_channel_unix_get_fd(stream->io);
+
+	cmd.sub_opcode = 0x0b;
+
+	if (setsockopt(sock, SOL_BLUETOOTH, BT_MSFT, &cmd, 1))
+		return FALSE;
+
+	return TRUE;
+}
+
 static gboolean avdtp_close_resp(struct avdtp *session,
 					struct avdtp_stream *stream,
 					struct seid_rej *resp, int size)
@@ -2952,6 +2970,9 @@ static gboolean avdtp_close_resp(struct avdtp *session,
 	struct avdtp_local_sep *sep = stream->lsep;
 
 	avdtp_sep_set_state(session, sep, AVDTP_STATE_CLOSING);
+
+	if (session->use_offload)
+		msft_avdtp_close(stream);
 
 	close_stream(stream);
 
