@@ -142,6 +142,13 @@ static const struct mgmt_exp_uuid codec_offload_uuid = {
 	.str = "a6695ace-ee7f-4fb9-881a-5fac66c629af"
 };
 
+/* 0cc2131f-96f0-4cd1-b313-b97e7cbc8335 */
+static const struct mgmt_exp_uuid msft_a2dp_offload_codecs_uuid = {
+	.val = { 0x35, 0x83, 0xbc, 0x7c, 0x7e, 0xb9, 0x13, 0xb3,
+		0xd1, 0x4c, 0xf0, 0x96, 0x1f, 0x13, 0xc2, 0x0c},
+	.str = "0cc2131f-96f0-4cd1-b313-b97e7cbc8335"
+};
+
 static DBusConnection *dbus_conn = NULL;
 
 static uint32_t kernel_features = 0;
@@ -9789,6 +9796,41 @@ static void codec_offload_func(struct btd_adapter *adapter, uint8_t action)
 	btd_error(adapter->dev_id, "Failed to set Codec Offload");
 }
 
+static void msft_a2dp_offload_complete(uint8_t status, uint16_t len,
+				       const void *param, void *user_data)
+{
+	struct btd_adapter *adapter = user_data;
+	uint8_t action = btd_opts.experimental ? 0x01 : 0x00;
+
+	if (status != 0) {
+		error("Set MSFT a2dp offload codec failed with status 0x%02x (%s)",
+		       status, mgmt_errstr(status));
+		return;
+	}
+
+	DBG("MSFT a2dp offload codecs successfully set");
+
+	if (action)
+		queue_push_tail(adapter->exps,
+				(void *)msft_a2dp_offload_codecs_uuid.val);
+}
+
+static void msft_a2dp_offload_func(struct btd_adapter *adapter, uint8_t action)
+{
+	struct mgmt_cp_set_exp_feature cp;
+
+	memset(&cp, 0, sizeof(cp));
+	memcpy(cp.uuid, msft_a2dp_offload_codecs_uuid.val, 16);
+	cp.action = action;
+
+	if (mgmt_send(adapter->mgmt, MGMT_OP_SET_EXP_FEATURE,
+		      adapter->dev_id, sizeof(cp), &cp,
+		      msft_a2dp_offload_complete, adapter, NULL) > 0)
+		return;
+
+	btd_error(adapter->dev_id, "Failed to set RPA Resolution");
+}
+
 static const struct exp_feat {
 	const struct mgmt_exp_uuid *uuid;
 	void (*func)(struct btd_adapter *adapter, uint8_t action);
@@ -9799,6 +9841,7 @@ static const struct exp_feat {
 	EXP_FEAT(&quality_report_uuid, quality_report_func),
 	EXP_FEAT(&rpa_resolution_uuid, rpa_resolution_func),
 	EXP_FEAT(&codec_offload_uuid, codec_offload_func),
+	EXP_FEAT(&msft_a2dp_offload_codecs_uuid, msft_a2dp_offload_func),
 };
 
 static void read_exp_features_complete(uint8_t status, uint16_t length,
