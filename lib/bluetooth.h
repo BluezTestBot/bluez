@@ -158,6 +158,13 @@ struct bt_codecs {
 	struct bt_codec codecs[];
 } __attribute__((packed));
 
+#define BT_MSFT		20
+struct bt_msft {
+	uint8_t sub_opcode;
+	uint8_t len;
+	uint8_t data[];
+} __attribute__((packed));
+
 /* Connection and socket states */
 enum {
 	BT_CONNECTED = 1, /* Equal to TCP_ESTABLISHED to make net code happy */
