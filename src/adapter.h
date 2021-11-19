@@ -261,3 +261,5 @@ bool btd_adapter_set_allowed_uuids(struct btd_adapter *adapter,
 							struct queue *uuids);
 bool btd_adapter_is_uuid_allowed(struct btd_adapter *adapter,
 							const char *uuid_str);
+
+bool is_msft_a2dp_offload_supported(struct btd_adapter *adapter);

@@ -9796,6 +9796,12 @@ static void codec_offload_func(struct btd_adapter *adapter, uint8_t action)
 	btd_error(adapter->dev_id, "Failed to set Codec Offload");
 }
 
+bool is_msft_a2dp_offload_supported(struct btd_adapter *adapter)
+{
+	return queue_find(adapter->exps, is_exp_feature_uuid_the_same,
+			(void *)msft_a2dp_offload_codecs_uuid.val) != NULL;
+}
+
 static void msft_a2dp_offload_complete(uint8_t status, uint16_t len,
 				       const void *param, void *user_data)
 {
