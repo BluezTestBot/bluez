@@ -2597,6 +2597,46 @@ static void cmd_exp_offload_codecs(int argc, char **argv)
 	}
 }
 
+static void exp_msft_offload_rsp(uint8_t status, uint16_t len,
+				 const void *param, void *user_data)
+{
+	if (status != 0)
+		error("Set MSFT offload codec failed with status 0x%02x (%s)",
+		      status, mgmt_errstr(status));
+	else
+		print("MSFT Offload codec feature successfully set");
+
+	bt_shell_noninteractive_quit(EXIT_SUCCESS);
+}
+
+static void cmd_exp_msft_offload_codecs(int argc, char **argv)
+{
+	/* 0cc2131f-96f0-4cd1-b313-b97e7cbc8335 */
+	static const uint8_t uuid[16] = {
+				0x35, 0x83, 0xbc, 0x7c, 0x7e, 0xb9, 0x13, 0xb3,
+				0xd1, 0x4c, 0xf0, 0x96, 0x1f, 0x13, 0xc2, 0x0c,
+	};
+	struct mgmt_cp_set_exp_feature cp;
+	uint8_t val;
+	uint16_t index;
+
+	if (parse_setting(argc, argv, &val) == false)
+		return bt_shell_noninteractive_quit(EXIT_FAILURE);
+
+	index = mgmt_index;
+	if (index == MGMT_INDEX_NONE)
+		index = 0;
+
+	memset(&cp, 0, sizeof(cp));
+	memcpy(cp.uuid, uuid, 16);
+	cp.action = val;
+
+	if (mgmt_send(mgmt, MGMT_OP_SET_EXP_FEATURE, index, sizeof(cp), &cp,
+		      exp_msft_offload_rsp, NULL, NULL) == 0) {
+		error("Unable to send msft offload codecs feature cmd");
+		return bt_shell_noninteractive_quit(EXIT_FAILURE);
+	}
+}
 static void class_rsp(uint16_t op, uint16_t id, uint8_t status, uint16_t len,
 							const void *param)
 {
@@ -5640,6 +5680,8 @@ static const struct bt_shell_menu main_menu = {
 		"Set bluetooth quality report feature"			},
 	{ "exp-offload",		"<on/off>",
 		cmd_exp_offload_codecs,	"Toggle codec support"		},
+	{ "exp-msft-offload",		"<on/off>",
+		cmd_exp_msft_offload_codecs, "Toggle msft codec support"},
 	{ "read-sysconfig",	NULL,
 		cmd_read_sysconfig,	"Read System Configuration"	},
 	{ "set-sysconfig",	"<-v|-h> [options...]",
