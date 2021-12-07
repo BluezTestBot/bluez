@@ -99,6 +99,7 @@ static bool client_msg_recvd(uint16_t src, uint8_t *data,
 {
 	uint32_t opcode;
 	int n;
+	char s[128];
 
 	if (mesh_opcode_get(data, len, &opcode, &n)) {
 		len -= n;
@@ -106,27 +107,27 @@ static bool client_msg_recvd(uint16_t src, uint8_t *data,
 	} else
 		return false;
 
-	bt_shell_printf("On Off Model Message received (%d) opcode %x\n",
-								len, opcode);
-	print_byte_array("\t",data, len);
-
 	switch (opcode) {
 	default:
 		return false;
 
 	case OP_GENERIC_ONOFF_STATUS:
+		bt_shell_printf("On Off Model Message received (%d) opcode %x\n",
+			len, opcode);
+		print_byte_array("\t",data, len);
 		if (len != 1 && len != 3)
 			break;
 
-		bt_shell_printf("Node %4.4x: Off Status present = %s",
-						src, data[0] ? "ON" : "OFF");
-
+		snprintf(s, sizeof(s), "Node %4.4x: On Off Status present = %s",
+			src, data[0] ? "ON" : "OFF");
 		if (len == 3) {
-			bt_shell_printf(", target = %s",
-					data[1] ? "ON" : "OFF");
+			snprintf(s + strlen(s), sizeof(s), ", target = %s",
+				data[1] ? "ON" : "OFF");
+			bt_shell_printf("%s\n", s);
 			print_remaining_time(data[2]);
-		} else
-			bt_shell_printf("\n");
+		}else
+			bt_shell_printf("%s\n", s);
+
 		break;
 	}
 

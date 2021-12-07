@@ -470,6 +470,8 @@ static bool deliver_model_data(struct mesh_element* element, uint16_t src,
 				uint16_t app_idx, uint8_t *data, uint16_t len)
 {
 	GList *l;
+	uint32_t opcode;
+	int n;
 
 	for(l = element->models; l; l = l->next) {
 		struct mesh_model *model = l->data;
@@ -481,6 +483,15 @@ static bool deliver_model_data(struct mesh_element* element, uint16_t src,
 			model->cbs.recv(src, data, len, model->user_data))
 			return true;
 	}
+
+	if (mesh_opcode_get(data, len, &opcode, &n)) {
+		len -= n;
+		data += n;
+	} else
+		return false;
+	bt_shell_printf("Unknown Model Message received (%d) opcode %x\n",
+						len, opcode);
+	print_byte_array("\t",data, len);
 
 	return false;
 }
