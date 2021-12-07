@@ -226,6 +226,8 @@ static void cmd_set(int argc, char *argv[])
 	uint16_t n;
 	uint8_t msg[32];
 	struct mesh_node *node;
+	int np;
+	uint32_t opcode;
 
 	if (IS_UNASSIGNED(target)) {
 		bt_shell_printf("Destination not set\n");
@@ -237,13 +239,22 @@ static void cmd_set(int argc, char *argv[])
 	if (!node)
 		return;
 
-	if ((read_input_parameters(argc, argv) != 1) &&
-					parms[0] != 0 && parms[0] != 1) {
-		bt_shell_printf("Bad arguments: Expecting \"0\" or \"1\"\n");
-		return bt_shell_noninteractive_quit(EXIT_FAILURE);
+	np = read_input_parameters(argc, argv);
+	if ((np != 1) && (np != 2) &&
+		parms[0] != 0 && parms[0] != 1 &&
+		parms[1] != 0 && parms[1] != 1) {
+	bt_shell_printf("Bad arguments: Expecting \"0\" or \"1\" "
+		"and an optional \"0\" or \"1\" as unack\n");
+	return bt_shell_noninteractive_quit(EXIT_FAILURE);
 	}
 
-	n = mesh_opcode_set(OP_GENERIC_ONOFF_SET, msg);
+	if( (np==2) && parms[1] ){
+		opcode = OP_GENERIC_ONOFF_SET_UNACK;
+	}else{
+		opcode = OP_GENERIC_ONOFF_SET;
+	}
+
+	n = mesh_opcode_set(opcode, msg);
 	msg[n++] = parms[0];
 	msg[n++] = trans_id++;
 
@@ -263,7 +274,7 @@ static const struct bt_shell_menu onoff_menu = {
 						"Set node to configure"},
 	{"get",			NULL,				cmd_get_status,
 						"Get ON/OFF status"},
-	{"onoff",		"<0/1>",			cmd_set,
+	{"onoff",		"<0/1> [unack]",		cmd_set,
 						"Send \"SET ON/OFF\" command"},
 	{} },
 };
