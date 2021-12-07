@@ -1037,6 +1037,44 @@ static void cmd_sub_get(int argc, char *argv[])
 	return bt_shell_noninteractive_quit(EXIT_SUCCESS);
 }
 
+static void cmd_sub_del(int argc, char *argv[])
+{
+        uint16_t n;
+        uint8_t msg[32];
+        int parm_cnt;
+
+        if (IS_UNASSIGNED(target)) {
+                bt_shell_printf("Destination not set\n");
+                return bt_shell_noninteractive_quit(EXIT_FAILURE);
+        }
+
+        n = mesh_opcode_set(OP_CONFIG_MODEL_SUB_DELETE, msg);
+
+        parm_cnt = read_input_parameters(argc, argv);
+        if (parm_cnt != 3) {
+                bt_shell_printf("Bad arguments: %s\n", argv[1]);
+                return bt_shell_noninteractive_quit(EXIT_FAILURE);
+        }
+
+        /* Per Mesh Profile 4.3.2.19 */
+        /* Element Address */
+        put_le16(parms[0], msg + n);
+        n += 2;
+        /* Subscription Address */
+        put_le16(parms[1], msg + n);
+        n += 2;
+        /* SIG Model ID */
+        put_le16(parms[2], msg + n);
+        n += 2;
+
+        if (!config_send(msg, n)) {
+                bt_shell_printf("Failed to send \"DELETE SUBSCRIPTION\"\n");
+                return bt_shell_noninteractive_quit(EXIT_FAILURE);
+        }
+
+        return bt_shell_noninteractive_quit(EXIT_SUCCESS);
+}
+
 static void cmd_mod_appidx_get(int argc, char *argv[])
 {
 	uint16_t n;
@@ -1232,6 +1270,8 @@ static const struct bt_shell_menu cfg_menu = {
 				cmd_sub_add,    "Add subscription"},
 	{"sub-get", "<ele_addr> <model id>",
 				cmd_sub_get,    "Get subscription"},
+	{"sub-del", "<ele_addr> <sub_addr> <model id>",
+				cmd_sub_del,    "Delete subscription"},
 	{"node-reset",		NULL,                    cmd_node_reset,
 				"Reset a node and remove it from network"},
 	{} },
