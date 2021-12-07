@@ -209,8 +209,9 @@ static void cmd_get_status(int argc, char *argv[])
 
 	node = node_find_by_addr(target);
 
-	if (!node)
-		return;
+	if (!node){
+		bt_shell_printf("Warning: node %4.4x not found in database\n",target);
+	}
 
 	n = mesh_opcode_set(OP_GENERIC_ONOFF_GET, msg);
 
@@ -237,8 +238,9 @@ static void cmd_set(int argc, char *argv[])
 
 	node = node_find_by_addr(target);
 
-	if (!node)
-		return;
+	if (!node){
+		bt_shell_printf("Warning: node %4.4x not found in database\n",target);
+	}
 
 	np = read_input_parameters(argc, argv);
 	if ((np != 1) && (np != 2) &&
