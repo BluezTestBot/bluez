@@ -48,6 +48,7 @@
 #include "mesh-gatt/util.h"
 #include "mesh-gatt/prov-db.h"
 #include "mesh-gatt/onoff-model.h"
+#include "mesh-gatt/level-model.h"
 
 /* String display constants */
 #define COLORED_NEW	COLOR_GREEN "NEW" COLOR_OFF
@@ -1998,6 +1999,9 @@ int main(int argc, char *argv[])
 
 	if (!onoff_client_init(PRIMARY_ELEMENT_IDX))
 		g_printerr("Failed to initialize mesh generic On/Off client\n");
+
+	if (!level_client_init(PRIMARY_ELEMENT_IDX))
+		g_printerr("Failed to initialize mesh generic level client\n");
 
 	status = bt_shell_run();
 
