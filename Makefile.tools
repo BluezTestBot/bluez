@@ -333,7 +333,9 @@ tools_meshctl_SOURCES = tools/meshctl.c \
 				tools/mesh-gatt/onoff-model.h \
 				tools/mesh-gatt/onoff-model.c \
 				tools/mesh-gatt/level-model.h \
-				tools/mesh-gatt/level-model.c
+				tools/mesh-gatt/level-model.c \
+				tools/mesh-gatt/onpowerup-model.h \
+				tools/mesh-gatt/onpowerup-model.c
 tools_meshctl_LDADD = gdbus/libgdbus-internal.la src/libshared-glib.la \
 				lib/libbluetooth-internal.la \
 				$(GLIB_LIBS) $(DBUS_LIBS) -ljson-c -lreadline
