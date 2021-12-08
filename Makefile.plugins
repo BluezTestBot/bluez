@@ -87,6 +87,7 @@ builtin_sources += profiles/health/mcap.h profiles/health/mcap.c \
 			profiles/health/hdp_manager.c \
 			profiles/health/hdp.h profiles/health/hdp.c \
 			profiles/health/hdp_util.h profiles/health/hdp_util.c
+builtin_ldadd += src/libshared-ell.la $(ell_ldadd)
 endif
 
 builtin_modules += gap

@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <ell/ell.h>
 
 #include <glib.h>
 
@@ -1484,13 +1485,12 @@ static void destroy_create_dc_data(gpointer data)
 static void *generate_echo_packet(void)
 {
 	uint8_t *buf;
-	int i;
 
 	buf = g_malloc(HDP_ECHO_LEN);
-	srand(time(NULL));
+	if (buf == NULL)
+		return NULL;
 
-	for(i = 0; i < HDP_ECHO_LEN; i++)
-		buf[i] = rand() % UINT8_MAX;
+	l_getrandom(buf, HDP_ECHO_LEN);
 
 	return buf;
 }
