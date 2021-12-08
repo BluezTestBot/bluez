@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <ell/ell.h>
 
 #include <glib.h>
 
@@ -130,7 +131,7 @@ static ssize_t autopair_pincb(struct btd_adapter *adapter,
 				return 0;
 
 			snprintf(pinstr, sizeof(pinstr), "%06u",
-						rand() % 1000000);
+						l_getrandom_uint32() % 1000000);
 			*display = true;
 			memcpy(pinbuf, pinstr, 6);
 			return 6;
