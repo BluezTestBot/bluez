@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/mount.h>
+#include <ell/ell.h>
 
 #ifndef WAIT_ANY
 #define WAIT_ANY (-1)
@@ -191,11 +192,8 @@ int main(int argc, char *argv[])
 							addr, 6) < 0) {
 			printf("Generating new persistent static address\n");
 
-			addr[0] = rand();
-			addr[1] = rand();
-			addr[2] = rand();
-			addr[3] = 0x34;
-			addr[4] = 0x12;
+			l_getrandom(addr, 6);
+			/* Update the MSB to make it a static address */
 			addr[5] = 0xc0;
 
 			efivars_write("BluetoothStaticAddress",

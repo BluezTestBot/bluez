@@ -109,7 +109,8 @@ peripheral_btsensor_SOURCES = peripheral/main.c \
 				peripheral/gap.h peripheral/gap.c \
 				peripheral/gatt.h peripheral/gatt.c
 peripheral_btsensor_LDADD = src/libshared-mainloop.la \
-				lib/libbluetooth-internal.la
+				lib/libbluetooth-internal.la \
+				src/libshared-ell.la $(ell_ldadd)
 
 tools_3dsp_SOURCES = tools/3dsp.c monitor/bt.h
 tools_3dsp_LDADD = src/libshared-mainloop.la
