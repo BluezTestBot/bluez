@@ -21,6 +21,7 @@
 #include <sys/un.h>
 #include <sys/uio.h>
 #include <time.h>
+#include <ell/ell.h>
 
 #include "lib/bluetooth.h"
 #include "lib/hci.h"
@@ -506,8 +507,7 @@ static unsigned int get_adv_delay(void)
 	/* The advertising delay is a pseudo-random value with a range
 	 * of 0 ms to 10 ms generated for each advertising event.
 	 */
-	srand(time(NULL));
-	return (rand() % 11);
+	return (l_getrandom_uint32() % 11);
 }
 
 static void adv_timeout_callback(int id, void *user_data)

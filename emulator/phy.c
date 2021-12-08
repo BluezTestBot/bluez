@@ -22,6 +22,7 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <time.h>
+#include <ell/ell.h>
 
 #include "src/shared/util.h"
 #include "src/shared/mainloop.h"
@@ -152,6 +153,7 @@ static int create_tx_socket(void)
 struct bt_phy *bt_phy_new(void)
 {
 	struct bt_phy *phy;
+	uint64_t phy_id;
 
 	phy = calloc(1, sizeof(*phy));
 	if (!phy)
@@ -173,8 +175,8 @@ struct bt_phy *bt_phy_new(void)
 	mainloop_add_fd(phy->rx_fd, EPOLLIN, phy_rx_callback, phy, NULL);
 
 	if (!get_random_bytes(&phy->id, sizeof(phy->id))) {
-		srandom(time(NULL));
-		phy->id = random();
+		l_getrandom(&phy_id, sizeof(phy_id));
+		phy->id = phy_id;
 	}
 
 	bt_phy_send(phy, BT_PHY_PKT_NULL, NULL, 0);
