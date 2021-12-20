@@ -10,6 +10,45 @@ AC_DEFUN([AC_PROG_CC_PIE], [
 	])
 ])
 
+AC_DEFUN([AC_PROG_CC_ASAN], [
+	AC_CACHE_CHECK([whether ${CC-cc} accepts -fsanitize=address],
+						ac_cv_prog_cc_asan, [
+		echo 'void f(){}' > asan.c
+		if test -z "`${CC-cc} -fsanitize=address -c asan.c 2>&1`"; then
+			ac_cv_prog_cc_asan=yes
+		else
+			ac_cv_prog_cc_asan=no
+		fi
+		rm -rf asan*
+       ])
+])
+
+AC_DEFUN([AC_PROG_CC_LSAN], [
+	AC_CACHE_CHECK([whether ${CC-cc} accepts -fsanitize=leak],
+						ac_cv_prog_cc_lsan, [
+		echo 'void f(){}' > lsan.c
+		if test -z "`${CC-cc} -fsanitize=leak -c lsan.c 2>&1`"; then
+			ac_cv_prog_cc_lsan=yes
+		else
+			ac_cv_prog_cc_lsan=no
+		fi
+		rm -rf lsan*
+	])
+])
+
+AC_DEFUN([AC_PROG_CC_UBSAN], [
+	AC_CACHE_CHECK([whether ${CC-cc} accepts -fsanitize=undefined],
+						ac_cv_prog_cc_ubsan, [
+		echo 'void f(){}' > ubsan.c
+		if test -z "`${CC-cc} -fsanitize=undefined -c ubsan.c 2>&1`"; then
+			ac_cv_prog_cc_ubsan=yes
+		else
+			ac_cv_prog_cc_ubsan=no
+		fi
+		rm -rf ubsan*
+	])
+])
+
 AC_DEFUN([COMPILER_FLAGS], [
 	with_cflags=""
 	if (test "$USE_MAINTAINER_MODE" = "yes"); then
@@ -51,6 +90,42 @@ AC_DEFUN([MISC_FLAGS], [
 				test "${ac_cv_prog_cc_pie}" = "yes"); then
 			misc_cflags="$misc_cflags -fPIC"
 			misc_ldflags="$misc_ldflags -pie -Wl,-z,now"
+		fi
+	])
+	AC_ARG_ENABLE(asan, AC_HELP_STRING([--enable-asan],
+			[enable linking with address sanitizer]), [
+		save_LIBS=$LIBS
+		AC_CHECK_LIB(asan, _init)
+		LIBS=$save_LIBS
+		if (test "${enableval}" = "yes" &&
+				test "${ac_cv_lib_asan__init}" = "yes" &&
+				test "${ac_cv_prog_cc_asan}" = "yes"); then
+			misc_cflags="$misc_cflags -fsanitize=address";
+			misc_ldflags="$misc_ldflags -fsanitize=address"
+		fi
+	])
+	AC_ARG_ENABLE(lsan, AC_HELP_STRING([--enable-lsan],
+			[enable linking with address sanitizer]), [
+		save_LIBS=$LIBS
+		AC_CHECK_LIB(lsan, _init)
+		LIBS=$save_LIBS
+		if (test "${enableval}" = "yes" &&
+				test "${ac_cv_lib_lsan__init}" = "yes" &&
+				test "${ac_cv_prog_cc_lsan}" = "yes"); then
+			misc_cflags="$misc_cflags -fsanitize=leak";
+			misc_ldflags="$misc_ldflags -fsanitize=leak"
+		fi
+	])
+	AC_ARG_ENABLE(ubsan, AC_HELP_STRING([--enable-ubsan],
+			[enable linking with address sanitizer]), [
+		save_LIBS=$LIBS
+		AC_CHECK_LIB(ubsan, _init)
+		LIBS=$save_LIBS
+		if (test "${enableval}" = "yes" &&
+				test "${ac_cv_lib_ubsan__init}" = "yes" &&
+				test "${ac_cv_prog_cc_ubsan}" = "yes"); then
+			misc_cflags="$misc_cflags -fsanitize=undefined";
+			misc_ldflags="$misc_ldflags -fsanitize=undefined"
 		fi
 	])
 	if (test "$enable_coverage" = "yes"); then
