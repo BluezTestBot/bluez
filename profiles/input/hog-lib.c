@@ -1349,23 +1349,16 @@ static void db_report_map_read_value_cb(struct gatt_db_attribute *attrib,
 	memcpy(map->value, value, map->length);
 }
 
-static void foreach_hog_chrc(struct gatt_db_attribute *attr, void *user_data)
+static void foreach_hog_report_map(struct gatt_db_attribute *attr,
+						void *user_data)
 {
 	struct bt_hog *hog = user_data;
-	bt_uuid_t uuid, report_uuid, report_map_uuid, info_uuid;
-	bt_uuid_t proto_mode_uuid, ctrlpt_uuid;
+	bt_uuid_t uuid, report_map_uuid;
 	uint16_t handle, value_handle;
 	struct report_map report_map = {0};
 
 	gatt_db_attribute_get_char_data(attr, &handle, &value_handle, NULL,
 					NULL, &uuid);
-
-	bt_uuid16_create(&report_uuid, HOG_REPORT_UUID);
-	if (!bt_uuid_cmp(&report_uuid, &uuid)) {
-		struct report *report = report_add(hog, attr);
-		gatt_db_service_foreach_desc(attr, foreach_hog_report, report);
-		return;
-	}
 
 	bt_uuid16_create(&report_map_uuid, HOG_REPORT_MAP_UUID);
 	if (!bt_uuid_cmp(&report_map_uuid, &uuid)) {
@@ -1392,6 +1385,23 @@ static void foreach_hog_chrc(struct gatt_db_attribute *attr, void *user_data)
 		}
 
 		gatt_db_service_foreach_desc(attr, foreach_hog_external, hog);
+	}
+}
+
+static void foreach_hog_chrc(struct gatt_db_attribute *attr, void *user_data)
+{
+	struct bt_hog *hog = user_data;
+	bt_uuid_t uuid, report_uuid, info_uuid;
+	bt_uuid_t proto_mode_uuid, ctrlpt_uuid;
+	uint16_t handle, value_handle;
+
+	gatt_db_attribute_get_char_data(attr, &handle, &value_handle, NULL,
+					NULL, &uuid);
+
+	bt_uuid16_create(&report_uuid, HOG_REPORT_UUID);
+	if (!bt_uuid_cmp(&report_uuid, &uuid)) {
+		struct report *report = report_add(hog, attr);
+		gatt_db_service_foreach_desc(attr, foreach_hog_report, report);
 		return;
 	}
 
@@ -1706,10 +1716,19 @@ bool bt_hog_attach(struct bt_hog *hog, void *gatt)
 
 	if (!hog->uhid_created) {
 		DBG("HoG discovering characteristics");
-		if (hog->attr)
+		if (hog->attr) {
 			gatt_db_service_foreach_char(hog->attr,
 							foreach_hog_chrc, hog);
-		else
+			/* Report Map must be read last since that can result
+			 * in uhid being created and the driver may start to
+			 * use UHID_SET_REPORT which requires the report->id to
+			 * be known or order to send the request to the right
+			 * attribute/handle.
+			 */
+			gatt_db_service_foreach_char(hog->attr,
+						     foreach_hog_report_map,
+						     hog);
+		} else
 			discover_char(hog, hog->attrib,
 					hog->primary->range.start,
 					hog->primary->range.end, NULL,
