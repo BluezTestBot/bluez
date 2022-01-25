@@ -25,6 +25,9 @@
 #include "src/shared/queue.h"
 #include "src/shared/util.h"
 #include "src/shared/mgmt.h"
+#include "src/shared/timeout.h"
+
+#define MGMT_TIMEOUT 2
 
 struct mgmt {
 	int ref_count;
@@ -49,6 +52,7 @@ struct mgmt {
 };
 
 struct mgmt_request {
+	struct mgmt *mgmt;
 	unsigned int id;
 	uint16_t opcode;
 	uint16_t index;
@@ -57,6 +61,8 @@ struct mgmt_request {
 	mgmt_request_func_t callback;
 	mgmt_destroy_func_t destroy;
 	void *user_data;
+	int timeout;
+	unsigned int timeout_id;
 };
 
 struct mgmt_notify {
@@ -80,6 +86,9 @@ static void destroy_request(void *data)
 
 	if (request->destroy)
 		request->destroy(request->user_data);
+
+	if (request->timeout_id)
+		timeout_remove(request->timeout_id);
 
 	free(request->buf);
 	free(request);
@@ -150,6 +159,26 @@ static void write_watch_destroy(void *user_data)
 	mgmt->writer_active = false;
 }
 
+static bool request_timeout(void *data)
+{
+	struct mgmt_request *request = data;
+
+	if (!request)
+		return false;
+
+	request->timeout_id = 0;
+
+	queue_remove_if(request->mgmt->pending_list, NULL, request);
+
+	if (request->callback)
+		request->callback(MGMT_STATUS_TIMEOUT, 0, NULL,
+						request->user_data);
+
+	destroy_request(request);
+
+	return false;
+}
+
 static bool send_request(struct mgmt *mgmt, struct mgmt_request *request)
 {
 	struct iovec iov;
@@ -168,6 +197,12 @@ static bool send_request(struct mgmt *mgmt, struct mgmt_request *request)
 		destroy_request(request);
 		return false;
 	}
+
+	if (request->timeout)
+		request->timeout_id = timeout_add_seconds(request->timeout,
+							request_timeout,
+							request,
+							NULL);
 
 	util_debug(mgmt->debug_callback, mgmt->debug_data,
 				"[0x%04x] command 0x%04x",
@@ -566,7 +601,8 @@ bool mgmt_set_close_on_unref(struct mgmt *mgmt, bool do_close)
 static struct mgmt_request *create_request(struct mgmt *mgmt, uint16_t opcode,
 				uint16_t index, uint16_t length,
 				const void *param, mgmt_request_func_t callback,
-				void *user_data, mgmt_destroy_func_t destroy)
+				void *user_data, mgmt_destroy_func_t destroy,
+				int timeout)
 {
 	struct mgmt_request *request;
 	struct mgmt_hdr *hdr;
@@ -598,12 +634,18 @@ static struct mgmt_request *create_request(struct mgmt *mgmt, uint16_t opcode,
 	hdr->index = htobs(index);
 	hdr->len = htobs(length);
 
+	/* Use a weak reference so requests don't prevent mgmt_unref to
+	 * cancel requests and free in case of the last reference is dropped by
+	 * the user.
+	 */
+	request->mgmt = mgmt;
 	request->opcode = opcode;
 	request->index = index;
 
 	request->callback = callback;
 	request->destroy = destroy;
 	request->user_data = user_data;
+	request->timeout = timeout;
 
 	return request;
 }
@@ -735,10 +777,11 @@ unsigned int mgmt_send_tlv(struct mgmt *mgmt, uint16_t opcode, uint16_t index,
 	return ret;
 }
 
-unsigned int mgmt_send(struct mgmt *mgmt, uint16_t opcode, uint16_t index,
-				uint16_t length, const void *param,
-				mgmt_request_func_t callback,
-				void *user_data, mgmt_destroy_func_t destroy)
+unsigned int mgmt_send_timeout(struct mgmt *mgmt, uint16_t opcode,
+				uint16_t index, uint16_t length,
+				const void *param, mgmt_request_func_t callback,
+				void *user_data, mgmt_destroy_func_t destroy,
+				int timeout)
 {
 	struct mgmt_request *request;
 
@@ -746,7 +789,7 @@ unsigned int mgmt_send(struct mgmt *mgmt, uint16_t opcode, uint16_t index,
 		return 0;
 
 	request = create_request(mgmt, opcode, index, length, param,
-					callback, user_data, destroy);
+					callback, user_data, destroy, timeout);
 	if (!request)
 		return 0;
 
@@ -766,6 +809,15 @@ unsigned int mgmt_send(struct mgmt *mgmt, uint16_t opcode, uint16_t index,
 	return request->id;
 }
 
+unsigned int mgmt_send(struct mgmt *mgmt, uint16_t opcode, uint16_t index,
+				uint16_t length, const void *param,
+				mgmt_request_func_t callback,
+				void *user_data, mgmt_destroy_func_t destroy)
+{
+	return mgmt_send_timeout(mgmt, opcode, index, length, param, callback,
+					user_data, destroy, MGMT_TIMEOUT);
+}
+
 unsigned int mgmt_send_nowait(struct mgmt *mgmt, uint16_t opcode, uint16_t index,
 				uint16_t length, const void *param,
 				mgmt_request_func_t callback,
@@ -777,7 +829,8 @@ unsigned int mgmt_send_nowait(struct mgmt *mgmt, uint16_t opcode, uint16_t index
 		return 0;
 
 	request = create_request(mgmt, opcode, index, length, param,
-					callback, user_data, destroy);
+					callback, user_data, destroy,
+					MGMT_TIMEOUT);
 	if (!request)
 		return 0;
 
@@ -803,7 +856,8 @@ unsigned int mgmt_reply(struct mgmt *mgmt, uint16_t opcode, uint16_t index,
 		return 0;
 
 	request = create_request(mgmt, opcode, index, length, param,
-					callback, user_data, destroy);
+					callback, user_data, destroy,
+					MGMT_TIMEOUT);
 	if (!request)
 		return 0;
 
