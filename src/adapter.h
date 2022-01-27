@@ -266,6 +266,8 @@ enum kernel_features {
 
 bool btd_has_kernel_features(uint32_t feature);
 
+bool is_quality_report_supported(struct btd_adapter *adapter);
+
 bool btd_adapter_set_allowed_uuids(struct btd_adapter *adapter,
 							struct queue *uuids);
 bool btd_adapter_is_uuid_allowed(struct btd_adapter *adapter,

@@ -1038,8 +1038,8 @@ struct mgmt_ev_adv_monitor_device_lost {
 #define QUALITY_SPEC_AOSP_BQR			0x2
 struct mgmt_ev_quality_report {
 	uint8_t quality_spec;
-	uint32_t report_len;
-	uint8_t report[];
+	uint32_t data_len;
+	uint8_t data[];
 } __packed;
 
 static const char *mgmt_op[] = {
