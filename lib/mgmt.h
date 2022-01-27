@@ -1032,6 +1032,16 @@ struct mgmt_ev_adv_monitor_device_lost {
 	struct mgmt_addr_info addr;
 } __packed;
 
+#define MGMT_EV_QUALITY_REPORT			0x0031
+#define QUALITY_SPEC_NA				0x0
+#define QUALITY_SPEC_INTEL_TELEMETRY		0x1
+#define QUALITY_SPEC_AOSP_BQR			0x2
+struct mgmt_ev_quality_report {
+	uint8_t quality_spec;
+	uint32_t report_len;
+	uint8_t report[];
+} __packed;
+
 static const char *mgmt_op[] = {
 	"<0x0000>",
 	"Read Version",
@@ -1172,6 +1182,7 @@ static const char *mgmt_ev[] = {
 	"Controller Resume",
 	"Advertisement Monitor Device Found",		/* 0x002f */
 	"Advertisement Monitor Device Lost",
+	"Bluetooth Quality Report",			/* 0x0031 */
 };
 
 static const char *mgmt_status[] = {
