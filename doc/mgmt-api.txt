@@ -4978,3 +4978,23 @@ Advertisement Monitor Device Lost Event
 		2	LE Random
 
 	This event will be sent to all management sockets.
+
+
+Bluetooth Quality Report Event
+==============================
+
+	Event code:		0x0031
+	Controller Index:	<controller_id>
+	Event Parameters:	Quality_Spec (1 Octet)
+				Report_Len (2 Octets)
+				Report (0-65535 Octets)
+
+	This event carries the Bluetooth quality report sent by the
+	controller.
+
+	Possible values for the Quality_Spec parameter:
+		0	Not Available
+		1	Intel Telemetry Event
+		2	AOSP Bluetooth Quality Report Event
+
+	This event will be sent to all management sockets.
