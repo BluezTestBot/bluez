@@ -96,6 +96,7 @@ struct mgmt_rp_read_index_list {
 #define MGMT_SETTING_STATIC_ADDRESS	0x00008000
 #define MGMT_SETTING_PHY_CONFIGURATION	0x00010000
 #define MGMT_SETTING_WIDEBAND_SPEECH	0x00020000
+#define MGMT_SETTING_QUALITY_REPORT	0x00040000
 
 #define MGMT_OP_READ_INFO		0x0004
 struct mgmt_rp_read_info {
@@ -755,6 +756,11 @@ struct mgmt_cp_add_adv_patterns_monitor_rssi {
 	struct mgmt_adv_rssi_thresholds rssi;
 	uint8_t pattern_count;
 	struct mgmt_adv_pattern patterns[0];
+} __packed;
+
+#define MGMT_OP_SET_QUALITY_REPORT		0x0057
+struct mgmt_cp_set_quality_report {
+	uint8_t action;
 } __packed;
 
 #define MGMT_EV_CMD_COMPLETE		0x0001
