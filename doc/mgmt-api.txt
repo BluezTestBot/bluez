@@ -332,6 +332,7 @@ Read Controller Information Command
 		15	Static Address
 		16	PHY Configuration
 		17	Wideband Speech
+		18	Quality Report
 
 	This command generates a Command Complete event on success or
 	a Command Status event on failure.
@@ -2924,6 +2925,7 @@ Read Extended Controller Information Command
 		15	Static Address
 		16	PHY Configuration
 		17	Wideband Speech
+		18	Quality Report
 
 	The EIR_Data field contains information about class of device,
 	local name and other values. Not all of them might be present. For
@@ -3856,6 +3858,37 @@ Add Advertisement Patterns Monitor With RSSI Threshold Command
 				Busy
 				No Resources
 				Invalid Parameters
+
+
+Set Quality Report Command
+==========================
+
+	Command Code:           0x0057
+	Controller Index:       <controller id>
+	Command Parameters:     Action (1 Octet)
+	Return Parameters:
+
+	This command is used to enable and disable the controller's quality
+	report feature.
+
+	This command requires to use a valid controller index. Otherwise,
+	an "invalid index" status will be returned.
+
+	The parameter "action" can be either 0 to disable the feature or
+	1 to enable the feature. For any values other than 0 and 1, an
+	"invalid parameters" status will be returned.
+
+	If the driver does not indicate that the controller supports the
+	quality report feature, a "not supported" status will be returned.
+
+	The command is sent to the controller to enable/disable the quality
+	report feature. If the controller failed to execute the action, a
+	"failed" status will be returned.
+
+	Possible errors:	Failed
+				Invalid Index
+				Invalid Parameters
+				Not Supported
 
 
 Command Complete Event
