@@ -20,7 +20,9 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <errno.h>
+#ifdef HAVE_SYS_RANDOM_H
 #include <sys/random.h>
+#endif
 
 #include "lib/bluetooth.h"
 #include "lib/hci.h"
@@ -28,6 +30,7 @@
 #include "lib/l2cap.h"
 #include "lib/uuid.h"
 
+#include "src/missing.h"
 #include "src/shared/mainloop.h"
 #include "src/shared/util.h"
 #include "src/shared/att.h"

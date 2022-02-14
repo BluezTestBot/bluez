@@ -25,12 +25,15 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/mount.h>
+#ifdef HAVE_SYS_RANDOM_H
 #include <sys/random.h>
+#endif
 
 #ifndef WAIT_ANY
 #define WAIT_ANY (-1)
 #endif
 
+#include "src/missing.h"
 #include "src/shared/mainloop.h"
 #include "peripheral/efivars.h"
 #include "peripheral/attach.h"

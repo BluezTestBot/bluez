@@ -17,13 +17,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#ifdef HAVE_SYS_RANDOM_H
 #include <sys/random.h>
+#endif
 
 #include <glib.h>
 
 #include "lib/bluetooth.h"
 #include "lib/sdp.h"
 
+#include "src/missing.h"
 #include "src/plugin.h"
 #include "src/adapter.h"
 #include "src/device.h"

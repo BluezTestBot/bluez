@@ -20,12 +20,15 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/uio.h>
+#ifdef HAVE_SYS_RANDOM_H
 #include <sys/random.h>
+#endif
 #include <time.h>
 
 #include "lib/bluetooth.h"
 #include "lib/hci.h"
 
+#include "src/missing.h"
 #include "src/shared/util.h"
 #include "src/shared/crypto.h"
 #include "src/shared/ecc.h"

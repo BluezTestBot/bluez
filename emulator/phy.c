@@ -19,11 +19,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#ifdef HAVE_SYS_RANDOM_H
 #include <sys/random.h>
+#endif
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <time.h>
 
+#include "src/missing.h"
 #include "src/shared/util.h"
 #include "src/shared/mainloop.h"
 

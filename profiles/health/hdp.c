@@ -16,7 +16,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
+#ifdef HAVE_SYS_RANDOM_H
 #include <sys/random.h>
+#endif
 
 #include <glib.h>
 
@@ -26,6 +28,7 @@
 
 #include "gdbus/gdbus.h"
 
+#include "src/missing.h"
 #include "src/dbus-common.h"
 #include "src/log.h"
 #include "src/error.h"

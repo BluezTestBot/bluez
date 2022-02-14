@@ -19,13 +19,16 @@
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
+#ifdef HAVE_SYS_RANDOM_H
 #include <sys/random.h>
+#endif
 
 #include <glib.h>
 
 #include "lib/bluetooth.h"
 #include "bluetooth/l2cap.h"
 #include "btio/btio.h"
+#include "src/missing.h"
 #include "src/log.h"
 #include "src/shared/timeout.h"
 
