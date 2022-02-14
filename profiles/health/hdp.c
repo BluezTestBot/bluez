@@ -16,7 +16,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
+#ifdef HAVE_GETRANDOM
 #include <sys/random.h>
+#endif
 
 #include <glib.h>
 
@@ -1485,15 +1487,24 @@ static void destroy_create_dc_data(gpointer data)
 static void *generate_echo_packet(void)
 {
 	uint8_t *buf;
+#ifndef HAVE_GETRANDOM
+	int i;
+#endif
 
 	buf = g_malloc(HDP_ECHO_LEN);
 	if (!buf)
 		return NULL;
 
+#ifdef HAVE_GETRANDOM
 	if (getrandom(buf, HDP_ECHO_LEN, 0) < 0) {
 		g_free(buf);
 		return NULL;
 	}
+#else
+	srand(time(NULL));
+	for(i = 0; i < HDP_ECHO_LEN; i++)
+		buf[i] = rand() % UINT8_MAX;
+#endif
 
 	return buf;
 }

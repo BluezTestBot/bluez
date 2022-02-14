@@ -17,7 +17,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#ifdef HAVE_GETRANDOM
 #include <sys/random.h>
+#endif
 
 #include <glib.h>
 
@@ -131,10 +133,14 @@ static ssize_t autopair_pincb(struct btd_adapter *adapter,
 			if (attempt >= 4)
 				return 0;
 
+#ifdef HAVE_GETRANDOM
 			if (getrandom(&val, sizeof(val), 0) < 0) {
 				error("Failed to get a random pincode");
 				return 0;
 			}
+#else
+			val = rand();
+#endif
 			snprintf(pinstr, sizeof(pinstr), "%06u",
 						val % 1000000);
 			*display = true;

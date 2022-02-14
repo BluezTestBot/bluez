@@ -19,7 +19,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
+#ifdef HAVE_GETRANDOM
 #include <sys/random.h>
+#endif
 
 #include <glib.h>
 
@@ -1905,11 +1907,15 @@ gboolean mcap_create_mcl(struct mcap_instance *mi,
 		mcl->state = MCL_IDLE;
 		bacpy(&mcl->addr, addr);
 		set_default_cb(mcl);
+#ifdef HAVE_GETRANDOM
 		if (getrandom(&val, sizeof(val), 0) < 0) {
 			mcap_instance_unref(mcl->mi);
 			g_free(mcl);
 			return FALSE;
 		}
+#else
+		val = rand();
+#endif
 		mcl->next_mdl = (val % MCAP_MDLID_FINAL) + 1;
 	}
 
@@ -2049,11 +2055,15 @@ static void connect_mcl_event_cb(GIOChannel *chan, GError *gerr,
 		mcl->mi = mcap_instance_ref(mi);
 		bacpy(&mcl->addr, &dst);
 		set_default_cb(mcl);
+#ifdef HAVE_GETRANDOM
 		if (getrandom(&val, sizeof(val), 0) < 0) {
 			mcap_instance_unref(mcl->mi);
 			g_free(mcl);
 			goto drop;
 		}
+#else
+		val = rand();
+#endif
 		mcl->next_mdl = (val % MCAP_MDLID_FINAL) + 1;
 	}
 

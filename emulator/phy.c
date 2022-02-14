@@ -19,7 +19,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#ifdef HAVE_GETRANDOM
 #include <sys/random.h>
+#endif
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <time.h>
@@ -174,6 +176,7 @@ struct bt_phy *bt_phy_new(void)
 	mainloop_add_fd(phy->rx_fd, EPOLLIN, phy_rx_callback, phy, NULL);
 
 	if (!get_random_bytes(&phy->id, sizeof(phy->id))) {
+#ifdef GAVE_GETRANDOM
 		if (getrandom(&phy->id, sizeof(phy->id), 0) < 0) {
 			mainloop_remove_fd(phy->rx_fd);
 			close(phy->tx_fd);
@@ -181,6 +184,10 @@ struct bt_phy *bt_phy_new(void)
 			free(phy);
 			return NULL;
 		}
+#else
+		srandom(time(NULL));
+		phy->id = random();
+#endif
 	}
 
 	bt_phy_send(phy, BT_PHY_PKT_NULL, NULL, 0);

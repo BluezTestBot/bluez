@@ -25,7 +25,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/mount.h>
+#ifdef HAVE_GETRANDOM
 #include <sys/random.h>
+#endif
 
 #ifndef WAIT_ANY
 #define WAIT_ANY (-1)
@@ -192,10 +194,18 @@ int main(int argc, char *argv[])
 							addr, 6) < 0) {
 			printf("Generating new persistent static address\n");
 
+#ifdef HAVE_GETRANDOM
 			if (getrandom(addr, sizeof(addr), 0) < 0) {
 				perror("Failed to get random static address");
 				return EXIT_FAILURE;
 			}
+#else
+			addr[0] = rand();
+			addr[1] = rand();
+			addr[2] = rand();
+			addr[3] = 0x34;
+			addr[4] = 0x12;
+#endif
 			/* Overwrite the MSB to make it a static address */
 			addr[5] = 0xc0;
 

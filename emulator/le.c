@@ -20,7 +20,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/uio.h>
+#ifdef HAVE_GETRANDOM
 #include <sys/random.h>
+#endif
 #include <time.h>
 
 #include "lib/bluetooth.h"
@@ -509,10 +511,15 @@ static unsigned int get_adv_delay(void)
 	/* The advertising delay is a pseudo-random value with a range
 	 * of 0 ms to 10 ms generated for each advertising event.
 	 */
+#ifdef HAVE_GETRANDOM
 	if (getrandom(&val, sizeof(val), 0) < 0) {
 		/* If it fails to get the random number, use a static value */
 		val = 5;
 	}
+#else
+	srand(time(NULL));
+	val = rand();
+#endif
 
 	return (val % 11);
 }
