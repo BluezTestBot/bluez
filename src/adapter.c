@@ -120,13 +120,6 @@ static const struct mgmt_exp_uuid le_simult_central_peripheral_uuid = {
 	.str = "671b10b5-42c0-4696-9227-eb28d1b049d6"
 };
 
-/* 330859bc-7506-492d-9370-9a6f0614037f */
-static const struct mgmt_exp_uuid quality_report_uuid = {
-	.val = { 0x7f, 0x03, 0x14, 0x06, 0x6f, 0x9a, 0x70, 0x93,
-		0x2d, 0x49, 0x06, 0x75, 0xbc, 0x59, 0x08, 0x33 },
-	.str = "330859bc-7506-492d-9370-9a6f0614037f"
-};
-
 /* 15c0a148-c273-11ea-b3de-0242ac130004 */
 static const struct mgmt_exp_uuid rpa_resolution_uuid = {
 	.val = { 0x04, 0x00, 0x13, 0xac, 0x42, 0x02, 0xde, 0xb3,
@@ -9600,12 +9593,6 @@ static void le_simult_central_peripheral_func(struct btd_adapter *adapter,
 				(void *)le_simult_central_peripheral_uuid.val);
 }
 
-static void quality_report_func(struct btd_adapter *adapter, uint8_t action)
-{
-	if (action)
-		queue_push_tail(adapter->exps, (void *)quality_report_uuid.val);
-}
-
 static void set_rpa_resolution_complete(uint8_t status, uint16_t len,
 					const void *param, void *user_data)
 {
@@ -9681,7 +9668,6 @@ static const struct exp_feat {
 	EXP_FEAT(&debug_uuid, exp_debug_func),
 	EXP_FEAT(&le_simult_central_peripheral_uuid,
 		 le_simult_central_peripheral_func),
-	EXP_FEAT(&quality_report_uuid, quality_report_func),
 	EXP_FEAT(&rpa_resolution_uuid, rpa_resolution_func),
 	EXP_FEAT(&codec_offload_uuid, codec_offload_func),
 };
@@ -9753,6 +9739,11 @@ static void read_exp_features(struct btd_adapter *adapter)
 		return;
 
 	btd_error(adapter->dev_id, "Failed to read exp features info");
+}
+
+bool is_quality_report_supported(struct btd_adapter *adapter)
+{
+	return !!(adapter->supported_settings & MGMT_SETTING_QUALITY_REPORT);
 }
 
 static void read_info_complete(uint8_t status, uint16_t length,
