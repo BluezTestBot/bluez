@@ -3893,24 +3893,55 @@ static struct conn_param *get_conn_param(GKeyFile *key_file, const char *peer,
 							uint8_t bdaddr_type)
 {
 	struct conn_param *param;
+	int min_interval, max_interval, latency, timeout;
+	GError *gerr = NULL;
 
-	if (!g_key_file_has_group(key_file, "ConnectionParameters"))
-		return NULL;
+	min_interval = g_key_file_get_integer(key_file, "LE",
+						"MinConnectionInterval", &gerr);
+	if (gerr) {
+		min_interval = -1;
+		g_clear_error(gerr);
+	}
+
+	max_interval = g_key_file_get_integer(key_file, "LE",
+						"MaxConnetionInterval", NULL);
+	if (gerr) {
+		max_interval = -1;
+		g_clear_error(gerr);
+	}
+
+	latency = g_key_file_get_integer(key_file, "LE",
+					"ConnectionLatency", NULL);
+	if (gerr) {
+		latency = -1;
+		g_clear_error(gerr);
+	}
+
+	timeout = g_key_file_get_integer(key_file, "LE",
+					"ConnetionSupervisionTimeout", NULL);
+	if (gerr) {
+		timeout = -1;
+		g_clear_error(gerr);
+	}
+
+	/* If no field was set don't attempt to load */
+	if (min_interval < 0 && max_interval < 0 && latecy < 0 && timeout < 0)
+		return;
 
 	param = g_new0(struct conn_param, 1);
 
-	param->min_interval = g_key_file_get_integer(key_file,
-							"ConnectionParameters",
-							"MinInterval", NULL);
-	param->max_interval = g_key_file_get_integer(key_file,
-							"ConnectionParameters",
-							"MaxInterval", NULL);
-	param->latency = g_key_file_get_integer(key_file,
-							"ConnectionParameters",
-							"Latency", NULL);
-	param->timeout = g_key_file_get_integer(key_file,
-							"ConnectionParameters",
-							"Timeout", NULL);
+	if (min_interval > 0)
+		param->min_interval = min_interval;
+
+	if (max_interval > 0)
+		param->max_interval = max_interval;
+
+	if (latency > 0)
+		param->latency = latency;
+
+	if (timeout > 0)
+		param->timeout = timeout;
+
 	str2ba(peer, &param->bdaddr);
 	param->bdaddr_type = bdaddr_type;
 
