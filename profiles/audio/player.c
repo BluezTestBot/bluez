@@ -1308,9 +1308,14 @@ void media_player_set_duration(struct media_player *mp, uint32_t duration)
 
 	g_hash_table_replace(mp->track, g_strdup("Duration"), value);
 
-	g_dbus_emit_property_changed(btd_get_dbus_connection(),
+	/* If metadata is pending wait for it */
+	if (mp->process_id)
+		return;
+
+	g_dbus_emit_property_changed_full(btd_get_dbus_connection(),
 					mp->path, MEDIA_PLAYER_INTERFACE,
-					"Track");
+					"Track",
+					G_DBUS_PROPERTY_CHANGED_FLAG_FLUSH);
 }
 
 void media_player_set_position(struct media_player *mp, uint32_t position)
@@ -1417,6 +1422,11 @@ static gboolean process_metadata_changed(void *user_data)
 	return FALSE;
 }
 
+static gboolean remove_metadata(void *key, void *value, void *user_data)
+{
+	return strcmp(key, "Duration") ? TRUE : FALSE;
+}
+
 void media_player_set_metadata(struct media_player *mp,
 				struct media_item *item, const char *key,
 				void *data, size_t len)
@@ -1434,7 +1444,7 @@ void media_player_set_metadata(struct media_player *mp,
 	}
 
 	if (mp->process_id == 0) {
-		g_hash_table_remove_all(mp->track);
+		g_hash_table_foreach_remove(mp->track, remove_metadata, NULL);
 		mp->process_id = g_idle_add(process_metadata_changed, mp);
 	}
 
