@@ -1308,9 +1308,14 @@ void media_player_set_duration(struct media_player *mp, uint32_t duration)
 
 	g_hash_table_replace(mp->track, g_strdup("Duration"), value);
 
-	g_dbus_emit_property_changed(btd_get_dbus_connection(),
+	/* If metadata is pending wait for it */
+	if (mp->process_id)
+		return;
+
+	g_dbus_emit_property_changed_full(btd_get_dbus_connection(),
 					mp->path, MEDIA_PLAYER_INTERFACE,
-					"Track");
+					"Track",
+					G_DBUS_PROPERTY_CHANGED_FLAG_FLUSH);
 }
 
 void media_player_set_position(struct media_player *mp, uint32_t position)
@@ -1417,6 +1422,23 @@ static gboolean process_metadata_changed(void *user_data)
 	return FALSE;
 }
 
+static gboolean remove_metadata(void *key, void *value, void *user_data)
+{
+	if (!strcmp(key, "Duration"))
+		return FALSE;
+
+	return strcmp(key, "Item") ? TRUE : FALSE;
+}
+
+static void metadata_changed(struct media_player *mp)
+{
+	if (mp->process_id)
+		return;
+
+	g_hash_table_foreach_remove(mp->track, remove_metadata, NULL);
+	mp->process_id = g_idle_add(process_metadata_changed, mp);
+}
+
 void media_player_set_metadata(struct media_player *mp,
 				struct media_item *item, const char *key,
 				void *data, size_t len)
@@ -1433,10 +1455,7 @@ void media_player_set_metadata(struct media_player *mp,
 		return;
 	}
 
-	if (mp->process_id == 0) {
-		g_hash_table_remove_all(mp->track);
-		mp->process_id = g_idle_add(process_metadata_changed, mp);
-	}
+	metadata_changed(mp);
 
 	g_hash_table_replace(mp->track, g_strdup(key), value);
 }
@@ -1962,6 +1981,7 @@ struct media_item *media_player_set_playlist_item(struct media_player *mp,
 {
 	struct media_folder *folder = mp->playlist;
 	struct media_item *item;
+	char *path;
 
 	DBG("%" PRIu64 "", uid);
 
@@ -1980,16 +2000,13 @@ struct media_item *media_player_set_playlist_item(struct media_player *mp,
 		mp->track = g_hash_table_ref(item->metadata);
 	}
 
-	if (item == g_hash_table_lookup(mp->track, "Item"))
+	path = g_hash_table_lookup(mp->track, "Item");
+	if (path && !strcmp(path, item->path))
 		return item;
 
-	if (mp->process_id == 0) {
-		g_hash_table_remove_all(mp->track);
-		mp->process_id = g_idle_add(process_metadata_changed, mp);
-	}
+	metadata_changed(mp);
 
-	g_hash_table_replace(mp->track, g_strdup("Item"),
-						g_strdup(item->path));
+	g_hash_table_replace(mp->track, g_strdup("Item"), g_strdup(item->path));
 
 	return item;
 }
