@@ -757,6 +757,39 @@ struct mgmt_cp_add_adv_patterns_monitor_rssi {
 	struct mgmt_adv_pattern patterns[0];
 } __packed;
 
+#define MGMT_OP_SET_MESH_RECEIVER	0x0057
+struct mgmt_cp_set_mesh {
+	uint8_t   enable;
+	uint16_t  window;
+	uint16_t  period;
+	uint8_t   num_ad_types;
+	uint8_t   ad_types[];
+} __packed;
+
+#define MGMT_OP_MESH_READ_FEATURES	0x0058
+struct mgmt_rp_mesh_read_features {
+	uint16_t index;
+	uint8_t	 max_handles;
+	uint8_t	 used_handles;
+	uint8_t	 handles[];
+} __packed;
+
+
+#define MGMT_OP_MESH_SEND		0x0059
+struct mgmt_cp_mesh_send {
+	struct mgmt_addr_info addr;
+	uint64_t  instant;
+	uint16_t  delay;
+	uint8_t   cnt;
+	uint8_t   data[];
+} __packed;
+
+#define MGMT_OP_MESH_SEND_CANCEL	0x005A
+struct mgmt_cp_mesh_send_cancel {
+	uint8_t  handle;
+} __packed;
+
+
 #define MGMT_EV_CMD_COMPLETE		0x0001
 struct mgmt_ev_cmd_complete {
 	uint16_t opcode;
@@ -1032,6 +1065,21 @@ struct mgmt_ev_adv_monitor_device_lost {
 	struct mgmt_addr_info addr;
 } __packed;
 
+#define MGMT_EV_MESH_DEVICE_FOUND		0x0031
+struct mgmt_ev_mesh_device_found {
+	struct mgmt_addr_info addr;
+	int8_t rssi;
+	uint32_t flags;
+	uint64_t instant;
+	uint16_t eir_len;
+	uint8_t eir[];
+} __packed;
+
+#define MGMT_EV_MESH_PACKET_CMPLT		0x0032
+struct mgmt_ev_mesh_pkt_cmplt {
+	uint8_t handle;
+} __packed;
+
 static const char *mgmt_op[] = {
 	"<0x0000>",
 	"Read Version",
@@ -1120,6 +1168,10 @@ static const char *mgmt_op[] = {
 	"Add Extended Advertisement Parameters",	/* 0x0054 */
 	"Add Extended Advertisement Data",
 	"Add Advertisement Patterns Monitor RSSI",
+	"Set Mesh Receiver",
+	"Read Mesh Features",
+	"Mesh Send",
+	"Mesh Send Cancel",
 };
 
 static const char *mgmt_ev[] = {
@@ -1172,6 +1224,8 @@ static const char *mgmt_ev[] = {
 	"Controller Resume",
 	"Advertisement Monitor Device Found",		/* 0x002f */
 	"Advertisement Monitor Device Lost",
+	"Mesh Packet Found",
+	"Mesh Packet Complete",
 };
 
 static const char *mgmt_status[] = {
