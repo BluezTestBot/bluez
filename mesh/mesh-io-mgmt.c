@@ -29,7 +29,7 @@
 #include "mesh/mesh-mgmt.h"
 #include "mesh/mesh-io.h"
 #include "mesh/mesh-io-api.h"
-#include "mesh/mesh-io-generic.h"
+#include "mesh/mesh-io-mgmt.h"
 
 struct mesh_io_private {
 	struct mesh_io *io;

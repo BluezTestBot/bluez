@@ -24,6 +24,7 @@
 #include "mesh/mesh-io-api.h"
 
 /* List of Mesh-IO Type headers */
+#include "mesh/mesh-io-mgmt.h"
 #include "mesh/mesh-io-generic.h"
 #include "mesh/mesh-io-unit.h"
 
