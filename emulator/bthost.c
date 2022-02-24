@@ -2801,6 +2801,25 @@ void bthost_set_ext_adv_enable(struct bthost *bthost, uint8_t enable)
 	send_command(bthost, BT_HCI_CMD_LE_SET_EXT_ADV_ENABLE, cp, 6);
 }
 
+void bthost_set_pa_params(struct bthost *bthost)
+{
+	struct bt_hci_cmd_le_set_pa_params cp;
+
+	memset(&cp, 0, sizeof(cp));
+	cp.handle = 0x01;
+	send_command(bthost, BT_HCI_CMD_LE_SET_PA_PARAMS, &cp, sizeof(cp));
+}
+
+void bthost_set_pa_enable(struct bthost *bthost, uint8_t enable)
+{
+	struct bt_hci_cmd_le_set_pa_enable cp;
+
+	memset(&cp, 0, sizeof(cp));
+	cp.enable = enable;
+	cp.handle = 0x01;
+	send_command(bthost, BT_HCI_CMD_LE_SET_PA_ENABLE, &cp, sizeof(cp));
+}
+
 bool bthost_search_ext_adv_addr(struct bthost *bthost, const uint8_t *addr)
 {
 	const struct queue_entry *entry;
