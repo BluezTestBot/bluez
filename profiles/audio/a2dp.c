@@ -2878,14 +2878,22 @@ unsigned int a2dp_discover(struct avdtp *session, a2dp_discover_cb_t cb,
 	if (!setup)
 		return 0;
 
+	setup_ref(setup);
 	cb_data = setup_cb_new(setup);
 	cb_data->discover_cb = cb;
 	cb_data->user_data = user_data;
 
-	if (avdtp_discover(session, discover_cb, setup) == 0)
+	if (avdtp_discover(session, discover_cb, setup) == 0) {
+		setup_unref(setup);
 		return cb_data->id;
+	}
 
-	setup_cb_free(cb_data);
+	/* Check if the channel is still there before freeing setup_cb, since it
+	 * could be freed by channel_free().
+	 */
+	if (setup->chan)
+		setup_cb_free(cb_data);
+	setup_unref(setup);
 	return 0;
 }
 
