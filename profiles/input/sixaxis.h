@@ -49,7 +49,7 @@ get_pairing(uint16_t vid, uint16_t pid, const char *name)
 			.type = CABLE_PAIRING_SIXAXIS,
 		},
 		{
-			.name = "Navigation Controller",
+			.name = "Sony Navigation Controller",
 			.source = 0x0002,
 			.vid = 0x054c,
 			.pid = 0x042f,
