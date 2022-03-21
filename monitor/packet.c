@@ -14103,6 +14103,31 @@ static void mgmt_device_found_evt(const void *data, uint16_t size)
 	print_eir(data + 14, size - 14, false);
 }
 
+static void mgmt_adv_monitor_device_found_evt(const void *data, uint16_t size)
+{
+	uint16_t handle = get_le16(data);
+	uint8_t address_type = get_u8(data + 8);
+	int8_t rssi = get_s8(data + 9);
+	uint32_t flags = get_le32(data + 10);
+	uint16_t data_len = get_le16(data + 14);
+
+	print_field("Handle: %u", handle);
+	mgmt_print_address(data + 2, address_type);
+	print_rssi(rssi);
+	mgmt_print_device_flags(flags);
+	print_field("Data length: %u", data_len);
+	print_eir(data + 16, size - 16, false);
+}
+
+static void mgmt_adv_monitor_device_lost_evt(const void *data, uint16_t size)
+{
+	uint16_t handle = get_le16(data);
+	uint8_t address_type = get_u8(data + 8);
+
+	print_field("Handle: %u", handle);
+	mgmt_print_address(data + 2, address_type);
+}
+
 static void mgmt_discovering_evt(const void *data, uint16_t size)
 {
 	uint8_t type = get_u8(data);
@@ -14414,6 +14439,10 @@ static const struct mgmt_data mgmt_event_table[] = {
 			mgmt_controller_suspend_evt, 1, true },
 	{ 0x002e, "Controller Resumed",
 			mgmt_controller_resume_evt, 8, true },
+	{ 0x002f, "Adv Monitor Device Found",
+			mgmt_adv_monitor_device_found_evt, 16, false },
+	{ 0x0030, "Adv Monitor Device Lost",
+			mgmt_adv_monitor_device_lost_evt, 9, true },
 	{ }
 };
 
