@@ -9183,6 +9183,7 @@ static void controller_resume_callback(uint16_t index, uint16_t length,
 	info("Controller resume with wake event 0x%x", ev->wake_reason);
 
 	controller_resume_notify(adapter);
+	btd_adv_monitor_resume(adapter->adv_monitor_manager);
 }
 
 static void device_blocked_callback(uint16_t index, uint16_t length,

@@ -42,4 +42,6 @@ void btd_adv_monitor_device_remove(struct btd_adv_monitor_manager *manager,
 
 void btd_adv_monitor_power_down(struct btd_adv_monitor_manager *manager);
 
+void btd_adv_monitor_resume(struct btd_adv_monitor_manager *manager);
+
 #endif /* __ADV_MONITOR_H */
