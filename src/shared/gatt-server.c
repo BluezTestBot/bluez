@@ -1498,7 +1498,7 @@ static void exchange_mtu_cb(struct bt_att_chan *chan, uint8_t opcode,
 	final_mtu = MAX(MIN(client_rx_mtu, server->mtu), BT_ATT_DEFAULT_LE_MTU);
 
 	/* Respond with the server MTU */
-	put_le16(server->mtu, rsp_pdu);
+	put_le16(final_mtu, rsp_pdu);
 	bt_att_chan_send_rsp(chan, BT_ATT_OP_MTU_RSP, rsp_pdu, 2);
 
 	/* Set MTU to be the minimum */
