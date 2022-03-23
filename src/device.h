@@ -11,6 +11,10 @@
 
 #define DEVICE_INTERFACE	"org.bluez.Device1"
 
+#define BTD_DEVICE_DBG(device, fmt, arg...) \
+	BTD_ADAPTER_DBG(device_get_adapter(device), "%s:%s() " fmt, __FILE__, \
+							__func__ , ## arg)
+
 struct btd_device;
 
 struct btd_device *device_create(struct btd_adapter *adapter,

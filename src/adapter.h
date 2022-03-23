@@ -23,6 +23,10 @@
 /* Invalid SSP passkey value used to indicate negative replies */
 #define INVALID_PASSKEY		0xffffffff
 
+#define BTD_ADAPTER_DBG(adapter, fmt, arg...) \
+	DBG_IDX(btd_adapter_get_index(adapter), "%s:%s() " fmt, __FILE__, \
+							__func__ , ## arg)
+
 struct btd_adapter;
 struct btd_device;
 struct queue;
