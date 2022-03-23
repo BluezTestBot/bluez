@@ -179,6 +179,18 @@ void __btd_log_init(const char *debug, int detach)
 	info("Bluetooth daemon %s", VERSION);
 }
 
+bool __btd_log_is_enabled(const char *file)
+{
+	struct btd_debug_desc *desc;
+
+	for (desc = __start___debug; desc < __stop___debug; desc++) {
+		if (desc->file && g_pattern_match_simple(file, desc->file))
+			return desc->flags & BTD_DEBUG_FLAG_PRINT;
+	}
+
+	return false;
+}
+
 void __btd_log_cleanup(void)
 {
 	closelog();
