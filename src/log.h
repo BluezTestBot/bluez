@@ -9,6 +9,7 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 void info(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
@@ -27,6 +28,7 @@ void btd_debug(uint16_t index, const char *format, ...)
 void __btd_log_init(const char *debug, int detach);
 void __btd_log_cleanup(void);
 void __btd_toggle_debug(void);
+bool __btd_log_is_enabled(const char *file);
 
 struct btd_debug_desc {
 	const char *file;
@@ -37,6 +39,15 @@ struct btd_debug_desc {
 
 void __btd_enable_debug(struct btd_debug_desc *start,
 					struct btd_debug_desc *stop);
+
+/* DBG_IS_ENABLED:
+ *
+ * Simple macro that can be used to check if debug has been enabled for the
+ * __FILE__.
+ * Note: This does a lookup thus why it was not used by the likes of
+ * DBG/DBG_IDX which loads it directly from section("__debug").
+ */
+#define DBG_IS_ENABLED() __btd_log_is_enabled(__FILE__)
 
 /**
  * DBG:
