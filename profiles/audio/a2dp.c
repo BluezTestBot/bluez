@@ -1995,7 +1995,12 @@ static gboolean get_codec(const GDBusPropertyTable *property,
 {
 	struct a2dp_remote_sep *sep = data;
 	struct avdtp_service_capability *cap = avdtp_get_codec(sep->sep);
-	struct avdtp_media_codec_capability *codec = (void *) cap->data;
+	struct avdtp_media_codec_capability *codec;
+
+	if (!cap)
+		return FALSE;
+
+	codec = (void *) cap->data;
 
 	dbus_message_iter_append_basic(iter, DBUS_TYPE_BYTE,
 						&codec->media_codec_type);
@@ -2008,9 +2013,15 @@ static gboolean get_capabilities(const GDBusPropertyTable *property,
 {
 	struct a2dp_remote_sep *sep = data;
 	struct avdtp_service_capability *service = avdtp_get_codec(sep->sep);
-	struct avdtp_media_codec_capability *codec = (void *) service->data;
-	uint8_t *caps = codec->data;
+	struct avdtp_media_codec_capability *codec;
+	uint8_t *caps;
 	DBusMessageIter array;
+
+	if (!service)
+		return FALSE;
+
+	codec = (void *) service->data;
+	caps = codec->data;
 
 	dbus_message_iter_open_container(iter, DBUS_TYPE_ARRAY,
 					DBUS_TYPE_BYTE_AS_STRING, &array);
@@ -2075,6 +2086,11 @@ static struct a2dp_remote_sep *register_remote_sep(void *data, void *user_data)
 	sep = queue_find(chan->seps, match_remote_sep, rsep);
 	if (sep)
 		return sep;
+
+	if (!avdtp_get_codec(rsep)) {
+		error("Unable to get remote sep codec");
+		return NULL;
+	}
 
 	sep = new0(struct a2dp_remote_sep, 1);
 	sep->chan = chan;
