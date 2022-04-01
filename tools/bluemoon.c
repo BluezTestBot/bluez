@@ -492,6 +492,13 @@ static void request_firmware(const char *path)
 		return;
 	}
 
+	if (st.st_size > (SIZE_MAX - 4)) {
+		fprintf(stderr, "Firmware size is too big\n");
+		close(fd);
+		shutdown_device();
+		return;
+	}
+
 	firmware_data = malloc(st.st_size);
 	if (!firmware_data) {
 		fprintf(stderr, "Failed to allocate firmware buffer\n");
@@ -870,6 +877,12 @@ static void analyze_firmware(const char *path)
 
 	if (fstat(fd, &st) < 0) {
 		fprintf(stderr, "Failed to get firmware size\n");
+		close(fd);
+		return;
+	}
+
+	if (st.st_size > (SIZE_MAX - 3)) {
+		fprintf(stderr, "Firmware size is too big\n");
 		close(fd);
 		return;
 	}
