@@ -109,7 +109,6 @@ struct btd_opts {
 	struct btd_defaults defaults;
 
 	gboolean	reverse_discovery;
-	gboolean	name_resolv;
 	gboolean	debug_keys;
 	gboolean	fast_conn;
 	gboolean	refresh_discovery;

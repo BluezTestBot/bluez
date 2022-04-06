@@ -767,13 +767,6 @@ static void parse_config(GKeyFile *config)
 		btd_opts.reverse_discovery = boolean;
 
 	boolean = g_key_file_get_boolean(config, "General",
-						"NameResolving", &err);
-	if (err)
-		g_clear_error(&err);
-	else
-		btd_opts.name_resolv = boolean;
-
-	boolean = g_key_file_get_boolean(config, "General",
 						"DebugKeys", &err);
 	if (err)
 		g_clear_error(&err);
@@ -954,7 +947,6 @@ static void init_defaults(void)
 	btd_opts.discovto = DEFAULT_DISCOVERABLE_TIMEOUT;
 	btd_opts.tmpto = DEFAULT_TEMPORARY_TIMEOUT;
 	btd_opts.reverse_discovery = TRUE;
-	btd_opts.name_resolv = TRUE;
 	btd_opts.debug_keys = FALSE;
 	btd_opts.refresh_discovery = TRUE;
 	btd_opts.name_request_retry_delay = DEFAULT_NAME_REQUEST_RETRY_DELAY;
