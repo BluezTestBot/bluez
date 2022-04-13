@@ -90,6 +90,18 @@ enum monitor_state {
 	MONITOR_STATE_RELEASED,	/* Dbus Object removed by app */
 };
 
+enum monitor_release_reason {
+	REASON_UNKNOWN,
+	REASON_INVALID_TYPE,
+	REASON_INVALID_RSSI_PARAMS,
+	REASON_INVALID_PATTERNS,
+	REASON_ALREADY_EXISTS,
+	REASON_FAILED_TO_ADD,
+	REASON_FAILED_TO_REMOVE,
+	REASON_REMOVED_BY_KERNEL,
+	REASON_APP_DESTROYED,
+};
+
 enum merged_pattern_state {
 	MERGED_PATTERN_STATE_ADDING,	/* Adding pattern to kernel */
 	MERGED_PATTERN_STATE_REMOVING,	/* Removing pattern from kernel */
@@ -113,6 +125,7 @@ struct adv_monitor {
 	char *path;
 
 	enum monitor_state state;	/* MONITOR_STATE_* */
+	enum monitor_release_reason release_reason;
 
 	struct rssi_parameters rssi;	/* RSSI parameter for this monitor */
 	struct adv_monitor_merged_pattern *merged_pattern;
@@ -137,6 +150,7 @@ struct adv_monitor_merged_pattern {
 	struct queue *patterns;		/* List of bt_ad_pattern objects */
 	enum merged_pattern_state current_state; /* MERGED_PATTERN_STATE_* */
 	enum merged_pattern_state next_state;	 /* MERGED_PATTERN_STATE_* */
+	enum monitor_release_reason release_reason;
 };
 
 /* Some data like last_seen, timer/timeout values need to be maintained
@@ -541,6 +555,18 @@ static void monitor_free(struct adv_monitor *monitor)
 	free(monitor);
 }
 
+/* Includes monitor release reason into the dbus message */
+static void report_release_reason_setup(DBusMessageIter *iter, void *user_data)
+{
+	const struct adv_monitor *monitor = user_data;
+	int8_t release_reason = REASON_UNKNOWN;
+
+	if (monitor)
+		release_reason = monitor->release_reason;
+
+	dbus_message_iter_append_basic(iter, DBUS_TYPE_BYTE, &release_reason);
+}
+
 /* Calls Release() method of the remote Adv Monitor */
 static void monitor_release(struct adv_monitor *monitor)
 {
@@ -560,8 +586,9 @@ static void monitor_release(struct adv_monitor *monitor)
 	DBG("Calling Release() on Adv Monitor of owner %s at path %s",
 		monitor->app->owner, monitor->path);
 
-	g_dbus_proxy_method_call(monitor->proxy, "Release", NULL, NULL, NULL,
-					NULL);
+	g_dbus_proxy_method_call(monitor->proxy, "Release",
+					report_release_reason_setup, NULL,
+					monitor, NULL);
 }
 
 /* Removes monitor from the merged_pattern. This would result in removing it
@@ -635,13 +662,20 @@ static void monitor_destroy(void *data)
 static void app_destroy(void *data)
 {
 	struct adv_monitor_app *app = data;
+	const struct queue_entry *e;
 
 	if (!app)
 		return;
 
 	DBG("Destroy Adv Monitor app %s at path %s", app->owner, app->path);
 
-	queue_destroy(app->monitors, monitor_destroy);
+	for (e = queue_get_entries(app->monitors); e; e = e->next) {
+		struct adv_monitor *m = e->data;
+
+		m->release_reason = REASON_APP_DESTROYED;
+		monitor_destroy(m);
+	}
+	queue_destroy(app->monitors, NULL);
 
 	if (app->reg) {
 		app_reply_msg(app, btd_error_failed(app->reg,
@@ -793,6 +827,7 @@ static bool parse_monitor_type(struct adv_monitor *monitor, const char *path)
 	}
 
 failed:
+	monitor->release_reason = REASON_INVALID_TYPE;
 	btd_error(adapter_id,
 			"Invalid argument of property Type of the Adv Monitor "
 			"at path %s", path);
@@ -919,6 +954,7 @@ done:
 	return true;
 
 failed:
+	monitor->release_reason = REASON_INVALID_RSSI_PARAMS;
 	btd_error(adapter_id,
 			"Invalid argument of RSSI thresholds and timeouts "
 			"of the Adv Monitor at path %s",
@@ -1005,6 +1041,7 @@ static bool parse_patterns(struct adv_monitor *monitor, const char *path)
 	return true;
 
 failed:
+	monitor->release_reason = REASON_INVALID_PATTERNS;
 	btd_error(adapter_id, "Invalid argument of property Patterns of the "
 			"Adv Monitor at path %s", path);
 
@@ -1053,6 +1090,7 @@ static void merged_pattern_destroy_monitors(
 		struct adv_monitor *monitor = e->data;
 
 		monitor->merged_pattern = NULL;
+		monitor->release_reason = merged_pattern->release_reason;
 		monitor_destroy(monitor);
 	}
 }
@@ -1086,6 +1124,7 @@ static void remove_adv_monitor_cb(uint8_t status, uint16_t length,
 	return;
 
 fail:
+	merged_pattern->release_reason = REASON_FAILED_TO_REMOVE;
 	merged_pattern_destroy_monitors(merged_pattern);
 	merged_pattern_free(merged_pattern);
 }
@@ -1142,6 +1181,7 @@ static void add_adv_patterns_monitor_cb(uint8_t status, uint16_t length,
 	return;
 
 fail:
+	merged_pattern->release_reason = REASON_FAILED_TO_ADD;
 	merged_pattern_destroy_monitors(merged_pattern);
 	merged_pattern_free(merged_pattern);
 }
@@ -1285,6 +1325,7 @@ static void monitor_proxy_added_cb(GDBusProxy *proxy, void *user_data)
 		merged_pattern_add(monitor->merged_pattern);
 	} else {
 		if (!merge_is_possible(existing_pattern, monitor)) {
+			monitor->release_reason = REASON_ALREADY_EXISTS;
 			monitor_destroy(monitor);
 			DBG("Adv Monitor at path %s released due to existing "
 				"monitor", path);
@@ -1551,6 +1592,7 @@ static void remove_merged_pattern(void *data, void *user_data)
 {
 	struct adv_monitor_merged_pattern *merged_pattern = data;
 	uint16_t *handle = user_data;
+	const struct queue_entry *e;
 
 	if (!handle)
 		return;
@@ -1562,8 +1604,14 @@ static void remove_merged_pattern(void *data, void *user_data)
 	DBG("Adv monitor with handle:0x%04x removed by kernel",
 		merged_pattern->monitor_handle);
 
+	for (e = queue_get_entries(merged_pattern->monitors); e; e = e->next) {
+		struct adv_monitor *m = e->data;
+
+		m->release_reason = REASON_REMOVED_BY_KERNEL;
+		monitor_destroy(m);
+	}
 	queue_foreach(merged_pattern->monitors, monitor_state_removed, NULL);
-	queue_destroy(merged_pattern->monitors, monitor_destroy);
+	queue_destroy(merged_pattern->monitors, NULL);
 	merged_pattern_free(merged_pattern);
 }
 

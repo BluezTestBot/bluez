@@ -17,11 +17,21 @@ Service		org.bluez
 Interface	org.bluez.AdvertisementMonitor1 [experimental]
 Object path	freely definable
 
-Methods		void Release() [noreply]
+Methods		void Release(Int8 reason) [noreply]
 
 			This gets called as a signal for a client to perform
 			clean-up when (1)a monitor cannot be activated after it
 			was exposed or (2)a monitor has been deactivated.
+
+			Possible reasons:  0  Unknown reason
+					   1  Invalid monitor type
+					   2  Invalid RSSI parameter(s)
+					   3  Invalid pattern(s)
+					   4  Monitor already exists
+					   5  Kernel failed to add monitor
+					   6  Kernel failed to remove monitor
+					   7  Monitor removed by kernel
+					   8  App unregistered/destroyed
 
 		void Activate() [noreply]
 
