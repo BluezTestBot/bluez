@@ -251,6 +251,46 @@ static void merged_pattern_free(void *data)
 	free(merged_pattern);
 }
 
+/* Checks if merging monitors with different RSSI Thresh is possible or not */
+static bool merge_is_possible(
+			struct adv_monitor_merged_pattern *existing_pattern,
+			struct adv_monitor *monitor)
+{
+	const struct queue_entry *q_entry;
+	struct adv_monitor *q_data;
+
+	/* Merging two monitors with different RSSI thresholds is not possible
+	 * if their RSSI ranges do not overlap.
+	 */
+
+	q_entry = queue_get_entries(existing_pattern->monitors);
+
+	while (q_entry) {
+		q_data = q_entry->data;
+
+		if (q_data->rssi.low_rssi >= monitor->rssi.high_rssi ||
+		    monitor->rssi.low_rssi >= q_data->rssi.high_rssi)
+			goto fail;
+
+		q_entry = q_entry->next;
+	}
+
+	return true;
+
+fail:
+	monitor->state = MONITOR_STATE_FAILED;
+	merged_pattern_free(monitor->merged_pattern);
+	monitor->merged_pattern = NULL;
+
+	btd_error(monitor->app->manager->adapter_id,
+			"Adv Monitor at path %s is in conflict with "
+			"an existing Adv Monitor at path %s",
+			g_dbus_proxy_get_path(monitor->proxy),
+			g_dbus_proxy_get_path(q_data->proxy));
+
+	return false;
+}
+
 /* Returns the smaller of the two integers |a| and |b| which is not equal to the
  * |unset| value. If both are unset, return unset.
  */
@@ -291,14 +331,9 @@ static void merge_rssi(const struct rssi_parameters *a,
 	 */
 	merged->high_rssi_timeout = 0;
 
-	/* Sampling period is not implemented yet in userspace. There is no
-	 * good value if the two values are different, so just choose 0 for
-	 * always reporting, to avoid missing packets.
-	 */
-	if (a->sampling_period != b->sampling_period)
-		merged->sampling_period = 0;
-	else
-		merged->sampling_period = a->sampling_period;
+	merged->sampling_period = get_smaller_not_unset(a->sampling_period,
+					b->sampling_period,
+					ADV_MONITOR_UNSET_SAMPLING_PERIOD);
 }
 
 /* Two merged_pattern are considered equal if all the following are true:
@@ -1249,6 +1284,13 @@ static void monitor_proxy_added_cb(GDBusProxy *proxy, void *user_data)
 						monitor->merged_pattern);
 		merged_pattern_add(monitor->merged_pattern);
 	} else {
+		if (!merge_is_possible(existing_pattern, monitor)) {
+			monitor_destroy(monitor);
+			DBG("Adv Monitor at path %s released due to existing "
+				"monitor", path);
+			return;
+		}
+
 		/* Since there is a matching pattern, abandon the one we have */
 		merged_pattern_free(monitor->merged_pattern);
 		monitor->merged_pattern = existing_pattern;
