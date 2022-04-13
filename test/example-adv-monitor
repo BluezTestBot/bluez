@@ -117,10 +117,11 @@ class AdvMonitor(dbus.service.Object):
 
 
     @dbus.service.method(ADV_MONITOR_IFACE,
-                         in_signature='',
+                         in_signature='y',
                          out_signature='')
-    def Release(self):
-        print('{}: Monitor Released'.format(self.path))
+    def Release(self, reason):
+        print('{}: Monitor Released (reason: {})'.format(self.path,
+                                                         format(reason, 'd')))
 
 
     @dbus.service.method(ADV_MONITOR_IFACE,
@@ -352,7 +353,10 @@ def test(bus, mainloop, advmon_mgr, app_id):
     # Run until user hits the 'Enter' key. If any peer device is advertising
     # during this time, DeviceFound() should get triggered for monitors
     # matching the advertisements.
-    raw_input('Press "Enter" key to quit...\n')
+    try:
+        raw_input('Press "Enter" key to quit...\n')  # python2
+    except:
+        input('Press "Enter" key to quit...\n')  # python3
 
     # Remove a monitor. DeviceFound() for this monitor should not get
     # triggered any more.
