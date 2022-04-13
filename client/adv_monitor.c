@@ -72,9 +72,13 @@ static DBusMessage *release_adv_monitor(DBusConnection *conn,
 					DBusMessage *msg, void *user_data)
 {
 	struct adv_monitor *adv_monitor = user_data;
+	int8_t release_reason;
 
-	bt_shell_printf("Advertisement monitor %d released\n",
-							adv_monitor->idx);
+	dbus_message_get_args(msg, NULL, DBUS_TYPE_BYTE, &release_reason,
+							DBUS_TYPE_INVALID);
+	bt_shell_printf("Advertisement monitor %d released (reason: %d)\n",
+							adv_monitor->idx,
+							release_reason);
 	remove_adv_monitor(adv_monitor, conn);
 
 	return dbus_message_new_method_return(msg);
@@ -117,7 +121,8 @@ static DBusMessage *device_lost_adv_monitor(DBusConnection *conn,
 }
 
 static const GDBusMethodTable adv_monitor_methods[] = {
-	{ GDBUS_ASYNC_METHOD("Release", NULL, NULL, release_adv_monitor) },
+	{ GDBUS_ASYNC_METHOD("Release", GDBUS_ARGS({"reason", "y"}),
+			NULL, release_adv_monitor) },
 	{ GDBUS_ASYNC_METHOD("Activate", NULL, NULL, activate_adv_monitor) },
 	{ GDBUS_ASYNC_METHOD("DeviceFound", GDBUS_ARGS({ "device", "o" }),
 			NULL, device_found_adv_monitor) },
