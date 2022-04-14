@@ -19,8 +19,7 @@ ProtectSystem=full
 PrivateTmp=true
 ProtectKernelTunables=true
 ProtectControlGroups=true
-ReadWritePaths=@statedir@
-ReadOnlyPaths=@confdir@
+ReadWritePaths=-@statedir@
 
 # Execute Mappings
 MemoryDenyWriteExecute=true
