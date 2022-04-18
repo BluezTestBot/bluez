@@ -171,6 +171,10 @@ Properties	string Address [readonly]
 
 			Indicates if the remote device is paired.
 
+		boolean Bonded [readonly]
+
+			Indicates if the remote device is bonded.
+
 		boolean Connected [readonly]
 
 			Indicates if the remote device is currently connected.
