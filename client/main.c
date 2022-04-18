@@ -1090,6 +1090,32 @@ static void cmd_paired_devices(int argc, char *argv[])
 	return bt_shell_noninteractive_quit(EXIT_SUCCESS);
 }
 
+static void cmd_bonded_devices(int argc, char *argv[])
+{
+	GList *ll;
+
+	if (check_default_ctrl() == FALSE)
+		return bt_shell_noninteractive_quit(EXIT_SUCCESS);
+
+	for (ll = g_list_first(default_ctrl->devices);
+			ll; ll = g_list_next(ll)) {
+		GDBusProxy *proxy = ll->data;
+		DBusMessageIter iter;
+		dbus_bool_t bonded;
+
+		if (g_dbus_proxy_get_property(proxy, "Bonded", &iter) == FALSE)
+			continue;
+
+		dbus_message_iter_get_basic(&iter, &bonded);
+		if (!bonded)
+			continue;
+
+		print_device(proxy, NULL);
+	}
+
+	return bt_shell_noninteractive_quit(EXIT_SUCCESS);
+}
+
 static void generic_callback(const DBusError *error, void *user_data)
 {
 	char *str = user_data;
@@ -1781,6 +1807,7 @@ static void cmd_info(int argc, char *argv[])
 	print_property(proxy, "Appearance");
 	print_property(proxy, "Icon");
 	print_property(proxy, "Paired");
+	print_property(proxy, "Bonded");
 	print_property(proxy, "Trusted");
 	print_property(proxy, "Blocked");
 	print_property(proxy, "Connected");
@@ -3116,6 +3143,8 @@ static const struct bt_shell_menu main_menu = {
 	{ "devices",      NULL,       cmd_devices, "List available devices" },
 	{ "paired-devices", NULL,     cmd_paired_devices,
 					"List paired devices"},
+	{ "bonded-devices", NULL,     cmd_bonded_devices,
+					"List bonded devices"},
 	{ "system-alias", "<name>",   cmd_system_alias,
 					"Set controller alias" },
 	{ "reset-alias",  NULL,       cmd_reset_alias,
