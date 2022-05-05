@@ -216,7 +216,8 @@ noinst_PROGRAMS += tools/bdaddr tools/avinfo tools/avtest \
 			tools/eddystone tools/ibeacon \
 			tools/btgatt-client tools/btgatt-server \
 			tools/test-runner tools/check-selftest \
-			tools/gatt-service profiles/iap/iapd
+			tools/gatt-service profiles/iap/iapd \
+			tools/isotest
 
 tools_bdaddr_SOURCES = tools/bdaddr.c src/oui.h src/oui.c
 tools_bdaddr_LDADD = lib/libbluetooth-internal.la $(UDEV_LIBS)
@@ -313,6 +314,8 @@ tools_mpris_proxy_LDADD = gdbus/libgdbus-internal.la $(GLIB_LIBS) $(DBUS_LIBS)
 tools_gatt_service_SOURCES = tools/gatt-service.c
 tools_gatt_service_LDADD = gdbus/libgdbus-internal.la \
 			   src/libshared-mainloop.la $(GLIB_LIBS) $(DBUS_LIBS)
+
+tools_isotest_LDADD = lib/libbluetooth-internal.la
 
 profiles_iap_iapd_SOURCES = profiles/iap/main.c
 profiles_iap_iapd_LDADD = gdbus/libgdbus-internal.la $(GLIB_LIBS) $(DBUS_LIBS)
