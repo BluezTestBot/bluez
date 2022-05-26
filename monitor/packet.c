@@ -15237,4 +15237,13 @@ void packet_todo(void)
 
 		printf("\t%s\n", le_meta_event_table[i].str);
 	}
+
+	printf("MGMT commands with missing decodings:\n");
+
+	for (i = 0; mgmt_command_table[i].str; i++) {
+		if (mgmt_command_table[i].func)
+			continue;
+
+		printf("\t%s\n", mgmt_command_table[i].str);
+	}
 }
