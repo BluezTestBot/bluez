@@ -353,6 +353,7 @@ static const char *settings_str[] = {
 				"static-addr",
 				"phy-configuration",
 				"wide-band-speech",
+				"quality-report",
 };
 
 static const char *settings2str(uint32_t settings)
@@ -1842,26 +1843,28 @@ static void cmd_exp_privacy(int argc, char **argv)
 	}
 }
 
-static void exp_quality_rsp(uint8_t status, uint16_t len, const void *param,
+static void quality_rsp(uint8_t status, uint16_t len, const void *param,
 							void *user_data)
 {
-	if (status != 0)
+	const struct mgmt_rp_set_quality_report *rp = param;
+	uint32_t current_settings;
+
+	if (status != 0) {
 		error("Set Quality Report feature failed: 0x%02x (%s)",
 						status, mgmt_errstr(status));
-	else
-		print("Quality Report feature successfully set");
+		return bt_shell_noninteractive_quit(EXIT_FAILURE);
+	}
+
+	current_settings = le32_to_cpu(rp->current_settings);
+	print("Quality Report feature successfully set");
+	print("\tcurrent settings: %s", settings2str(current_settings));
 
 	bt_shell_noninteractive_quit(EXIT_SUCCESS);
 }
 
 static void cmd_exp_quality(int argc, char **argv)
 {
-	/* 330859bc-7506-492d-9370-9a6f0614037f */
-	static const uint8_t uuid[16] = {
-				0x7f, 0x03, 0x14, 0x06, 0x6f, 0x9a, 0x70, 0x93,
-				0x2d, 0x49, 0x06, 0x75, 0xbc, 0x59, 0x08, 0x33,
-	};
-	struct mgmt_cp_set_exp_feature cp;
+	struct mgmt_cp_set_quality_report cp;
 	uint8_t val;
 
 	if (mgmt_index == MGMT_INDEX_NONE) {
@@ -1878,11 +1881,10 @@ static void cmd_exp_quality(int argc, char **argv)
 	}
 
 	memset(&cp, 0, sizeof(cp));
-	memcpy(cp.uuid, uuid, 16);
-	cp.action = val;
+	cp.quality_report = val;
 
-	if (mgmt_send(mgmt, MGMT_OP_SET_EXP_FEATURE, mgmt_index,
-			sizeof(cp), &cp, exp_quality_rsp, NULL, NULL) == 0) {
+	if (mgmt_send(mgmt, MGMT_OP_SET_QUALITY_REPORT, mgmt_index,
+			sizeof(cp), &cp, quality_rsp, NULL, NULL) == 0) {
 		error("Unable to send quality report feature cmd");
 		return bt_shell_noninteractive_quit(EXIT_FAILURE);
 	}
@@ -5636,10 +5638,10 @@ static const struct bt_shell_menu main_menu = {
 		cmd_exp_debug,		"Set debug feature"		},
 	{ "exp-privacy",	"<on/off>",
 		cmd_exp_privacy,	"Set LL privacy feature"	},
-	{ "exp-quality",	"<on/off>", cmd_exp_quality,
-		"Set bluetooth quality report feature"			},
 	{ "exp-offload",		"<on/off>",
 		cmd_exp_offload_codecs,	"Toggle codec support"		},
+	{ "quality",		"<on/off>",
+		cmd_exp_quality, "Set bluetooth quality report feature"	},
 	{ "read-sysconfig",	NULL,
 		cmd_read_sysconfig,	"Read System Configuration"	},
 	{ "set-sysconfig",	"<-v|-h> [options...]",
