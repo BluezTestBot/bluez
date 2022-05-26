@@ -12552,6 +12552,7 @@ static const struct bitfield_data mgmt_settings_table[] = {
 	{ 15, "Static Address"		},
 	{ 16, "PHY Configuration"	},
 	{ 17, "Wideband Speech"		},
+	{ 18, "Quality Report"		},
 	{ }
 };
 
@@ -14148,6 +14149,13 @@ static void mgmt_remove_adv_monitor_patterns_rsp(const void *data,
 	print_field("Handle: %d", handle);
 }
 
+static void mgmt_set_quality_report_cmd(const void *data, uint16_t size)
+{
+	uint8_t action = get_u8(data);
+
+	print_field("Set Quality Report %u", action);
+}
+
 struct mgmt_data {
 	uint16_t opcode;
 	const char *str;
@@ -14405,6 +14413,9 @@ static const struct mgmt_data mgmt_command_table[] = {
 				mgmt_add_adv_monitor_patterns_rssi_cmd, 8,
 									false,
 				mgmt_add_adv_monitor_patterns_rsp, 2, true},
+	{ 0x0057, "Set Quality Report",
+				mgmt_set_quality_report_cmd, 1, true,
+				mgmt_new_settings_rsp, 4, true },
 	{ }
 };
 
