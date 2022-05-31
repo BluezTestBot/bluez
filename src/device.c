@@ -2790,6 +2790,7 @@ static void bonding_request_free(struct bonding_req *bonding)
 		bonding->device->bonding = NULL;
 
 	g_free(bonding);
+	bonding = NULL;
 }
 
 static DBusMessage *pair_device(DBusConnection *conn, DBusMessage *msg,
