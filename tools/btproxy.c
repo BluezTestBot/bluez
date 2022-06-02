@@ -48,6 +48,7 @@ struct sockaddr_hci {
 };
 #define HCI_CHANNEL_USER	1
 #define HCI_INDEX_NONE		0xffff
+#define HCI_INDEX_MAX		15
 
 static uint16_t hci_index = HCI_INDEX_NONE;
 static bool client_active = false;
@@ -533,13 +534,28 @@ static bool setup_proxy(int host_fd, bool host_shutdown,
 	return true;
 }
 
-static int open_channel(uint16_t index)
+static int get_next_hci_index(int index)
+{
+	while (++index <= HCI_INDEX_MAX) {
+		if (hci_index & (1 << index))
+			return index;
+	}
+
+	return -1;
+}
+
+static int open_channel(int index)
 {
 	struct sockaddr_hci addr;
 	int fd, err;
 
-	if (index == HCI_INDEX_NONE)
-		index = 0;
+	if (index == HCI_INDEX_NONE) {
+		index = get_next_hci_index(-1);
+		if (index < 0) {
+			perror("No controller available");
+			return -1;
+		}
+	}
 
 	printf("Opening user channel for hci%u\n", index);
 
@@ -561,9 +577,10 @@ static int open_channel(uint16_t index)
 		/* Open next available controller if no specific index was
 		 * provided and the error indicates that the controller.
 		 */
-		if (hci_index == HCI_INDEX_NONE &&
+		index = get_next_hci_index(index);
+		if (index >=0 &&
 				(err == -EBUSY || err == -EUSERS))
-			return open_channel(++index);
+			return open_channel(index);
 
 		perror("Failed to bind Bluetooth socket");
 		return -1;
@@ -601,13 +618,7 @@ static void server_callback(int fd, uint32_t events, void *user_data)
 		return;
 	}
 
-	if (client_active && hci_index != HCI_INDEX_NONE) {
-		fprintf(stderr, "Active client already present\n");
-		close(host_fd);
-		return;
-	}
-
-	dev_fd = open_channel(hci_index);
+	dev_fd = open_channel(HCI_INDEX_NONE);
 	if (dev_fd < 0) {
 		close(host_fd);
 		return;
@@ -800,6 +811,7 @@ int main(int argc, char *argv[])
 
 	for (;;) {
 		int opt;
+		int index;
 
 		opt = getopt_long(argc, argv, "rc:l::u::p:i:aezdvh",
 						main_options, NULL);
@@ -844,7 +856,15 @@ int main(int argc, char *argv[])
 				usage();
 				return EXIT_FAILURE;
 			}
-			hci_index = atoi(str);
+			index = atoi(str);
+			if (index > HCI_INDEX_MAX) {
+				fprintf(stderr, "Invalid controller index\n");
+				usage();
+				return EXIT_FAILURE;
+			}
+			if (hci_index == HCI_INDEX_NONE)
+				hci_index = 0;
+			hci_index |= 1 << index;
 			break;
 		case 'a':
 			type = HCI_AMP;
@@ -892,7 +912,7 @@ int main(int argc, char *argv[])
 		if (use_redirect) {
 			printf("Creating local redirect\n");
 
-			dev_fd = open_channel(hci_index);
+			dev_fd = open_channel(HCI_INDEX_NONE);
 		} else {
 			printf("Connecting to %s:%u\n", connect_address,
 								tcp_port);
