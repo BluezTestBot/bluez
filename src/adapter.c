@@ -8769,7 +8769,7 @@ int adapter_set_io_capability(struct btd_adapter *adapter, uint8_t io_cap)
 }
 
 int btd_adapter_add_remote_oob_data(struct btd_adapter *adapter,
-					const bdaddr_t *bdaddr,
+					const bdaddr_t *bdaddr, uint8_t bdaddr_type,
 					uint8_t *hash, uint8_t *randomizer)
 {
 	struct mgmt_cp_add_remote_oob_data cp;
@@ -8780,6 +8780,7 @@ int btd_adapter_add_remote_oob_data(struct btd_adapter *adapter,
 
 	memset(&cp, 0, sizeof(cp));
 	bacpy(&cp.addr.bdaddr, bdaddr);
+	cp.addr.type = bdaddr_type;
 	memcpy(cp.hash192, hash, 16);
 
 	if (randomizer)

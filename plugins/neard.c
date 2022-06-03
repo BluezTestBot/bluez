@@ -56,6 +56,7 @@ enum cps {
 
 struct oob_params {
 	bdaddr_t address;
+	uint8_t address_type;
 	uint32_t class;
 	char *name;
 	GSList *services;
@@ -363,6 +364,36 @@ static int process_eir(uint8_t *eir, size_t size, struct oob_params *remote)
 	return 0;
 }
 
+static void process_eir_le(uint8_t *eir, size_t size, struct oob_params *remote)
+{
+	struct eir_data eir_data;
+
+	DBG("size %zu", size);
+
+	memset(&eir_data, 0, sizeof(eir_data));
+
+	eir_parse(&eir_data, eir, size);
+
+	bacpy(&remote->address, &eir_data.addr);
+	remote->address_type = eir_data.addr_type;
+
+	remote->class = eir_data.class;
+
+	remote->name = eir_data.name;
+	eir_data.name = NULL;
+
+	remote->services = eir_data.services;
+	eir_data.services = NULL;
+
+	remote->hash = eir_data.hash;
+	eir_data.hash = NULL;
+
+	remote->randomizer = eir_data.randomizer;
+	eir_data.randomizer = NULL;
+
+	eir_data_free(&eir_data);
+}
+
 /*
  * This is (barely documented) Nokia extension format, most work was done by
  * reverse engineering.
@@ -543,7 +574,7 @@ static int process_message(DBusMessage *msg, struct oob_params *remote)
 			uint8_t *eir;
 			int size;
 
-			/* nokia.com:bt and EIR should not be passed together */
+			/* nokia.com:bt, EIR, and EIR.le should not be passed together */
 			if (bacmp(&remote->address, BDADDR_ANY) != 0)
 				goto error;
 
@@ -561,7 +592,7 @@ static int process_message(DBusMessage *msg, struct oob_params *remote)
 			uint8_t *data;
 			int size;
 
-			/* nokia.com:bt and EIR should not be passed together */
+			/* nokia.com:bt, EIR, and EIR.le should not be passed together */
 			if (bacmp(&remote->address, BDADDR_ANY) != 0)
 				goto error;
 
@@ -574,6 +605,23 @@ static int process_message(DBusMessage *msg, struct oob_params *remote)
 
 			if (process_nokia_com_bt(data, size, remote))
 				goto error;
+		} else if (strcasecmp(key, "EIR.le") == 0) {
+			DBusMessageIter array;
+			uint8_t *eir;
+			int size;
+
+			/* nokia.com:bt, EIR, and EIR.le should not be passed together */
+			if (bacmp(&remote->address, BDADDR_ANY) != 0)
+				goto error;
+
+			if (dbus_message_iter_get_arg_type(&value) !=
+					DBUS_TYPE_ARRAY)
+				goto error;
+
+			dbus_message_iter_recurse(&value, &array);
+			dbus_message_iter_get_fixed_array(&array, &eir, &size);
+
+			process_eir_le(eir, size, remote);
 		} else if (strcasecmp(key, "State") == 0) {
 			const char *state;
 
@@ -637,6 +685,7 @@ static void store_params(struct btd_adapter *adapter, struct btd_device *device,
 
 	if (params->hash) {
 		btd_adapter_add_remote_oob_data(adapter, &params->address,
+							params->address_type,
 							params->hash,
 							params->randomizer);
 	} else if (params->pin_len) {
@@ -692,7 +741,7 @@ static DBusMessage *push_oob(DBusConnection *conn, DBusMessage *msg, void *data)
 	}
 
 	device = btd_adapter_get_device(adapter, &remote.address,
-								BDADDR_BREDR);
+								remote.address_type);
 
 	err = check_device(device);
 	if (err < 0) {
@@ -716,7 +765,7 @@ static DBusMessage *push_oob(DBusConnection *conn, DBusMessage *msg, void *data)
 	free_oob_params(&remote);
 
 	err = adapter_create_bonding(adapter, device_get_address(device),
-							BDADDR_BREDR, io_cap);
+							remote.address_type, io_cap);
 	if (err < 0)
 		return error_reply(msg, -err);
 
@@ -764,7 +813,8 @@ static DBusMessage *request_oob(DBusConnection *conn, DBusMessage *msg,
 		goto done;
 	}
 
-	device = btd_adapter_get_device(adapter, &remote.address, BDADDR_BREDR);
+	device = btd_adapter_get_device(adapter, &remote.address,
+							   remote.address_type);
 
 	err = check_device(device);
 	if (err < 0)

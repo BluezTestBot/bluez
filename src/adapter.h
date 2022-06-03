@@ -213,7 +213,7 @@ int adapter_set_io_capability(struct btd_adapter *adapter, uint8_t io_cap);
 int btd_adapter_read_local_oob_data(struct btd_adapter *adapter);
 
 int btd_adapter_add_remote_oob_data(struct btd_adapter *adapter,
-					const bdaddr_t *bdaddr,
+					const bdaddr_t *bdaddr, uint8_t bdaddr_type,
 					uint8_t *hash, uint8_t *randomizer);
 
 int btd_adapter_remove_remote_oob_data(struct btd_adapter *adapter,
