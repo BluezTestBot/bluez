@@ -33,8 +33,8 @@
 #include "src/shared/util.h"
 
 #define NEARD_NAME "org.neard"
-#define NEARD_PATH "/"
-#define NEARD_MANAGER_INTERFACE "org.neard.Manager"
+#define NEARD_PATH "/org/neard"
+#define NEARD_MANAGER_INTERFACE "org.neard.AgentManager"
 #define AGENT_INTERFACE "org.neard.HandoverAgent"
 #define AGENT_PATH "/org/bluez/neard_handover_agent"
 #define AGENT_CARRIER_TYPE "bluetooth"
