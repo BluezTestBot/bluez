@@ -8770,7 +8770,11 @@ int adapter_set_io_capability(struct btd_adapter *adapter, uint8_t io_cap)
 
 int btd_adapter_add_remote_oob_data(struct btd_adapter *adapter,
 					const bdaddr_t *bdaddr,
-					uint8_t *hash, uint8_t *randomizer)
+					uint8_t bdaddr_type,
+					uint8_t *hash192,
+					uint8_t *randomizer192,
+					uint8_t *hash256,
+					uint8_t *randomizer256)
 {
 	struct mgmt_cp_add_remote_oob_data cp;
 	char addr[18];
@@ -8780,10 +8784,15 @@ int btd_adapter_add_remote_oob_data(struct btd_adapter *adapter,
 
 	memset(&cp, 0, sizeof(cp));
 	bacpy(&cp.addr.bdaddr, bdaddr);
-	memcpy(cp.hash192, hash, 16);
-
-	if (randomizer)
-		memcpy(cp.rand192, randomizer, 16);
+	cp.addr.type = bdaddr_type;
+	if (hash192)
+		memcpy(cp.hash192, hash192, 16);
+	if (hash256)
+		memcpy(cp.hash256, hash256, 16);
+	if (randomizer192)
+		memcpy(cp.rand192, randomizer192, 16);
+	if (randomizer256)
+		memcpy(cp.rand256, randomizer256, 16);
 
 	if (mgmt_send(adapter->mgmt, MGMT_OP_ADD_REMOTE_OOB_DATA,
 				adapter->dev_id, sizeof(cp), &cp,

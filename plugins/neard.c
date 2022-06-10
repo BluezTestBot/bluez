@@ -56,11 +56,14 @@ enum cps {
 
 struct oob_params {
 	bdaddr_t address;
+	uint8_t address_type;
 	uint32_t class;
 	char *name;
 	GSList *services;
-	uint8_t *hash;
-	uint8_t *randomizer;
+	uint8_t *hash192;
+	uint8_t *randomizer192;
+	uint8_t *hash256;
+	uint8_t *randomizer256;
 	uint8_t *pin;
 	int pin_len;
 	enum cps power_state;
@@ -70,8 +73,10 @@ static void free_oob_params(struct oob_params *params)
 {
 	g_slist_free_full(params->services, free);
 	g_free(params->name);
-	g_free(params->hash);
-	g_free(params->randomizer);
+	g_free(params->hash192);
+	g_free(params->randomizer192);
+	g_free(params->hash256);
+	g_free(params->randomizer256);
 	free(params->pin);
 }
 
@@ -352,15 +357,45 @@ static int process_eir(uint8_t *eir, size_t size, struct oob_params *remote)
 	remote->services = eir_data.services;
 	eir_data.services = NULL;
 
-	remote->hash = eir_data.hash192;
+	remote->hash192 = eir_data.hash192;
 	eir_data.hash192 = NULL;
 
-	remote->randomizer = eir_data.randomizer192;
+	remote->randomizer192 = eir_data.randomizer192;
 	eir_data.randomizer192 = NULL;
 
 	eir_data_free(&eir_data);
 
 	return 0;
+}
+
+static void process_eir_le(uint8_t *eir, size_t size, struct oob_params *remote)
+{
+	struct eir_data eir_data;
+
+	DBG("size %zu", size);
+
+	memset(&eir_data, 0, sizeof(eir_data));
+
+	eir_parse(&eir_data, eir, size);
+
+	bacpy(&remote->address, &eir_data.addr);
+	remote->address_type = eir_data.addr_type;
+
+	remote->class = eir_data.class;
+
+	remote->name = eir_data.name;
+	eir_data.name = NULL;
+
+	remote->services = eir_data.services;
+	eir_data.services = NULL;
+
+	remote->hash256 = eir_data.hash256;
+	eir_data.hash256 = NULL;
+
+	remote->randomizer256 = eir_data.randomizer256;
+	eir_data.randomizer256 = NULL;
+
+	eir_data_free(&eir_data);
 }
 
 /*
@@ -543,7 +578,7 @@ static int process_message(DBusMessage *msg, struct oob_params *remote)
 			uint8_t *eir;
 			int size;
 
-			/* nokia.com:bt and EIR should not be passed together */
+			/* nokia.com:bt, EIR, and EIR.le should not be passed together */
 			if (bacmp(&remote->address, BDADDR_ANY) != 0)
 				goto error;
 
@@ -561,7 +596,7 @@ static int process_message(DBusMessage *msg, struct oob_params *remote)
 			uint8_t *data;
 			int size;
 
-			/* nokia.com:bt and EIR should not be passed together */
+			/* nokia.com:bt, EIR, and EIR.le should not be passed together */
 			if (bacmp(&remote->address, BDADDR_ANY) != 0)
 				goto error;
 
@@ -574,6 +609,23 @@ static int process_message(DBusMessage *msg, struct oob_params *remote)
 
 			if (process_nokia_com_bt(data, size, remote))
 				goto error;
+		} else if (strcasecmp(key, "EIR.le") == 0) {
+			DBusMessageIter array;
+			uint8_t *eir;
+			int size;
+
+			/* nokia.com:bt, EIR, and EIR.le should not be passed together */
+			if (bacmp(&remote->address, BDADDR_ANY) != 0)
+				goto error;
+
+			if (dbus_message_iter_get_arg_type(&value) !=
+					DBUS_TYPE_ARRAY)
+				goto error;
+
+			dbus_message_iter_recurse(&value, &array);
+			dbus_message_iter_get_fixed_array(&array, &eir, &size);
+
+			process_eir_le(eir, size, remote);
 		} else if (strcasecmp(key, "State") == 0) {
 			const char *state;
 
@@ -635,10 +687,13 @@ static void store_params(struct btd_adapter *adapter, struct btd_device *device,
 	if (params->services)
 		device_add_eir_uuids(device, params->services);
 
-	if (params->hash) {
+	if (params->hash192 || params->hash256) {
 		btd_adapter_add_remote_oob_data(adapter, &params->address,
-							params->hash,
-							params->randomizer);
+							params->address_type,
+							params->hash192,
+							params->randomizer192,
+							params->hash256,
+							params->randomizer256);
 	} else if (params->pin_len) {
 		/* TODO
 		 * Handle PIN, for now only discovery mode and 'common' PINs
@@ -692,7 +747,7 @@ static DBusMessage *push_oob(DBusConnection *conn, DBusMessage *msg, void *data)
 	}
 
 	device = btd_adapter_get_device(adapter, &remote.address,
-								BDADDR_BREDR);
+								remote.address_type);
 
 	err = check_device(device);
 	if (err < 0) {
@@ -716,7 +771,7 @@ static DBusMessage *push_oob(DBusConnection *conn, DBusMessage *msg, void *data)
 	free_oob_params(&remote);
 
 	err = adapter_create_bonding(adapter, device_get_address(device),
-							BDADDR_BREDR, io_cap);
+							remote.address_type, io_cap);
 	if (err < 0)
 		return error_reply(msg, -err);
 
@@ -764,7 +819,8 @@ static DBusMessage *request_oob(DBusConnection *conn, DBusMessage *msg,
 		goto done;
 	}
 
-	device = btd_adapter_get_device(adapter, &remote.address, BDADDR_BREDR);
+	device = btd_adapter_get_device(adapter, &remote.address,
+							   remote.address_type);
 
 	err = check_device(device);
 	if (err < 0)
@@ -777,7 +833,7 @@ static DBusMessage *request_oob(DBusConnection *conn, DBusMessage *msg,
 
 	store_params(adapter, device, &remote);
 
-	if (remote.hash && btd_adapter_get_powered(adapter))
+	if (remote.hash192 && btd_adapter_get_powered(adapter))
 		goto read_local;
 done:
 	free_oob_params(&remote);
