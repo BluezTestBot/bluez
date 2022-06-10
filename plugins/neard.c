@@ -352,11 +352,11 @@ static int process_eir(uint8_t *eir, size_t size, struct oob_params *remote)
 	remote->services = eir_data.services;
 	eir_data.services = NULL;
 
-	remote->hash = eir_data.hash;
-	eir_data.hash = NULL;
+	remote->hash = eir_data.hash192;
+	eir_data.hash192 = NULL;
 
-	remote->randomizer = eir_data.randomizer;
-	eir_data.randomizer = NULL;
+	remote->randomizer = eir_data.randomizer192;
+	eir_data.randomizer192 = NULL;
 
 	eir_data_free(&eir_data);
 

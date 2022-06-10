@@ -53,10 +53,14 @@ void eir_data_free(struct eir_data *eir)
 	eir->services = NULL;
 	g_free(eir->name);
 	eir->name = NULL;
-	free(eir->hash);
-	eir->hash = NULL;
-	free(eir->randomizer);
-	eir->randomizer = NULL;
+	free(eir->hash192);
+	eir->hash192 = NULL;
+	free(eir->randomizer192);
+	eir->randomizer192 = NULL;
+	free(eir->hash256);
+	eir->hash256 = NULL;
+	free(eir->randomizer256);
+	eir->randomizer256 = NULL;
 	g_slist_free_full(eir->msd_list, g_free);
 	eir->msd_list = NULL;
 	g_slist_free_full(eir->sd_list, sd_free);
@@ -323,13 +327,15 @@ void eir_parse(struct eir_data *eir, const uint8_t *eir_data, uint8_t eir_len)
 		case EIR_SSP_HASH:
 			if (data_len < 16)
 				break;
-			eir->hash = util_memdup(data, 16);
+			free(eir->hash192);
+			eir->hash192 = util_memdup(data, 16);
 			break;
 
 		case EIR_SSP_RANDOMIZER:
 			if (data_len < 16)
 				break;
-			eir->randomizer = util_memdup(data, 16);
+			free(eir->randomizer192);
+			eir->randomizer192 = util_memdup(data, 16);
 			break;
 
 		case EIR_DEVICE_ID:
@@ -342,6 +348,15 @@ void eir_parse(struct eir_data *eir, const uint8_t *eir_data, uint8_t eir_len)
 			eir->did_version = data[6] | (data[7] << 8);
 			break;
 
+		case EIR_LE_DEVICE_ADDRESS:
+			if (data_len < sizeof(bdaddr_t) + 1)
+				break;
+
+			memcpy(&eir->addr, data, sizeof(bdaddr_t));
+			eir->addr_type = data[sizeof(bdaddr_t)] & 0x1 ?
+					BDADDR_LE_RANDOM : BDADDR_LE_PUBLIC;
+			break;
+
 		case EIR_SVC_DATA16:
 			eir_parse_uuid16_data(eir, data, data_len);
 			break;
@@ -352,6 +367,20 @@ void eir_parse(struct eir_data *eir, const uint8_t *eir_data, uint8_t eir_len)
 
 		case EIR_SVC_DATA128:
 			eir_parse_uuid128_data(eir, data, data_len);
+			break;
+
+		case EIR_LE_SC_CONF:
+			if (data_len < 16)
+				break;
+			free(eir->hash256);
+			eir->hash256 = util_memdup(data, 16);
+			break;
+
+		case EIR_LE_SC_RAND:
+			if (data_len < 16)
+				break;
+			free(eir->randomizer256);
+			eir->randomizer256 = util_memdup(data, 16);
 			break;
 
 		case EIR_MANUFACTURER_DATA:

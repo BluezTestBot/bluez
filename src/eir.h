@@ -33,9 +33,12 @@
 #define EIR_PUB_TRGT_ADDR           0x17  /* LE: Public Target Address */
 #define EIR_RND_TRGT_ADDR           0x18  /* LE: Random Target Address */
 #define EIR_GAP_APPEARANCE          0x19  /* GAP appearance */
+#define EIR_LE_DEVICE_ADDRESS       0x1B  /* LE: Bluetooth Device Address */
 #define EIR_SOLICIT32               0x1F  /* LE: Solicit UUIDs, 32-bit */
 #define EIR_SVC_DATA32              0x20  /* LE: Service data, 32-bit UUID */
 #define EIR_SVC_DATA128             0x21  /* LE: Service data, 128-bit UUID */
+#define EIR_LE_SC_CONF              0x22  /* LE: Secure Connections Confirmation Value */
+#define EIR_LE_SC_RAND              0x23  /* LE: Secure Connections Random Value */
 #define EIR_TRANSPORT_DISCOVERY     0x26  /* Transport Discovery Service */
 #define EIR_MANUFACTURER_DATA       0xFF  /* Manufacturer Specific Data */
 
@@ -77,9 +80,12 @@ struct eir_data {
 	uint16_t appearance;
 	bool name_complete;
 	int8_t tx_power;
-	uint8_t *hash;
-	uint8_t *randomizer;
+	uint8_t *hash192;
+	uint8_t *randomizer192;
+	uint8_t *hash256;
+	uint8_t *randomizer256;
 	bdaddr_t addr;
+	uint8_t addr_type;
 	uint16_t did_vendor;
 	uint16_t did_product;
 	uint16_t did_version;
