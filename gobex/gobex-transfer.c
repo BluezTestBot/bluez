@@ -92,7 +92,9 @@ static void transfer_complete(struct transfer *transfer, GError *err)
 		g_obex_drop_tx_queue(transfer->obex);
 	}
 
-	transfer->complete_func(transfer->obex, err, transfer->user_data);
+	if (find_transfer(id) != NULL)
+		transfer->complete_func(transfer->obex, err, transfer->user_data);
+
 	/* Check if the complete_func removed the transfer */
 	if (find_transfer(id) == NULL)
 		return;
