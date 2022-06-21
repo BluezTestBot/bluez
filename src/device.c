@@ -3159,7 +3159,7 @@ void device_remove_connection(struct btd_device *device, uint8_t bdaddr_type)
 						DEVICE_INTERFACE, "Connected");
 
 	if (remove_device)
-		set_temporary_timer(device, 0);
+		set_temporary_timer(device, 1);
 }
 
 guint device_add_disconnect_watch(struct btd_device *device,
