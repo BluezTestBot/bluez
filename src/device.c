@@ -3073,7 +3073,8 @@ static void set_temporary_timer(struct btd_device *dev, unsigned int timeout)
 								dev, NULL);
 }
 
-void device_remove_connection(struct btd_device *device, uint8_t bdaddr_type)
+void device_remove_connection(struct btd_device *device, uint8_t bdaddr_type,
+								bool *remove)
 {
 	struct bearer_state *state = get_state(device, bdaddr_type);
 	DBusMessage *reply;
@@ -3158,8 +3159,8 @@ void device_remove_connection(struct btd_device *device, uint8_t bdaddr_type)
 	g_dbus_emit_property_changed(dbus_conn, device->path,
 						DEVICE_INTERFACE, "Connected");
 
-	if (remove_device)
-		set_temporary_timer(device, 0);
+	if (remove_device && remove)
+		*remove = true;
 }
 
 guint device_add_disconnect_watch(struct btd_device *device,

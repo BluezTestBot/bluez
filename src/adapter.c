@@ -7171,6 +7171,8 @@ static void adapter_remove_connection(struct btd_adapter *adapter,
 						struct btd_device *device,
 						uint8_t bdaddr_type)
 {
+	bool remove;
+
 	DBG("");
 
 	if (!g_slist_find(adapter->connections, device)) {
@@ -7178,7 +7180,12 @@ static void adapter_remove_connection(struct btd_adapter *adapter,
 		return;
 	}
 
-	device_remove_connection(device, bdaddr_type);
+	device_remove_connection(device, bdaddr_type, &remove);
+
+	if (remove) {
+		btd_adapter_remove_device(adapter, device);
+		return;
+	}
 
 	if (device_is_authenticating(device))
 		device_cancel_authentication(device, TRUE);
