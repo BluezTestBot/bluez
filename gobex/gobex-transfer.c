@@ -186,6 +186,9 @@ static void transfer_response(GObex *obex, GError *err, GObexPacket *rsp,
 	gboolean rspcode, final;
 	guint id;
 
+	if (!g_slist_find(transfers, transfer))
+		return;
+
 	g_obex_debug(G_OBEX_DEBUG_TRANSFER, "transfer %u", transfer->id);
 
 	id = transfer->req_id;
