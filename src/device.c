@@ -4089,7 +4089,7 @@ bool device_is_name_resolve_allowed(struct btd_device *device)
 	/* now >= failed_time + name_request_retry_delay, meaning the
 	 * period of not sending name request is over.
 	 */
-	if (now.tv_sec >= device->name_resolve_failed_time +
+	if ((unsigned)now.tv_sec >= device->name_resolve_failed_time +
 					btd_opts.name_request_retry_delay)
 		return true;
 
