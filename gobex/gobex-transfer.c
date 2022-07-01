@@ -83,15 +83,20 @@ static struct transfer *find_transfer(guint id)
 
 static void transfer_complete(struct transfer *transfer, GError *err)
 {
-	guint id = transfer->id;
+	guint id;
 
-	g_obex_debug(G_OBEX_DEBUG_TRANSFER, "transfer %u", id);
+	if (!g_slist_find(transfers, transfer))
+		return;
+
+	transfer->req_id = 0;
+	g_obex_debug(G_OBEX_DEBUG_TRANSFER, "transfer %u", transfer->id);
 
 	if (err) {
 		/* No further tx must be performed */
 		g_obex_drop_tx_queue(transfer->obex);
 	}
 
+	id = transfer->id;
 	transfer->complete_func(transfer->obex, err, transfer->user_data);
 	/* Check if the complete_func removed the transfer */
 	if (find_transfer(id) == NULL)
@@ -106,8 +111,6 @@ static void transfer_abort_response(GObex *obex, GError *err, GObexPacket *rsp,
 	struct transfer *transfer = user_data;
 
 	g_obex_debug(G_OBEX_DEBUG_TRANSFER, "transfer %u", transfer->id);
-
-	transfer->req_id = 0;
 
 	/* Intentionally override error */
 	err = g_error_new(G_OBEX_ERROR, G_OBEX_ERROR_CANCELLED,
@@ -184,12 +187,6 @@ static void transfer_response(GObex *obex, GError *err, GObexPacket *rsp,
 	struct transfer *transfer = user_data;
 	GObexPacket *req;
 	gboolean rspcode, final;
-	guint id;
-
-	g_obex_debug(G_OBEX_DEBUG_TRANSFER, "transfer %u", transfer->id);
-
-	id = transfer->req_id;
-	transfer->req_id = 0;
 
 	if (err != NULL) {
 		transfer_complete(transfer, err);
@@ -202,6 +199,9 @@ static void transfer_response(GObex *obex, GError *err, GObexPacket *rsp,
 						g_obex_strerror(rspcode));
 		goto failed;
 	}
+
+	if (!g_slist_find(transfers, transfer))
+		return;
 
 	if (transfer->opcode == G_OBEX_OP_GET) {
 		handle_get_body(transfer, rsp, &err);
@@ -222,8 +222,6 @@ static void transfer_response(GObex *obex, GError *err, GObexPacket *rsp,
 		req = g_obex_packet_new(transfer->opcode, TRUE,
 							G_OBEX_HDR_INVALID);
 	} else {
-		/* Keep id since request still outstanting */
-		transfer->req_id = id;
 		return;
 	}
 
