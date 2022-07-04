@@ -186,16 +186,19 @@ static void transfer_response(GObex *obex, GError *err, GObexPacket *rsp,
 	gboolean rspcode, final;
 	guint id;
 
-	g_obex_debug(G_OBEX_DEBUG_TRANSFER, "transfer %u", transfer->id);
-
-	id = transfer->req_id;
-	transfer->req_id = 0;
-
 	if (err != NULL) {
+		if (!g_slist_find(transfers, transfer))
+			return;
+
+		transfer->req_id = 0;
 		transfer_complete(transfer, err);
 		return;
 	}
 
+	g_obex_debug(G_OBEX_DEBUG_TRANSFER, "transfer %u", transfer->id);
+
+	id = transfer->req_id;
+	transfer->req_id = 0;
 	rspcode = g_obex_packet_get_operation(rsp, &final);
 	if (rspcode != G_OBEX_RSP_SUCCESS && rspcode != G_OBEX_RSP_CONTINUE) {
 		err = g_error_new(G_OBEX_ERROR, rspcode, "%s",
