@@ -1140,8 +1140,12 @@ static void handle_response(GObex *obex, GError *err, GObexPacket *rsp)
 		p->rsp_func(obex, err, rsp, p->rsp_data);
 
 		/* Check if user callback removed the request */
-		if (!final_rsp && p != obex->pending_req)
+		if (!final_rsp && p != obex->pending_req) {
+			if (p->cancelled)
+				g_error_free(err);
+
 			return;
+		}
 	}
 
 	if (p->cancelled)
