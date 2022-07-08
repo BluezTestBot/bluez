@@ -51,6 +51,7 @@ void g_obex_suspend(GObex *obex);
 void g_obex_resume(GObex *obex);
 gboolean g_obex_srm_active(GObex *obex);
 void g_obex_drop_tx_queue(GObex *obex);
+void g_obex_remove_responsefunc(GObex *obex);
 
 GObex *g_obex_new(GIOChannel *io, GObexTransportType transport_type,
 						gssize rx_mtu, gssize tx_mtu);

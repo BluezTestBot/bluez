@@ -533,6 +533,12 @@ void g_obex_drop_tx_queue(GObex *obex)
 		pending_pkt_free(p);
 }
 
+void g_obex_remove_responsefunc(GObex *obex)
+{
+	if (obex->pending_req)
+		obex->pending_req->rsp_func = NULL;
+}
+
 static gboolean g_obex_send_internal(GObex *obex, struct pending_pkt *p,
 								GError **err)
 {
