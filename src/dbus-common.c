@@ -123,6 +123,8 @@ const char *gap_appearance_to_icon(uint16_t appearance)
 		return "phone";
 	case 0x02:
 		return "computer";
+	case 0x03:
+		return "watch";
 	case 0x05:
 		return "video-display";
 	case 0x0a:
