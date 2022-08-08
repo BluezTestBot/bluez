@@ -158,6 +158,15 @@ static void print_inc_service(struct service *service, const char *description)
 					service->uuid, text);
 }
 
+static uint16_t handle_from_path(const char *path)
+{
+	const char *number = path + strlen(path) - 4;
+	if (number < path)
+		return 0;
+
+	return (uint16_t) strtol(number, NULL, 16);
+}
+
 static void print_service_proxy(GDBusProxy *proxy, const char *description)
 {
 	struct service service;
@@ -179,6 +188,7 @@ static void print_service_proxy(GDBusProxy *proxy, const char *description)
 	service.path = (char *) g_dbus_proxy_get_path(proxy);
 	service.uuid = (char *) uuid;
 	service.primary = primary;
+	service.handle = handle_from_path(service.path);
 
 	print_service(&service, description);
 }
@@ -261,6 +271,7 @@ static void print_characteristic(GDBusProxy *proxy, const char *description)
 	memset(&chrc, 0, sizeof(chrc));
 	chrc.path = (char *) g_dbus_proxy_get_path(proxy);
 	chrc.uuid = (char *) uuid;
+	chrc.handle = handle_from_path(chrc.path);
 
 	print_chrc(&chrc, description);
 }
@@ -355,6 +366,7 @@ static void print_descriptor(GDBusProxy *proxy, const char *description)
 	memset(&desc, 0, sizeof(desc));
 	desc.path = (char *) g_dbus_proxy_get_path(proxy);
 	desc.uuid = (char *) uuid;
+	desc.handle = handle_from_path(desc.path);
 
 	print_desc(&desc, description);
 }
