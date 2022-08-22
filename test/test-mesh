@@ -97,7 +97,6 @@ import struct
 import fcntl
 import os
 import numpy
-import random
 import dbus
 import dbus.service
 import dbus.exceptions
@@ -113,7 +112,7 @@ except ImportError:
 from dbus.mainloop.glib import DBusGMainLoop
 
 try:
-  from termcolor import colored, cprint
+  from termcolor import colored
   set_error = lambda x: colored('!' + x, 'red', attrs=['bold'])
   set_cyan = lambda x: colored(x, 'cyan', attrs=['bold'])
   set_green = lambda x: colored(x, 'green', attrs=['bold'])
@@ -771,7 +770,7 @@ class Menu():
 			return
 		if len(cmds) > 1:
 			for cmd in cmds:
-			     print(set_cyan(cmd + '?'))
+				print(set_cyan(cmd + '?'))
 			return
 
 		self.menu.get(cmds[0]).func()
