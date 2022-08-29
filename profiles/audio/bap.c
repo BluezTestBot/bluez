@@ -613,7 +613,7 @@ static bool pac_found(struct bt_bap_pac *lpac, struct bt_bap_pac *rpac,
 
 	/* TODO: Cache LRU? */
 	if (btd_service_is_initiator(service))
-		bt_bap_select(lpac, rpac, select_cb, ep);
+		bt_bap_select(lpac, rpac, ep->path, select_cb, ep);
 
 	return true;
 }

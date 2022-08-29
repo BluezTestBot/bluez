@@ -4058,6 +4058,7 @@ static bool match_pac(struct bt_bap_pac *lpac, struct bt_bap_pac *rpac,
 }
 
 int bt_bap_select(struct bt_bap_pac *lpac, struct bt_bap_pac *rpac,
+			const char *remote_ep_path,
 			bt_bap_pac_select_t func, void *user_data)
 {
 	if (!lpac || !rpac || !func)
@@ -4067,6 +4068,7 @@ int bt_bap_select(struct bt_bap_pac *lpac, struct bt_bap_pac *rpac,
 		return -EOPNOTSUPP;
 
 	lpac->ops->select(lpac, &rpac->qos, rpac->data, rpac->metadata,
+					remote_ep_path,
 					func, user_data, lpac->user_data);
 
 	return 0;

@@ -891,6 +891,7 @@ done:
 
 static int pac_select(struct bt_bap_pac *pac, struct bt_bap_pac_qos *qos,
 			struct iovec *caps, struct iovec *metadata,
+			const char *remote_ep_path,
 			bt_bap_pac_select_t cb, void *cb_data, void *user_data)
 {
 	struct media_endpoint *endpoint = user_data;
@@ -916,6 +917,8 @@ static int pac_select(struct bt_bap_pac *pac, struct bt_bap_pac_qos *qos,
 	data->user_data = cb_data;
 
 	dbus_message_iter_init_append(msg, &iter);
+
+	dbus_message_iter_append_basic(&iter, DBUS_TYPE_OBJECT_PATH, &remote_ep_path);
 
 	dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "{sv}", &dict);
 

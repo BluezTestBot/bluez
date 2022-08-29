@@ -122,6 +122,7 @@ struct bt_bap_pac *bt_bap_add_pac(struct gatt_db *db, const char *name,
 struct bt_bap_pac_ops {
 	int (*select) (struct bt_bap_pac *pac, struct bt_bap_pac_qos *qos,
 			struct iovec *caps, struct iovec *metadata,
+			const char *remote_ep_path,
 			bt_bap_pac_select_t cb, void *cb_data, void *user_data);
 	int (*config) (struct bt_bap_stream *stream, struct iovec *cfg,
 			struct bt_bap_qos *qos, bt_bap_pac_config_t cb,
@@ -188,6 +189,7 @@ int bt_bap_pac_get_codec(struct bt_bap_pac *pac, uint8_t *id,
 
 /* Stream related functions */
 int bt_bap_select(struct bt_bap_pac *lpac, struct bt_bap_pac *rpac,
+			const char *remote_ep_path,
 			bt_bap_pac_select_t func, void *user_data);
 
 struct bt_bap_stream *bt_bap_config(struct bt_bap *bap,
