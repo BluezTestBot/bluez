@@ -598,7 +598,7 @@ Methods		void SetConfiguration(object transport, dict properties)
 			configuration since on success the configuration is
 			send back as parameter of SetConfiguration.
 
-		dict SelectProperties(dict properties)
+		dict SelectProperties(object remote_endpoint, dict properties)
 
 			Select preferable properties from the supported
 			properties. Refer to SetConfiguration for the list of
