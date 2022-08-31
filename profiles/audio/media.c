@@ -1434,7 +1434,7 @@ static DBusMessage *register_endpoint(DBusConnection *conn, DBusMessage *msg,
 	gboolean delay_reporting = FALSE;
 	uint8_t codec = 0;
 	struct bt_bap_pac_qos qos = {};
-	uint8_t *capabilities;
+	uint8_t *capabilities = NULL;
 	int size = 0;
 	int err;
 
@@ -2998,14 +2998,25 @@ static const GDBusPropertyTable media_properties[] = {
 static void path_free(void *data)
 {
 	struct media_adapter *adapter = data;
+	GSList *l;
 
 	queue_destroy(adapter->apps, app_free);
 
-	while (adapter->endpoints)
-		release_endpoint(adapter->endpoints->data);
+	for (l = adapter->endpoints; l;) {
+		struct media_endpoint *endpoint	= l->data;
 
-	while (adapter->players)
-		media_player_destroy(adapter->players->data);
+		l = g_slist_next(l);
+
+		release_endpoint(endpoint);
+	}
+
+	for (l = adapter->players; l;) {
+		struct media_player *mp = l->data;
+
+		l = g_slist_next(l);
+
+		media_player_destroy(mp);
+	}
 
 	adapters = g_slist_remove(adapters, adapter);
 
