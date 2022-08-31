@@ -61,6 +61,7 @@ static gboolean rfkill_event(GIOChannel *chan,
 	struct rfkill_event event = { 0 };
 	struct btd_adapter *adapter;
 	char sysname[PATH_MAX];
+	bool blocked = false;
 	ssize_t len;
 	int fd, id;
 
@@ -84,7 +85,7 @@ static gboolean rfkill_event(GIOChannel *chan,
 						event.soft, event.hard);
 
 	if (event.soft || event.hard)
-		return TRUE;
+		blocked = true;
 
 	if (event.op != RFKILL_OP_CHANGE)
 		return TRUE;
@@ -122,7 +123,10 @@ static gboolean rfkill_event(GIOChannel *chan,
 
 	DBG("RFKILL unblock for hci%d", id);
 
-	btd_adapter_restore_powered(adapter);
+	if (blocked)
+		btd_adapter_set_blocked(adapter);
+	else
+		btd_adapter_restore_powered(adapter);
 
 	return TRUE;
 }
