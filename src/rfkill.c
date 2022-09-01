@@ -55,12 +55,73 @@ struct rfkill_event {
 };
 #define RFKILL_EVENT_SIZE_V1    8
 
+int rfkill_get_blocked(uint16_t index)
+{
+	struct rfkill_event event = { 0 };
+	int fd;
+	ssize_t len;
+	int blocked = -1;
+
+	fd = open("/dev/rfkill", O_RDWR);
+	if (fd < 0) {
+		DBG("Failed to open RFKILL control device");
+		return -1;
+	}
+
+	while (1) {
+		char sysname[PATH_MAX];
+		int namefd, id;
+
+		len = read(fd, &event, sizeof(event));
+		if (len < 0) {
+			if (errno == EAGAIN)
+				return -1;
+			return -1;
+		}
+
+		if (len < RFKILL_EVENT_SIZE_V1)
+			return -1;
+
+		snprintf(sysname, sizeof(sysname) - 1,
+				"/sys/class/rfkill/rfkill%u/name", event.idx);
+
+		namefd = open(sysname, O_RDONLY);
+		if (namefd < 0)
+			continue;
+
+		memset(sysname, 0, sizeof(sysname));
+
+		if (read(namefd, sysname, sizeof(sysname) - 1) < 4) {
+			close(namefd);
+			continue;
+		}
+
+		close(namefd);
+
+		if (g_str_has_prefix(sysname, "hci") == FALSE)
+			continue;
+
+		id = atoi(sysname + 3);
+		if (id < 0)
+			continue;
+
+		if (index == id) {
+			blocked = event.soft || event.hard;
+			break;
+		}
+	}
+	close(fd);
+
+	return blocked;
+}
+
 static gboolean rfkill_event(GIOChannel *chan,
 				GIOCondition cond, gpointer data)
 {
 	struct rfkill_event event = { 0 };
 	struct btd_adapter *adapter;
 	char sysname[PATH_MAX];
+	bool blocked = false;
 	ssize_t len;
 	int fd, id;
 
@@ -84,7 +145,7 @@ static gboolean rfkill_event(GIOChannel *chan,
 						event.soft, event.hard);
 
 	if (event.soft || event.hard)
-		return TRUE;
+		blocked = true;
 
 	if (event.op != RFKILL_OP_CHANGE)
 		return TRUE;
@@ -122,7 +183,10 @@ static gboolean rfkill_event(GIOChannel *chan,
 
 	DBG("RFKILL unblock for hci%d", id);
 
-	btd_adapter_restore_powered(adapter);
+	if (blocked)
+		btd_adapter_set_blocked(adapter);
+	else
+		btd_adapter_restore_powered(adapter);
 
 	return TRUE;
 }
