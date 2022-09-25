@@ -5,6 +5,3 @@ Description=Bluetooth OBEX service
 Type=dbus
 BusName=org.bluez.obex
 ExecStart=@pkglibexecdir@/obexd
-
-[Install]
-Alias=dbus-org.bluez.obex.service
