@@ -46,6 +46,7 @@
 
 #define SEG_TO	2
 #define MSG_TO	60
+#define SAR_DEL	10
 
 #define DEFAULT_TRANSMIT_COUNT		1
 #define DEFAULT_TRANSMIT_INTERVAL	100
@@ -166,6 +167,7 @@ struct mesh_sar {
 	bool segmented;
 	bool frnd;
 	bool frnd_cred;
+	bool delete;
 	uint8_t ttl;
 	uint8_t last_seg;
 	uint8_t key_aid;
@@ -1493,13 +1495,27 @@ static void inseg_to(struct l_timeout *seg_timeout, void *user_data)
 static void inmsg_to(struct l_timeout *msg_timeout, void *user_data)
 {
 	struct mesh_net *net = user_data;
-	struct mesh_sar *sar = l_queue_remove_if(net->sar_in,
+	struct mesh_sar *sar = l_queue_find(net->sar_in,
 			match_msg_timeout, msg_timeout);
 
 	l_timeout_remove(msg_timeout);
 	if (!sar)
 		return;
 
+	if (!sar->delete) {
+		/*
+		 * Incomplete timer expired, cancel SAR and start
+		 * delete timer
+		 */
+		sar->delete = true;
+		l_timeout_remove(sar->seg_timeout);
+		sar->seg_timeout = NULL;
+		sar->msg_timeout = l_timeout_create(SAR_DEL,
+					inmsg_to, net, NULL);
+		return;
+	}
+
+	l_queue_remove(net->sar_in, sar);
 	sar->msg_timeout = NULL;
 	mesh_sar_free(sar);
 }
@@ -1956,7 +1972,9 @@ static bool seg_rxed(struct mesh_net *net, bool frnd, uint32_t iv_index,
 			/* Re-Send ACK for full msg */
 			send_net_ack(net, sar_in, expected);
 			return true;
-		}
+		} else if (sar_in->delete)
+			/* Ignore canceled */
+			return false;
 	} else {
 		uint16_t len = MAX_SEG_TO_LEN(segN);
 
@@ -1996,6 +2014,9 @@ static bool seg_rxed(struct mesh_net *net, bool frnd, uint32_t iv_index,
 		sar_in->len = segN * MAX_SEG_LEN + size;
 
 	if (sar_in->flags == expected) {
+		/* Remove message incomplete timer */
+		l_timeout_remove(sar_in->msg_timeout);
+
 		/* Got it all */
 		send_net_ack(net, sar_in, expected);
 
@@ -2006,6 +2027,11 @@ static bool seg_rxed(struct mesh_net *net, bool frnd, uint32_t iv_index,
 		/* Kill Inter-Seg timeout */
 		l_timeout_remove(sar_in->seg_timeout);
 		sar_in->seg_timeout = NULL;
+
+		/* Start delete timer */
+		sar_in->delete = true;
+		sar_in->msg_timeout = l_timeout_create(SAR_DEL,
+				inmsg_to, net, NULL);
 		return true;
 	}
 
