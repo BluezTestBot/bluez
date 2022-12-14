@@ -576,6 +576,21 @@ void bt_shell_printf(const char *fmt, ...)
 	}
 }
 
+void bt_shell_echo(const char *fmt, ...)
+{
+	va_list args;
+	char *str;
+
+	va_start(args, fmt);
+	vasprintf(&str, fmt, args);
+	asprintf(&str, COLOR_HIGHLIGHT "%s" COLOR_OFF, str);
+	va_end(args);
+
+	rl_save_prompt();
+	bt_shell_set_prompt(str);
+	rl_restore_prompt();
+}
+
 static void print_string(const char *str, void *user_data)
 {
 	bt_shell_printf("%s\n", str);
