@@ -725,6 +725,9 @@ static bool discover_descs(struct discovery_op *op, bool *discovering)
 		goto failed;
 	}
 
+	/* Done with the current service */
+	gatt_db_service_set_active(op->cur_svc, true);
+
 done:
 	free(chrc_data);
 	return true;
