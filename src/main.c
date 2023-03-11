@@ -154,6 +154,7 @@ static const char *avdtp_options[] = {
 
 static const char *avrcp_options[] = {
 	"SetAbsoluteVolumeWithoutTarget",
+	"AllowVolumeChangedOnPre1_4Controller",
 	NULL
 };
 
@@ -987,6 +988,13 @@ static void parse_config(GKeyFile *config)
 		g_clear_error(&err);
 	else
 		btd_opts.avrcp.set_absolute_volume_without_target = boolean;
+
+	boolean = g_key_file_get_boolean(config, "AVRCP",
+						"AllowVolumeChangedOnPre1_4Controller", &err);
+	if (err)
+		g_clear_error(&err);
+	else
+		btd_opts.avrcp.allow_volume_changed_on_pre_1_4_ct = boolean;
 
 	val = g_key_file_get_integer(config, "AdvMon", "RSSISamplingPeriod",
 									&err);
