@@ -3943,6 +3943,8 @@ static bool device_match_profile(struct btd_device *device,
 							bt_uuid_strcmp) == NULL)
 		return false;
 
+	btd_device_set_temporary(device, false);
+
 	return true;
 }
 
