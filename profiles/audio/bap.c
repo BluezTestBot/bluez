@@ -192,10 +192,8 @@ static void bap_data_free(struct bap_data *data)
 	if (data->io_id)
 		g_source_remove(data->io_id);
 
-	if (data->service && btd_service_get_user_data(data->service) == data) {
+	if (data->service && btd_service_get_user_data(data->service) == data)
 		btd_service_set_user_data(data->service, NULL);
-		bt_bap_set_user_data(data->bap, NULL);
-	}
 
 	queue_destroy(data->snks, ep_unregister);
 	queue_destroy(data->srcs, ep_unregister);
@@ -3282,7 +3280,6 @@ static int bap_adapter_probe(struct btd_profile *p, struct btd_adapter *adapter)
 	data->pac_id = bt_bap_pac_register(data->bap, pac_added_broadcast,
 					pac_removed_broadcast, data, NULL);
 
-	bt_bap_set_user_data(data->bap, adapter);
 	bap_data_set_user_data(data, adapter);
 
 	data->adapter = adapter;
