@@ -86,6 +86,7 @@ struct bass_data {
 	struct bt_bass *bass;
 	unsigned int src_id;
 	unsigned int cp_id;
+	unsigned int bis_id;
 };
 
 struct bass_assistant {
@@ -136,6 +137,15 @@ static struct queue *assistants;
 static struct queue *delegators;
 
 static const char *state2str(enum assistant_state state);
+
+static struct bass_data *bass_data_new(struct btd_device *device);
+static void bass_data_add(struct bass_data *data);
+static void bass_data_remove(struct bass_data *data);
+
+static void bis_probe(uint8_t bis, uint8_t sgrp, struct iovec *caps,
+	struct iovec *meta, struct bt_bap_qos *qos, void *user_data);
+static void bis_remove(struct bt_bap *bap, void *user_data);
+
 
 static void bass_debug(const char *str, void *user_data)
 {
@@ -560,9 +570,11 @@ static void confirm_cb(GIOChannel *io, void *user_data)
 static void bap_attached(struct bt_bap *bap, void *user_data)
 {
 	struct btd_service *service;
+	struct btd_profile *p;
 	struct btd_device *device;
 	struct btd_adapter *adapter;
 	struct bass_delegator *dg;
+	struct bass_data *data;
 	GError *err = NULL;
 
 	DBG("%p", bap);
@@ -571,8 +583,23 @@ static void bap_attached(struct bt_bap *bap, void *user_data)
 	if (!service)
 		return;
 
+	p = btd_service_get_profile(service);
+	if (!p)
+		return;
+
+	/* Only handle sessions with Broadcast Sources */
+	if (!g_str_equal(p->remote_uuid, BCAAS_UUID_STR))
+		return;
+
 	device = btd_service_get_device(service);
 	adapter = device_get_adapter(device);
+
+	/* Create BASS session with the Broadcast Source */
+	data = bass_data_new(device);
+	data->bis_id = bt_bap_bis_cb_register(bap, bis_probe,
+					bis_remove, device, NULL);
+
+	bass_data_add(data);
 
 	dg = queue_find(delegators, delegator_match_device, device);
 	if (!dg)
@@ -625,11 +652,21 @@ static void setup_free(void *data)
 	bt_bass_clear_bis_sync(setup->dg->src, setup->bis);
 }
 
+static bool match_device(const void *data, const void *match_data)
+{
+	const struct bass_data *bdata = data;
+	const struct btd_device *device = match_data;
+
+	return bdata->device == device;
+}
+
 static void bap_detached(struct bt_bap *bap, void *user_data)
 {
 	struct btd_service *service;
+	struct btd_profile *p;
 	struct btd_device *device;
 	struct bass_delegator *dg;
+	struct bass_data *data;
 
 	DBG("%p", bap);
 
@@ -637,7 +674,22 @@ static void bap_detached(struct bt_bap *bap, void *user_data)
 	if (!service)
 		return;
 
+	p = btd_service_get_profile(service);
+	if (!p)
+		return;
+
+	/* Only handle sessions with Broadcast Sources */
+	if (!g_str_equal(p->remote_uuid, BCAAS_UUID_STR))
+		return;
+
 	device = btd_service_get_device(service);
+
+	/* Remove BASS session with the Broadcast Source device */
+	data = queue_find(sessions, match_device, device);
+	if (data) {
+		bt_bap_bis_cb_unregister(bap, data->bis_id);
+		bass_data_remove(data);
+	}
 
 	dg = queue_remove_if(delegators, delegator_match_device, device);
 	if (!dg)
@@ -1035,10 +1087,10 @@ static struct bass_assistant *assistant_new(struct btd_adapter *adapter,
 	return assistant;
 }
 
-void bass_add_stream(struct btd_device *device, struct iovec *meta,
-			struct iovec *caps, struct bt_bap_qos *qos,
-			uint8_t sgrp, uint8_t bis)
+static void bis_probe(uint8_t bis, uint8_t sgrp, struct iovec *caps,
+	struct iovec *meta, struct bt_bap_qos *qos, void *user_data)
 {
+	struct btd_device *device = user_data;
 	const struct queue_entry *entry;
 	struct bt_bap *bap;
 	struct bt_bap_pac *pac;
@@ -1100,8 +1152,10 @@ static void unregister_assistant(void *data)
 				assistant->path, MEDIA_ASSISTANT_INTERFACE);
 }
 
-void bass_remove_stream(struct btd_device *device)
+static void bis_remove(struct bt_bap *bap, void *user_data)
 {
+	struct btd_device *device = user_data;
+
 	queue_remove_all(assistants, assistant_match_device,
 		device, unregister_assistant);
 }
