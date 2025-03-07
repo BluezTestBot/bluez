@@ -52,8 +52,6 @@
 #include "src/log.h"
 #include "src/error.h"
 
-#include "bap.h"
-
 #define BASS_UUID_STR "0000184f-0000-1000-8000-00805f9b34fb"
 #define BCAAS_UUID_STR "00001852-0000-1000-8000-00805f9b34fb"
 
@@ -118,6 +116,7 @@ struct bass_delegator {
 
 struct bass_setup {
 	struct bass_delegator *dg;
+	char *path;
 	struct bt_bap_stream *stream;
 	uint8_t bis;
 	struct bt_bap_qos qos;
@@ -370,7 +369,7 @@ static void bap_state_changed(struct bt_bap_stream *stream, uint8_t old_state,
 
 		queue_foreach(links, append_stream, &iso_bc_addr);
 
-		bap_qos_to_iso_qos(bap_qos, &qos);
+		bt_bap_qos_to_iso_qos(bap_qos, &qos);
 
 		if (!bt_io_set(dg->io, &gerr,
 				BT_IO_OPT_QOS, &qos,
@@ -413,19 +412,17 @@ static void bap_state_changed(struct bt_bap_stream *stream, uint8_t old_state,
 
 static void setup_configure_stream(struct bass_setup *setup)
 {
-	char *path;
-
 	setup->stream = bt_bap_stream_new(setup->dg->bap, setup->lpac, NULL,
 					&setup->qos, setup->config);
 	if (!setup->stream)
 		return;
 
-	if (asprintf(&path, "%s/bis%d",
+	if (asprintf(&setup->path, "%s/bis%d",
 			device_get_path(setup->dg->device),
 			setup->bis) < 0)
 		return;
 
-	bt_bap_stream_set_user_data(setup->stream, path);
+	bt_bap_stream_set_user_data(setup->stream, setup->path);
 
 	bt_bap_stream_config(setup->stream, &setup->qos,
 			setup->config, NULL, NULL);
@@ -532,7 +529,7 @@ static gboolean big_info_cb(GIOChannel *io, GIOCondition cond,
 	iov.iov_len = base.base_len;
 
 	/* Create BAP QoS structure */
-	bap_iso_qos_to_bap_qos(&qos, &bap_qos);
+	bt_bap_iso_qos_to_bap_qos(&qos, &bap_qos);
 
 	bt_bap_parse_base(&iov, &bap_qos, bass_debug, bis_handler, dg);
 
@@ -651,6 +648,7 @@ static void setup_free(void *data)
 	util_iov_free(setup->qos.bcast.bcode, 1);
 	util_iov_free(setup->meta, 1);
 	util_iov_free(setup->config, 1);
+	free(setup->path);
 
 	/* Clear bis index from the bis sync bitmask, if it
 	 * has been previously set.
@@ -1113,7 +1111,7 @@ static void bis_probe(uint8_t bis, uint8_t sgrp, struct iovec *caps,
 			/* Only client sessions must be handled */
 			continue;
 
-		bap = bap_get_session(data->device);
+		bap = bt_bap_get_session(bt_bass_get_att(data->bass), NULL);
 		if (!bap)
 			continue;
 

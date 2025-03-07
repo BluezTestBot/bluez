@@ -349,6 +349,45 @@ static struct queue *bap_db;
 static struct queue *bap_cbs;
 static struct queue *sessions;
 
+/* Structure holding the parameters for Periodic Advertisement create sync.
+ * The full QOS is populated at the time the user selects and endpoint and
+ * configures it using SetConfiguration.
+ */
+struct bt_iso_qos bap_sink_pa_qos = {
+	.bcast = {
+		.options		= 0x00,
+		.skip			= 0x0000,
+		.sync_timeout		= BT_ISO_SYNC_TIMEOUT,
+		.sync_cte_type	= 0x00,
+		/* TODO: The following parameters are not needed for PA Sync.
+		 * They will be removed when the kernel checks will be removed.
+		 */
+		.big			= BT_ISO_QOS_BIG_UNSET,
+		.bis			= BT_ISO_QOS_BIS_UNSET,
+		.encryption		= 0x00,
+		.bcode			= {0x00},
+		.mse			= 0x00,
+		.timeout		= BT_ISO_SYNC_TIMEOUT,
+		.sync_factor		= 0x07,
+		.packing		= 0x00,
+		.framing		= 0x00,
+		.in = {
+			.interval	= 10000,
+			.latency	= 10,
+			.sdu		= 40,
+			.phy		= 0x02,
+			.rtn		= 2,
+		},
+		.out = {
+			.interval	= 10000,
+			.latency	= 10,
+			.sdu		= 40,
+			.phy		= 0x02,
+			.rtn		= 2,
+		}
+	}
+};
+
 static void bap_stream_set_io(void *data, void *user_data);
 static void stream_find_io(void *data, void *user_data);
 static void bap_stream_get_dir(void *data, void *user_data);
@@ -662,7 +701,7 @@ static void bap_disconnected(int err, void *user_data)
 	bt_bap_detach(bap);
 }
 
-static struct bt_bap *bap_get_session(struct bt_att *att, struct gatt_db *db)
+struct bt_bap *bt_bap_get_session(struct bt_att *att, struct gatt_db *db)
 {
 	const struct queue_entry *entry;
 	struct bt_bap *bap;
@@ -675,6 +714,9 @@ static struct bt_bap *bap_get_session(struct bt_att *att, struct gatt_db *db)
 	}
 
 	bap = bt_bap_new(db, NULL);
+	if (!bap)
+		return NULL;
+
 	bap->att = att;
 
 	bt_bap_attach(bap, NULL);
@@ -845,7 +887,7 @@ static void ascs_ase_read(struct gatt_db_attribute *attrib,
 	struct bt_ascs_ase_status rsp;
 
 	if (ase)
-		bap = bap_get_session(att, ase->ascs->bdb->db);
+		bap = bt_bap_get_session(att, ase->ascs->bdb->db);
 
 	if (bap)
 		ep = bap_get_endpoint(bap->local_eps, bap->ldb, attrib);
@@ -3437,7 +3479,7 @@ static void ascs_ase_cp_write(struct gatt_db_attribute *attrib,
 				void *user_data)
 {
 	struct bt_ascs *ascs = user_data;
-	struct bt_bap *bap = bap_get_session(att, ascs->bdb->db);
+	struct bt_bap *bap = bt_bap_get_session(att, ascs->bdb->db);
 	struct iovec iov = {
 		.iov_base = (void *) value,
 		.iov_len = len,
@@ -7462,4 +7504,55 @@ bool bt_bap_bcode_cb_unregister(struct bt_bap *bap, unsigned int id)
 	bap_bcode_cb_free(cb);
 
 	return false;
+}
+
+void bt_bap_iso_qos_to_bap_qos(struct bt_iso_qos *iso_qos,
+				struct bt_bap_qos *bap_qos)
+{
+	bap_qos->bcast.big = iso_qos->bcast.big;
+	bap_qos->bcast.bis = iso_qos->bcast.bis;
+	bap_qos->bcast.sync_factor = iso_qos->bcast.sync_factor;
+	bap_qos->bcast.packing = iso_qos->bcast.packing;
+	bap_qos->bcast.framing = iso_qos->bcast.framing;
+	bap_qos->bcast.encryption = iso_qos->bcast.encryption;
+	if (bap_qos->bcast.encryption)
+		bap_qos->bcast.bcode = util_iov_new(iso_qos->bcast.bcode,
+						sizeof(iso_qos->bcast.bcode));
+	bap_qos->bcast.options = iso_qos->bcast.options;
+	bap_qos->bcast.skip = iso_qos->bcast.skip;
+	bap_qos->bcast.sync_timeout = iso_qos->bcast.sync_timeout;
+	bap_qos->bcast.sync_cte_type =
+			iso_qos->bcast.sync_cte_type;
+	bap_qos->bcast.mse = iso_qos->bcast.mse;
+	bap_qos->bcast.timeout = iso_qos->bcast.timeout;
+	bap_qos->bcast.io_qos.interval =
+			iso_qos->bcast.in.interval;
+	bap_qos->bcast.io_qos.latency = iso_qos->bcast.in.latency;
+	bap_qos->bcast.io_qos.phy = iso_qos->bcast.in.phy;
+	bap_qos->bcast.io_qos.rtn = iso_qos->bcast.in.rtn;
+	bap_qos->bcast.io_qos.sdu = iso_qos->bcast.in.sdu;
+}
+
+void bt_bap_qos_to_iso_qos(struct bt_bap_qos *bap_qos,
+				struct bt_iso_qos *iso_qos)
+{
+	memset(iso_qos, 0, sizeof(*iso_qos));
+
+	iso_qos->bcast.big = bap_qos->bcast.big;
+	iso_qos->bcast.bis = bap_qos->bcast.bis;
+	iso_qos->bcast.sync_factor = bap_qos->bcast.sync_factor;
+	iso_qos->bcast.packing = bap_qos->bcast.packing;
+	iso_qos->bcast.framing = bap_qos->bcast.framing;
+	iso_qos->bcast.encryption = bap_qos->bcast.encryption;
+	if (bap_qos->bcast.bcode && bap_qos->bcast.bcode->iov_base)
+		memcpy(iso_qos->bcast.bcode, bap_qos->bcast.bcode->iov_base,
+				bap_qos->bcast.bcode->iov_len);
+	iso_qos->bcast.options = bap_qos->bcast.options;
+	iso_qos->bcast.skip = bap_qos->bcast.skip;
+	iso_qos->bcast.sync_timeout = bap_qos->bcast.sync_timeout;
+	iso_qos->bcast.sync_cte_type = bap_qos->bcast.sync_cte_type;
+	iso_qos->bcast.mse = bap_qos->bcast.mse;
+	iso_qos->bcast.timeout = bap_qos->bcast.timeout;
+	memcpy(&iso_qos->bcast.out, &bap_qos->bcast.io_qos,
+			sizeof(struct bt_iso_io_qos));
 }

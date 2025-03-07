@@ -50,6 +50,8 @@ typedef void (*bt_bap_bcode_func_t)(struct bt_bap_stream *stream,
 				bt_bap_bcode_reply_t reply, void *reply_data,
 				void *user_data);
 
+extern struct bt_iso_qos bap_sink_pa_qos;
+
 /* Local PAC related functions */
 struct bt_bap_pac_qos {
 	uint8_t  framing;
@@ -296,3 +298,10 @@ unsigned int bt_bap_bcode_cb_register(struct bt_bap *bap,
 				bt_bap_destroy_func_t destroy);
 
 bool bt_bap_bcode_cb_unregister(struct bt_bap *bap, unsigned int id);
+
+struct bt_bap *bt_bap_get_session(struct bt_att *att, struct gatt_db *db);
+
+void bt_bap_iso_qos_to_bap_qos(struct bt_iso_qos *iso_qos,
+				struct bt_bap_qos *bap_qos);
+void bt_bap_qos_to_iso_qos(struct bt_bap_qos *bap_qos,
+				struct bt_iso_qos *iso_qos);
